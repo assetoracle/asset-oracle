@@ -16,8 +16,6 @@ import {
   Trophy,
   Copy,
   Gift,
-  Clock3,
-  ExternalLink,
   Link2,
   Medal,
   CheckCircle2,
