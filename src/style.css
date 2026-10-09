@@ -2071,3 +2071,454 @@ input:focus-visible {
     justify-self: start;
   }
 }
+
+/* Referral leaderboard */
+
+.referral-promo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 24px;
+  padding: 26px;
+  border: 1px solid rgba(18, 217, 245, 0.2);
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 100% 0%, #12d9f514, transparent 50%),
+    var(--secondary);
+}
+
+.referral-promo-icon,
+.referral-heading-icon,
+.referral-link-icon,
+.account-page-icon,
+.account-empty-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--accent);
+  border: 1px solid rgba(18, 217, 245, 0.2);
+  background: rgba(18, 217, 245, 0.07);
+  border-radius: 14px;
+}
+
+.referral-promo-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.referral-promo-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.referral-promo-copy h2 {
+  margin: 8px 0;
+  font-size: 22px;
+}
+
+.referral-promo-copy p,
+.referral-link-heading p,
+.referral-status-banner p,
+.referral-table-empty p,
+.referral-rule p,
+.account-empty-state > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.referral-page {
+  padding-bottom: 40px;
+}
+
+.referral-heading-icon,
+.account-page-icon {
+  width: 54px;
+  height: 54px;
+}
+
+.referral-status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin: 24px 0;
+  padding: 18px;
+  border: 1px solid rgba(255, 193, 102, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 193, 102, 0.045);
+}
+
+.referral-status-banner > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #ffd18a;
+}
+
+.referral-status-banner strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffd18a;
+  font-size: 13px;
+}
+
+.referral-overview-grid,
+.account-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.referral-stat-card,
+.account-summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid rgba(99, 243, 255, 0.14);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #102f3a, #0b2a35);
+}
+
+.referral-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(18, 217, 245, 0.08);
+  color: var(--accent);
+}
+
+.referral-stat-card > span:not(.referral-stat-icon),
+.account-summary-card > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.referral-stat-card > strong {
+  color: var(--text);
+  font-size: 30px;
+}
+
+.referral-stat-card small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.referral-link-card,
+.referral-leaderboard-card,
+.referral-rules-card {
+  margin-top: 20px;
+  padding: 24px;
+  border: 1px solid rgba(99, 243, 255, 0.14);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #102f3a, #0b2a35);
+}
+
+.referral-link-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+
+.referral-link-icon {
+  width: 44px;
+  height: 44px;
+}
+
+.referral-link-heading h2,
+.referral-table-heading h2,
+.referral-rules-heading h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+
+.referral-link-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 54px;
+  padding: 8px 8px 8px 15px;
+  border: 1px solid rgba(141, 169, 179, 0.2);
+  border-radius: 12px;
+  background: rgba(7, 26, 36, 0.65);
+}
+
+.referral-link-field > span {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.referral-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 13px;
+  flex-shrink: 0;
+  border: 1px solid rgba(18, 217, 245, 0.25);
+  border-radius: 9px;
+  background: rgba(18, 217, 245, 0.08);
+  color: var(--highlight);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.referral-copy-button:hover {
+  border-color: var(--accent);
+  background: rgba(18, 217, 245, 0.14);
+}
+
+.referral-message {
+  margin: 12px 0 0;
+  color: var(--highlight);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.referral-table-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.referral-table-heading h2 {
+  margin-top: 8px;
+}
+
+.referral-period-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid rgba(141, 169, 179, 0.12);
+  border-radius: 10px;
+  background: rgba(7, 26, 36, 0.45);
+}
+
+.referral-period-tabs button {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.referral-table-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.referral-table-empty > svg {
+  color: var(--accent);
+}
+
+.referral-table-empty h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.referral-table-empty p {
+  max-width: 420px;
+}
+
+.referral-table-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(141, 169, 179, 0.12);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.referral-table-footer svg {
+  flex-shrink: 0;
+  color: var(--teal);
+}
+
+.referral-rules-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.referral-rules-heading > svg {
+  color: var(--accent);
+}
+
+.referral-rule {
+  display: flex;
+  gap: 14px;
+  padding: 17px 0;
+  border-bottom: 1px solid rgba(141, 169, 179, 0.12);
+}
+
+.referral-rule:last-child {
+  border-bottom: 0;
+}
+
+.referral-rule > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: rgba(18, 217, 245, 0.08);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.referral-rule strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.account-page {
+  padding-bottom: 48px;
+}
+
+.account-page .section-heading {
+  align-items: center;
+}
+
+.account-summary-card strong {
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.account-empty-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 42px 24px;
+  border: 1px solid rgba(141, 169, 179, 0.14);
+  border-radius: 18px;
+  background: rgba(11, 42, 53, 0.65);
+  text-align: center;
+}
+
+.account-empty-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.account-empty-state h2 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.account-empty-state > p {
+  max-width: 550px;
+}
+
+.account-empty-state .primary-button {
+  margin-top: 5px;
+}
+
+@media (max-width: 760px) {
+  .referral-promo {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 21px;
+  }
+
+  .referral-promo-copy {
+    flex-basis: calc(100% - 75px);
+  }
+
+  .referral-promo > .primary-button {
+    width: 100%;
+  }
+
+  .referral-overview-grid,
+  .account-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .referral-stat-card,
+  .account-summary-card {
+    padding: 17px;
+  }
+
+  .referral-stat-card {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 5px 12px;
+  }
+
+  .referral-stat-icon {
+    grid-row: span 3;
+  }
+
+  .referral-stat-card > strong {
+    font-size: 24px;
+  }
+
+  .referral-link-card,
+  .referral-leaderboard-card,
+  .referral-rules-card {
+    padding: 19px;
+  }
+}
+
+@media (max-width: 480px) {
+  .referral-link-field {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .referral-link-field > span {
+    padding: 4px;
+  }
+
+  .referral-copy-button {
+    width: 100%;
+  }
+
+  .referral-period-tabs {
+    width: 100%;
+  }
+
+  .referral-period-tabs button {
+    flex: 1;
+  }
+
+  .referral-table-empty {
+    padding: 35px 8px;
+  }
+
+  .account-empty-state {
+    padding: 30px 17px;
+  }
+}
