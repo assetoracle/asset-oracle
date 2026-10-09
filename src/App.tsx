@@ -1,20 +1,23 @@
 
 import { useState } from "react";
 import MarketSourcePanel from "./components/MarketSourcePanel";
+import BitcoinPriceCard from "./components/BitcoinPriceCard";
 
 type MarketCategory =
   | "All Markets"
   | "Crypto"
   | "Sports"
   | "Economics"
-  | "Real-World Assets";
+  | "RWA"
+  | "Regional";
 
 const categories: MarketCategory[] = [
   "All Markets",
   "Crypto",
   "Sports",
   "Economics",
-  "Real-World Assets",
+  "RWA",
+  "Regional",
 ];
 
 const marketExamples = [
@@ -50,13 +53,23 @@ const marketExamples = [
   },
   {
     id: 4,
-    category: "Real-World Assets",
+    category: "RWA",
     symbol: "RW",
-    label: "REAL-WORLD ASSETS",
+    label: "RWA",
     question: "Will a specified real-world asset metric increase?",
     description:
       "A market must identify the asset, data provider, measurement date, and verification rule.",
     endDate: "Rules required",
+  },
+  {
+    id: 5,
+    category: "Regional",
+    symbol: "GL",
+    label: "REGIONAL & GLOBAL EVENTS",
+    question: "Will a selected economic indicator change this month?",
+    description:
+      "A market must specify the region, authoritative source, publication date, and decision rule.",
+    endDate: "Release required",
   },
 ];
 
@@ -167,12 +180,14 @@ function App() {
               <span className="eyebrow">EXPLORE THE POSSIBILITIES</span>
               <h2>Prediction markets</h2>
               <p>
-                Discover questions across digital assets, sports and more.
+                Explore crypto, sports, economics, RWA, and regional events.
               </p>
             </div>
 
             <span className="preview-badge">UI PREVIEW</span>
           </div>
+
+          <BitcoinPriceCard />
 
           <label className="search-box">
             <span aria-hidden="true">⌕</span>
