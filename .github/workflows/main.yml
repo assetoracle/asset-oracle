@@ -31,8 +31,6 @@ jobs:
 
       - name: Verify essential files
         run: |
-          echo "Checking project files..."
-
           files=(
             "package.json"
             "index.html"
@@ -51,39 +49,28 @@ jobs:
             "src/components/BitcoinPriceCard.tsx"
           )
 
-          missing=0
-
           for file in "${files[@]}"; do
-            if [ -f "$file" ]; then
-              echo "FOUND: $file"
-            else
-              echo "MISSING: $file"
-              missing=1
+            if [ ! -f "$file" ]; then
+              echo "MISSING FILE: $file"
+              exit 1
             fi
+            echo "FOUND: $file"
           done
-
-          if [ "$missing" -ne 0 ]; then
-            echo "One or more essential files are missing."
-            exit 1
-          fi
-
-      - name: Set up npm cache
-        run: npm config set fund false
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Check wallet exports
+      - name: Verify wallet exports
         run: |
           grep -q "export async function connectWallet" src/wallet.ts
           grep -q "export async function switchToAssetChainTestnet" src/wallet.ts
           grep -q "export const ASSET_CHAIN_TESTNET" src/wallet.ts
           echo "Wallet exports verified."
 
-      - name: Check market source exports
+      - name: Verify market source utility
         run: |
-          grep -q "export function getMarketSource" src/data/marketSourceUtils.ts
-          echo "Market source export verified."
+          grep -q "export function findMarketSource" src/data/marketSourceUtils.ts
+          echo "Market source utility verified."
 
       - name: Build application
         run: npm run build
