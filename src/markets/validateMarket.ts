@@ -1,4 +1,4 @@
-import { getMarketSource } from "../data/marketSourceUtils";
+import { findMarketSource } from "../data/marketSourceUtils";
 import type { MarketRecord } from "./marketTypes";
 
 export type MarketValidationResult = {
@@ -25,13 +25,7 @@ export function validateMarket(
 
   if (!market.endTime || !Number.isFinite(Date.parse(market.endTime))) {
     errors.push("A valid market end time is required.");
-  }
-
-  if (
-    market.endTime &&
-    Number.isFinite(Date.parse(market.endTime)) &&
-    Date.parse(market.endTime) <= Date.now()
-  ) {
+  } else if (Date.parse(market.endTime) <= Date.now()) {
     errors.push("The market end time must be in the future.");
   }
 
@@ -43,7 +37,7 @@ export function validateMarket(
     errors.push("The market must include YES and NO outcomes.");
   }
 
-  const source = getMarketSource(
+  const source = findMarketSource(
     market.resolutionRule?.sourceId ?? "",
   );
 
