@@ -861,3 +861,133 @@ a {
     padding: 13px;
   }
 }
+
+/* Bitcoin price card */
+
+.bitcoin-price-card {
+  margin: 0 0 28px;
+  padding: 24px;
+  border: 1px solid rgba(18, 217, 245, 0.2);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0b2a35, #102f3a);
+}
+
+.bitcoin-price-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bitcoin-symbol {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(18, 217, 245, 0.1);
+  color: #63f3ff;
+  font-size: 25px;
+}
+
+.bitcoin-price-heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.bitcoin-price-heading strong {
+  color: #f2fcff;
+  font-size: 15px;
+}
+
+.bitcoin-price-heading > div span {
+  color: #8da9b3;
+  font-size: 12px;
+}
+
+.price-source {
+  margin-left: auto;
+  color: #63f3ff;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.bitcoin-price-value {
+  margin: 24px 0 12px;
+  color: #f2fcff;
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  overflow-wrap: anywhere;
+}
+
+.price-timestamp,
+.price-error,
+.price-disclaimer {
+  color: #8da9b3;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.price-error {
+  color: #ffb4a9;
+}
+
+.price-refresh-button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: 1px solid rgba(18, 217, 245, 0.35);
+  border-radius: 8px;
+  background: transparent;
+  color: #63f3ff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.price-refresh-button:hover {
+  background: rgba(18, 217, 245, 0.08);
+}
+
+.price-refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.price-disclaimer {
+  margin: 16px 0 0;
+}
+
+.source-check-button {
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+.source-check-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.source-check-result {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(18, 217, 245, 0.2);
+  border-radius: 10px;
+  background: #102f3a;
+}
+
+.source-check-result strong {
+  color: #63f3ff;
+}
+
+.source-check-result p,
+.source-check-result span {
+  color: #8da9b3;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .bitcoin-price-card {
+    padding: 18px;
+  }
+}
