@@ -1,15 +1,17 @@
 import { findMarketSource } from "../data/marketSourceUtils";
-import type { MarketRecord } from "./marketTypes";
-
-export type MarketValidationResult = {
-  valid: boolean;
-  errors: string[];
-};
+import type {
+  MarketRecord,
+  MarketValidationResult,
+} from "./marketTypes";
 
 export function validateMarket(
   market: MarketRecord,
 ): MarketValidationResult {
   const errors: string[] = [];
+
+  if (!market.id?.trim()) {
+    errors.push("A market ID is required.");
+  }
 
   if (!market.question?.trim()) {
     errors.push("A market question is required.");
@@ -19,27 +21,41 @@ export function validateMarket(
     errors.push("A market description is required.");
   }
 
-  if (!market.creator?.trim()) {
+  if (!market.createdBy?.trim()) {
     errors.push("A market creator is required.");
   }
 
-  if (!market.endTime || !Number.isFinite(Date.parse(market.endTime))) {
-    errors.push("A valid market end time is required.");
-  } else if (Date.parse(market.endTime) <= Date.now()) {
-    errors.push("The market end time must be in the future.");
+  const closesAt = Date.parse(market.closesAt);
+  const resolvesAt = Date.parse(market.resolvesAt);
+
+  if (!Number.isFinite(closesAt)) {
+    errors.push("A valid market closing time is required.");
+  } else if (closesAt <= Date.now()) {
+    errors.push("The market closing time must be in the future.");
+  }
+
+  if (!Number.isFinite(resolvesAt)) {
+    errors.push("A valid market resolution time is required.");
+  } else if (
+    Number.isFinite(closesAt) &&
+    resolvesAt < closesAt
+  ) {
+    errors.push(
+      "The resolution time cannot be before the closing time.",
+    );
   }
 
   if (
     !Array.isArray(market.outcomes) ||
     !market.outcomes.includes("YES") ||
-    !market.outcomes.includes("NO")
+    !market.outcomes.includes("NO") ||
+    market.outcomes.length !== 2
   ) {
-    errors.push("The market must include YES and NO outcomes.");
+    errors.push("A market must have exactly YES and NO outcomes.");
   }
 
-  const source = findMarketSource(
-    market.resolutionRule?.sourceId ?? "",
-  );
+  const rule = market.resolutionRule;
+  const source = findMarketSource(rule?.sourceId ?? "");
 
   if (!source) {
     errors.push("The selected resolution data source is not registered.");
@@ -47,31 +63,30 @@ export function validateMarket(
     errors.push("The selected resolution data source is disabled.");
   }
 
-  if (!market.resolutionRule?.metric?.trim()) {
+  if (!rule?.metric?.trim()) {
     errors.push("A resolution metric is required.");
   }
 
   if (
-    market.resolutionRule?.target === undefined ||
-    market.resolutionRule?.target === null ||
-    !Number.isFinite(Number(market.resolutionRule.target))
+    rule?.targetValue === undefined ||
+    !Number.isFinite(rule.targetValue)
   ) {
-    errors.push("A valid resolution target is required.");
+    errors.push("A valid numeric resolution target is required.");
   }
 
   if (
-    !["gt", "gte", "lt", "lte", "eq"].includes(
-      market.resolutionRule?.comparison ?? "",
+    !["ABOVE", "BELOW", "EQUALS"].includes(
+      rule?.comparison ?? "",
     )
   ) {
     errors.push("A valid resolution comparison is required.");
   }
 
-  if (!market.resolutionRule?.observationTime?.trim()) {
+  if (!rule?.observationTime?.trim()) {
     errors.push("A resolution observation time is required.");
   }
 
-  if (!market.resolutionRule?.description?.trim()) {
+  if (!rule?.description?.trim()) {
     errors.push("A resolution rule description is required.");
   }
 
