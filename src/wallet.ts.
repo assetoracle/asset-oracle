@@ -1,0 +1,87 @@
+
+export const ASSET_CHAIN_TESTNET = {
+  chainId: "0xa575",
+  chainName: "Asset Chain Testnet",
+  nativeCurrency: {
+    name: "Asset",
+    symbol: "ASSET",
+    decimals: 18,
+  },
+  rpcUrls: ["https://enugu-rpc.assetchain.org"],
+  blockExplorerUrls: ["https://scan.assetchain.org"],
+};
+
+export type WalletConnection = {
+  address: string;
+  chainId: string;
+};
+
+type Eip1193Provider = {
+  request: (args: {
+    method: string;
+    params?: unknown[];
+  }) => Promise<unknown>;
+};
+
+declare global {
+  interface Window {
+    ethereum?: Eip1193Provider;
+  }
+}
+
+export async function connectWallet(): Promise<WalletConnection> {
+  const provider = window.ethereum;
+
+  if (!provider) {
+    throw new Error(
+      "No compatible browser wallet found. Open Asset Oracle in a browser with a wallet installed.",
+    );
+  }
+
+  const accounts = await provider.request({
+    method: "eth_requestAccounts",
+  });
+
+  if (!Array.isArray(accounts) || typeof accounts[0] !== "string") {
+    throw new Error("The wallet did not return an account.");
+  }
+
+  const chainId = await provider.request({
+    method: "eth_chainId",
+  });
+
+  if (typeof chainId !== "string") {
+    throw new Error("The wallet did not return a network ID.");
+  }
+
+  return {
+    address: accounts[0],
+    chainId,
+  };
+}
+
+export async function switchToAssetChainTestnet(): Promise<void> {
+  const provider = window.ethereum;
+
+  if (!provider) {
+    throw new Error("No compatible browser wallet found.");
+  }
+
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: ASSET_CHAIN_TESTNET.chainId }],
+    });
+  } catch (error) {
+    const walletError = error as { code?: number };
+
+    if (walletError.code !== 4902) {
+      throw error;
+    }
+
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [ASSET_CHAIN_TESTNET],
+    });
+  }
+}
