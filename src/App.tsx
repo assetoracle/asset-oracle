@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   House,
@@ -13,8 +14,6 @@ import {
   CircleHelp,
 } from "lucide-react";
 
-import MarketSourcePanel from "./components/MarketSourcePanel";
-import BitcoinPriceCard from "./components/BitcoinPriceCard";
 import MarketDetailPage from "./components/MarketDetailPage";
 
 import {
@@ -59,9 +58,8 @@ const marketExamples = [
     label: "CRYPTO",
     question: "Will Bitcoin reach $150,000 by December 31, 2026?",
     description:
-      "The final result must follow a predefined price source and resolution rule.",
+      "A preview of how a crypto market could define its price source and resolution rule.",
     endDate: "Dec 31, 2026",
-    plays: 0,
   },
   {
     id: 2,
@@ -70,9 +68,8 @@ const marketExamples = [
     label: "SPORTS",
     question: "Will a selected football team win its next scheduled match?",
     description:
-      "A real market must specify the fixture and official result source.",
+      "A real market requires a specific fixture, match time, and official result source.",
     endDate: "Fixture required",
-    plays: 0,
   },
   {
     id: 3,
@@ -83,7 +80,6 @@ const marketExamples = [
     description:
       "A real market must specify the NBS release and comparison period.",
     endDate: "Release required",
-    plays: 0,
   },
   {
     id: 4,
@@ -94,7 +90,6 @@ const marketExamples = [
     description:
       "The asset, data provider, measurement date, and decision rule must be defined.",
     endDate: "Rules required",
-    plays: 0,
   },
   {
     id: 5,
@@ -105,7 +100,6 @@ const marketExamples = [
     description:
       "The region, authoritative source, publication date, and decision rule must be specified.",
     endDate: "Release required",
-    plays: 0,
   },
 ];
 
@@ -130,13 +124,11 @@ function App() {
       const connection = await connectWallet();
       setWallet(connection);
 
-      if (connection.chainId !== ASSET_CHAIN_TESTNET.chainId) {
-        setWalletMessage(
-          "Wallet connected. Switch to Asset Chain testnet to continue.",
-        );
-      } else {
-        setWalletMessage("Wallet connected to Asset Chain testnet.");
-      }
+      setWalletMessage(
+        connection.chainId === ASSET_CHAIN_TESTNET.chainId
+          ? "Wallet connected to Asset Chain testnet."
+          : "Wallet connected. Switch to Asset Chain testnet to continue.",
+      );
     } catch (error) {
       setWalletMessage(
         error instanceof Error
@@ -295,19 +287,19 @@ function App() {
             <article className="principle">
               <span className="principle-number">01</span>
               <h2>Find a market</h2>
-              <p>Choose a question that interests you.</p>
+              <p>Explore a question and its predefined rules.</p>
             </article>
 
             <article className="principle">
               <span className="principle-number">02</span>
-              <h2>Choose YES or NO</h2>
-              <p>Understand the rules before participating.</p>
+              <h2>Understand the rules</h2>
+              <p>Review the source and resolution criteria.</p>
             </article>
 
             <article className="principle">
               <span className="principle-number">03</span>
-              <h2>Check the result</h2>
-              <p>See the evidence used to verify the outcome.</p>
+              <h2>Verify the result</h2>
+              <p>Follow the evidence behind the final outcome.</p>
             </article>
           </section>
 
@@ -333,21 +325,18 @@ function App() {
             </div>
 
             <p className="market-disclaimer">
-              Illustrative examples only. These are not live markets,
-              and the play counts and odds are not available yet.
+              These are illustrative previews, not live markets.
+              Participation, live odds, and play counts are not available.
             </p>
           </section>
-
-          <BitcoinPriceCard />
-          <MarketSourcePanel />
 
           <section className="verification-banner">
             <div>
               <span className="eyebrow">BUILT AROUND EVIDENCE</span>
               <h2>Every outcome needs a reason.</h2>
               <p>
-                Learn how market rules, data providers, and evidence
-                will be used to establish final outcomes.
+                Market rules, authoritative data providers, and
+                traceable evidence will help establish final outcomes.
               </p>
               <button
                 className="text-action"
@@ -630,56 +619,54 @@ function App() {
           <CircleHelp size={15} /> Help
         </button>
 
-      
-<span>Early development · Testnet first</span>
+        <span>Early development · Testnet first</span>
 
-<div className="footer-socials" aria-label="Official social channels">
-  <a
-    href="https://x.com/assetoracle"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Asset Oracle on X"
-    title="Follow Asset Oracle on X"
-  >
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-8-7 8H1.9l7.3-8.4L1.3 2h6.5l4.4 7.4L18.9 2Zm-1.1 17.9h1.7L6.8 4H5L17.8 19.9Z"
-      />
-    </svg>
-  </a>
+        <div className="footer-socials" aria-label="Official social channels">
+          <a
+            href="https://x.com/assetoracle"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Asset Oracle on X"
+            title="Follow Asset Oracle on X"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-8-7 8H1.9l7.3-8.4L1.3 2h6.5l4.4 7.4L18.9 2Zm-1.1 17.9h1.7L6.8 4H5L17.8 19.9Z"
+              />
+            </svg>
+          </a>
 
-  <a
-    href="https://t.me/assetoracle"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Join Asset Oracle on Telegram"
-    title="Join Asset Oracle on Telegram"
-  >
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M21.9 3.4 18.7 20c-.2 1.2-.9 1.5-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6.1 13.6l-5-1.6c-1.1-.3-1.1-1.1.2-1.6L20.8 2c.9-.3 1.7.2 1.1 1.4Z"
-      />
-    </svg>
-  </a>
+          <a
+            href="https://t.me/assetoracle"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Join Asset Oracle on Telegram"
+            title="Join Asset Oracle on Telegram"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M21.9 3.4 18.7 20c-.2 1.2-.9 1.5-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6.1 13.6l-5-1.6c-1.1-.3-1.1-1.1.2-1.6L20.8 2c.9-.3 1.7.2 1.1 1.4Z"
+              />
+            </svg>
+          </a>
 
-  <a
-    href="https://discord.gg/2HfFcsWEFq"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Join Asset Oracle on Discord"
-    title="Join Asset Oracle on Discord"
-  >
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Z"
-      />
-    </svg>
-  </a>
-</div>
-
+          <a
+            href="https://discord.gg/2HfFcsWEFq"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Join Asset Oracle on Discord"
+            title="Join Asset Oracle on Discord"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1-1.9 2.1Z"
+              />
+            </svg>
+          </a>
+        </div>
       </footer>
 
       <nav className="bottom-navigation" aria-label="Quick navigation">
