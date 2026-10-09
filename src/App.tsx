@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import MarketSourcePanel from "./components/MarketSourcePanel";
 
 type MarketCategory =
   | "All Markets"
@@ -24,7 +25,7 @@ const marketExamples = [
     label: "DIGITAL ASSETS",
     question: "Will Bitcoin reach $150,000 by December 31, 2026?",
     description:
-      "Outcome must be verified against the predefined CoinGecko price source and market rules.",
+      "A future market must define its price source, observation period, and resolution rule.",
     endDate: "Dec 31, 2026",
   },
   {
@@ -34,7 +35,7 @@ const marketExamples = [
     label: "SPORTS",
     question: "Will a selected football team win its next scheduled match?",
     description:
-      "A future market will require a specific fixture, official result source and settlement deadline.",
+      "A market must identify the exact fixture, official result source, and settlement deadline.",
     endDate: "Fixture required",
   },
   {
@@ -44,7 +45,7 @@ const marketExamples = [
     label: "AFRICAN ECONOMICS",
     question: "Will Nigeria's next published inflation rate be lower?",
     description:
-      "A future market will specify the NBS release, comparison period and exact decision rule.",
+      "A market must specify the NBS release, comparison period, and decision rule.",
     endDate: "Release required",
   },
   {
@@ -54,8 +55,8 @@ const marketExamples = [
     label: "REAL-WORLD ASSETS",
     question: "Will a specified real-world asset metric increase?",
     description:
-      "A future market will identify its asset, data provider, measurement date and verification rule.",
-    endDate: "Market rules required",
+      "A market must identify the asset, data provider, measurement date, and verification rule.",
+    endDate: "Rules required",
   },
 ];
 
@@ -69,9 +70,12 @@ function App() {
       activeCategory === "All Markets" ||
       market.category === activeCategory;
 
+    const query = search.trim().toLowerCase();
+
     const matchesSearch =
-      market.question.toLowerCase().includes(search.toLowerCase()) ||
-      market.category.toLowerCase().includes(search.toLowerCase());
+      market.question.toLowerCase().includes(query) ||
+      market.category.toLowerCase().includes(query) ||
+      market.label.toLowerCase().includes(query);
 
     return matchesCategory && matchesSearch;
   });
@@ -96,7 +100,7 @@ function App() {
           type="button"
           onClick={() =>
             window.alert(
-              "Wallet connection will be added in a later development stage."
+              "Wallet connection will be implemented in a later development stage.",
             )
           }
         >
@@ -125,6 +129,7 @@ function App() {
             <a className="primary-button" href="#markets">
               Explore markets <span aria-hidden="true">↗</span>
             </a>
+
             <span className="network-label">
               <span className="network-dot" />
               Asset Chain · Testnet development
@@ -161,7 +166,9 @@ function App() {
             <div>
               <span className="eyebrow">EXPLORE THE POSSIBILITIES</span>
               <h2>Prediction markets</h2>
-              <p>Discover questions across digital assets, sports and more.</p>
+              <p>
+                Discover questions across digital assets, sports and more.
+              </p>
             </div>
 
             <span className="preview-badge">UI PREVIEW</span>
@@ -232,10 +239,12 @@ function App() {
           )}
 
           <p className="market-disclaimer">
-            These are illustrative interface examples, not live markets.
-            No stakes, live odds or actual settlement data are available yet.
+            These are illustrative examples, not live markets. No stakes,
+            live odds, or actual settlement data are available yet.
           </p>
         </section>
+
+        <MarketSourcePanel />
 
         <section className="verification-banner">
           <div>
@@ -244,9 +253,10 @@ function App() {
             <p>
               The planned settlement record will identify the actual
               data providers, verification evidence, decision rule,
-              final outcome and available on-chain transactions.
+              final outcome, and available on-chain transactions.
             </p>
           </div>
+
           <span className="verification-icon" aria-hidden="true">
             ✓
           </span>
