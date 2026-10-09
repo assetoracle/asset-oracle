@@ -18,6 +18,13 @@ export default function MarketSourcePanel() {
     try {
       const result = await checkCoinGecko();
       setCheckResult(result);
+    } catch {
+      setCheckResult({
+        sourceId: "coingecko",
+        reachable: false,
+        checkedAt: new Date().toISOString(),
+        message: "An unexpected error occurred during the provider check.",
+      });
     } finally {
       setChecking(false);
     }
