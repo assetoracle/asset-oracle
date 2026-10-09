@@ -1,89 +1,80 @@
+import { findMarketSource } from "../data/marketSourceUtils";
+import type { MarketRecord } from "./marketTypes";
 
-import type {
-  MarketRecord,
-  MarketValidationResult,
-} from "./marketTypes";
-
-import { getMarketSource } from "../data/marketSourceUtils";
+export type MarketValidationResult = {
+  valid: boolean;
+  errors: string[];
+};
 
 export function validateMarket(
   market: MarketRecord,
 ): MarketValidationResult {
   const errors: string[] = [];
 
-  if (!market.id.trim()) {
-    errors.push("Market ID is required.");
+  if (!market.question?.trim()) {
+    errors.push("A market question is required.");
   }
 
-  if (market.question.trim().length < 15) {
-    errors.push("The market question must contain at least 15 characters.");
-  }
-
-  if (!market.description.trim()) {
+  if (!market.description?.trim()) {
     errors.push("A market description is required.");
   }
 
-  if (!market.createdBy.trim()) {
-    errors.push("The creator identifier is required.");
+  if (!market.creator?.trim()) {
+    errors.push("A market creator is required.");
+  }
+
+  if (!market.endTime || !Number.isFinite(Date.parse(market.endTime))) {
+    errors.push("A valid market end time is required.");
+  }
+
+  if (
+    market.endTime &&
+    Number.isFinite(Date.parse(market.endTime)) &&
+    Date.parse(market.endTime) <= Date.now()
+  ) {
+    errors.push("The market end time must be in the future.");
   }
 
   if (
     !Array.isArray(market.outcomes) ||
-    market.outcomes.length !== 2 ||
-    market.outcomes[0] !== "YES" ||
-    market.outcomes[1] !== "NO"
+    !market.outcomes.includes("YES") ||
+    !market.outcomes.includes("NO")
   ) {
-    errors.push("The market must have exactly YES and NO outcomes.");
+    errors.push("The market must include YES and NO outcomes.");
   }
 
-  const createdAt = Date.parse(market.createdAt);
-  const closesAt = Date.parse(market.closesAt);
-  const resolvesAt = Date.parse(market.resolvesAt);
+  const source = findMarketSource(market.resolutionRule?.sourceId);
 
-  if (
-    !Number.isFinite(createdAt) ||
-    !Number.isFinite(closesAt) ||
-    !Number.isFinite(resolvesAt)
-  ) {
-    errors.push("Market dates must be valid date-time values.");
-  } else {
-    if (closesAt <= createdAt) {
-      errors.push("The closing time must be after the creation time.");
-    }
-
-    if (resolvesAt < closesAt) {
-      errors.push("The resolution deadline cannot precede market closure.");
-    }
-  }
-
-  const rule = market.resolutionRule;
-
-  if (!rule.sourceId.trim()) {
-    errors.push("A resolution data source is required.");
-  } else if (!getMarketSource(rule.sourceId)) {
+  if (!source) {
     errors.push("The selected resolution data source is not registered.");
+  } else if (!source.enabled) {
+    errors.push("The selected resolution data source is disabled.");
   }
 
-  if (!rule.metric.trim()) {
-    errors.push("The metric being evaluated must be specified.");
-  }
-
-  if (!Number.isFinite(rule.targetValue)) {
-    errors.push("The target value must be a finite number.");
+  if (!market.resolutionRule?.metric?.trim()) {
+    errors.push("A resolution metric is required.");
   }
 
   if (
-    !["ABOVE", "BELOW", "EQUALS"].includes(rule.comparison)
+    market.resolutionRule?.target === undefined ||
+    market.resolutionRule?.target === null ||
+    !Number.isFinite(Number(market.resolutionRule.target))
   ) {
-    errors.push("A valid comparison rule must be selected.");
+    errors.push("A valid resolution target is required.");
   }
 
-  if (!Number.isFinite(Date.parse(rule.observationTime))) {
-    errors.push("The observation time must be a valid date-time.");
+  if (!["gt", "gte", "lt", "lte", "eq"].includes(
+    market.resolutionRule?.comparison ?? "",
+  )) {
+    errors.push("A valid resolution comparison is required.");
   }
 
-  if (!rule.description.trim()) {
-    errors.push("The resolution rule must be explained.");
+  if (!market.resolutionRule?.observationTime?.trim()) {
+    errors.push("A resolution observation time is required.");
+  }
+
+  if (!market.resolutionRule?.description?.trim()) {
+    errors.push("A resolution rule description is required.");
   }
 
   return {
