@@ -1,8 +1,27 @@
 
+import { useState } from "react";
 import { getMarketSourceStatuses } from "../data/marketSourceStatus";
+import { checkCoinGecko } from "../data/checkMarketSource";
 
 export default function MarketSourcePanel() {
   const sources = getMarketSourceStatuses();
+
+  const [checking, setChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<
+    Awaited<ReturnType<typeof checkCoinGecko>> | null
+  >(null);
+
+  async function handleCheck() {
+    setChecking(true);
+    setCheckResult(null);
+
+    try {
+      const result = await checkCoinGecko();
+      setCheckResult(result);
+    } finally {
+      setChecking(false);
+    }
+  }
 
   return (
     <section className="source-panel">
@@ -11,7 +30,8 @@ export default function MarketSourcePanel() {
           <span className="eyebrow">DATA INFRASTRUCTURE</span>
           <h2>Verification sources</h2>
           <p>
-            Data providers planned for transparent market verification.
+            Check provider connectivity before building live market
+            verification.
           </p>
         </div>
 
@@ -37,15 +57,39 @@ export default function MarketSourcePanel() {
                   : "source-status disabled"
               }
             >
-              {source.enabled ? "Enabled" : "Disabled"}
+              {source.enabled ? "Registered" : "Disabled"}
             </span>
           </article>
         ))}
       </div>
 
+      <button
+        className="primary-button source-check-button"
+        type="button"
+        onClick={handleCheck}
+        disabled={checking}
+      >
+        {checking ? "Checking provider..." : "Check CoinGecko"}
+      </button>
+
+      {checkResult && (
+        <div className="source-check-result" role="status">
+          <strong>
+            {checkResult.reachable
+              ? "Provider responded"
+              : "Provider check failed"}
+          </strong>
+          <p>{checkResult.message}</p>
+          <span>
+            Checked: {new Date(checkResult.checkedAt).toLocaleString()}
+          </span>
+        </div>
+      )}
+
       <p className="source-note">
-        Enabled means registered in this interface. Live API connectivity
-        and data verification have not yet been confirmed.
+        A successful connectivity check confirms only that the endpoint
+        responded. It does not verify market data accuracy or authorize
+        market settlement.
       </p>
     </section>
   );
