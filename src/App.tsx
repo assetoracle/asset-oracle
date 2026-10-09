@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   House,
@@ -13,8 +12,11 @@ import {
   ShieldCheck,
   CircleHelp,
 } from "lucide-react";
+
 import MarketSourcePanel from "./components/MarketSourcePanel";
 import BitcoinPriceCard from "./components/BitcoinPriceCard";
+import MarketDetailPage from "./components/MarketDetailPage";
+
 import {
   connectWallet,
   switchToAssetChainTestnet,
@@ -113,6 +115,9 @@ function App() {
     useState<MarketCategory>("All Markets");
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedMarket, setSelectedMarket] =
+    useState<(typeof marketExamples)[number] | null>(null);
+
   const [wallet, setWallet] = useState<WalletConnection | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
@@ -168,6 +173,15 @@ function App() {
     }
   }
 
+  function navigateTo(nextPage: Page) {
+    setPage(nextPage);
+    setSelectedMarket(null);
+    setMobileMenuOpen(false);
+    setSearch("");
+    setActiveCategory("All Markets");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   const query = search.trim().toLowerCase();
 
   const filteredMarkets = marketExamples.filter((market) => {
@@ -182,14 +196,6 @@ function App() {
 
     return matchesCategory && matchesSearch;
   });
-
-  function navigateTo(nextPage: Page) {
-    setPage(nextPage);
-    setMobileMenuOpen(false);
-    setSearch("");
-    setActiveCategory("All Markets");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
 
   function renderMarketCard(market: (typeof marketExamples)[number]) {
     return (
@@ -212,11 +218,10 @@ function App() {
           <button
             className="text-action"
             type="button"
-            onClick={() =>
-              setWalletMessage(
-                "This is a preview. Market participation will be enabled after market records and smart contracts are implemented.",
-              )
-            }
+            onClick={() => {
+              setSelectedMarket(market);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           >
             View details <ArrowUpRight size={15} />
           </button>
@@ -226,6 +231,21 @@ function App() {
   }
 
   function renderPageContent() {
+    if (selectedMarket) {
+      return (
+        <MarketDetailPage
+          question={selectedMarket.question}
+          category={selectedMarket.label}
+          description={selectedMarket.description}
+          endDate={selectedMarket.endDate}
+          onBack={() => {
+            setSelectedMarket(null);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
+      );
+    }
+
     if (page === "Home") {
       return (
         <>
@@ -331,6 +351,7 @@ function App() {
                 Explore markets <ArrowUpRight size={15} />
               </button>
             </div>
+
             <ShieldCheck
               className="verification-icon"
               size={42}
@@ -476,7 +497,9 @@ function App() {
           onClick={() => navigateTo("Home")}
           aria-label="Go to Asset Oracle home"
         >
-          <span className="brand-mark" aria-hidden="true">A</span>
+          <span className="brand-mark" aria-hidden="true">
+            A
+          </span>
           <span>
             <span className="brand-name">ASSET ORACLE</span>
             <span className="brand-tagline">
@@ -554,6 +577,7 @@ function App() {
               {wallet.address.slice(0, 10)}...
               {wallet.address.slice(-8)}
             </p>
+
             {wallet.chainId !== ASSET_CHAIN_TESTNET.chainId && (
               <p>Connected to chain ID {wallet.chainId}</p>
             )}
@@ -587,22 +611,28 @@ function App() {
           <strong>ASSET ORACLE</strong>
           <p>REAL-WORLD TRUTH, ON-CHAIN.</p>
         </div>
+
         <button
           className="footer-help"
           type="button"
-          onClick={() => setWalletMessage(
-            "Asset Oracle helps users explore prediction markets and understand how outcomes are verified. Live participation is not yet enabled.",
-          )}
+          onClick={() =>
+            setWalletMessage(
+              "Asset Oracle helps users explore prediction markets and understand how outcomes are verified. Live participation is not yet enabled.",
+            )
+          }
         >
           <CircleHelp size={15} /> Help
         </button>
+
         <span>Early development · Testnet first</span>
       </footer>
 
       <nav className="bottom-navigation" aria-label="Quick navigation">
         {navigation.map(({ label, icon: Icon }) => (
           <button
-            className={page === label ? "bottom-nav-link active" : "bottom-nav-link"}
+            className={
+              page === label ? "bottom-nav-link active" : "bottom-nav-link"
+            }
             key={label}
             type="button"
             onClick={() => navigateTo(label)}
