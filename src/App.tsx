@@ -1,5 +1,18 @@
 
 import { useState } from "react";
+import {
+  House,
+  ChartNoAxesCombined,
+  BriefcaseBusiness,
+  WalletCards,
+  History,
+  Menu,
+  X,
+  Search,
+  ArrowUpRight,
+  ShieldCheck,
+  CircleHelp,
+} from "lucide-react";
 import MarketSourcePanel from "./components/MarketSourcePanel";
 import BitcoinPriceCard from "./components/BitcoinPriceCard";
 import {
@@ -8,6 +21,8 @@ import {
   ASSET_CHAIN_TESTNET,
   type WalletConnection,
 } from "./wallet";
+
+type Page = "Home" | "Markets" | "Portfolio" | "Claims" | "History";
 
 type MarketCategory =
   | "All Markets"
@@ -26,16 +41,25 @@ const categories: MarketCategory[] = [
   "Regional",
 ];
 
+const navigation = [
+  { label: "Home" as const, icon: House },
+  { label: "Markets" as const, icon: ChartNoAxesCombined },
+  { label: "Portfolio" as const, icon: BriefcaseBusiness },
+  { label: "Claims" as const, icon: WalletCards },
+  { label: "History" as const, icon: History },
+];
+
 const marketExamples = [
   {
     id: 1,
     category: "Crypto",
     symbol: "BTC",
-    label: "DIGITAL ASSETS",
+    label: "CRYPTO",
     question: "Will Bitcoin reach $150,000 by December 31, 2026?",
     description:
-      "A future market must define its price source, observation period, and resolution rule.",
+      "The final result must follow a predefined price source and resolution rule.",
     endDate: "Dec 31, 2026",
+    plays: 0,
   },
   {
     id: 2,
@@ -44,8 +68,9 @@ const marketExamples = [
     label: "SPORTS",
     question: "Will a selected football team win its next scheduled match?",
     description:
-      "A market must identify the exact fixture, official result source, and settlement deadline.",
+      "A real market must specify the fixture and official result source.",
     endDate: "Fixture required",
+    plays: 0,
   },
   {
     id: 3,
@@ -54,18 +79,20 @@ const marketExamples = [
     label: "AFRICAN ECONOMICS",
     question: "Will Nigeria's next published inflation rate be lower?",
     description:
-      "A market must specify the NBS release, comparison period, and decision rule.",
+      "A real market must specify the NBS release and comparison period.",
     endDate: "Release required",
+    plays: 0,
   },
   {
     id: 4,
     category: "RWA",
     symbol: "RW",
-    label: "RWA",
+    label: "REAL-WORLD ASSETS",
     question: "Will a specified real-world asset metric increase?",
     description:
-      "A market must identify the asset, data provider, measurement date, and verification rule.",
+      "The asset, data provider, measurement date, and decision rule must be defined.",
     endDate: "Rules required",
+    plays: 0,
   },
   {
     id: 5,
@@ -74,15 +101,18 @@ const marketExamples = [
     label: "REGIONAL & GLOBAL EVENTS",
     question: "Will a selected economic indicator change this month?",
     description:
-      "A market must specify the region, authoritative source, publication date, and decision rule.",
+      "The region, authoritative source, publication date, and decision rule must be specified.",
     endDate: "Release required",
+    plays: 0,
   },
 ];
 
 function App() {
+  const [page, setPage] = useState<Page>("Home");
   const [activeCategory, setActiveCategory] =
     useState<MarketCategory>("All Markets");
   const [search, setSearch] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [wallet, setWallet] = useState<WalletConnection | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
@@ -99,6 +129,8 @@ function App() {
         setWalletMessage(
           "Wallet connected. Switch to Asset Chain testnet to continue.",
         );
+      } else {
+        setWalletMessage("Wallet connected to Asset Chain testnet.");
       }
     } catch (error) {
       setWalletMessage(
@@ -120,11 +152,11 @@ function App() {
       const connection = await connectWallet();
       setWallet(connection);
 
-      if (connection.chainId === ASSET_CHAIN_TESTNET.chainId) {
-        setWalletMessage("Connected to Asset Chain testnet.");
-      } else {
-        setWalletMessage("Please confirm the network in your wallet.");
-      }
+      setWalletMessage(
+        connection.chainId === ASSET_CHAIN_TESTNET.chainId
+          ? "Connected to Asset Chain testnet."
+          : "Please confirm the network in your wallet.",
+      );
     } catch (error) {
       setWalletMessage(
         error instanceof Error
@@ -136,12 +168,12 @@ function App() {
     }
   }
 
+  const query = search.trim().toLowerCase();
+
   const filteredMarkets = marketExamples.filter((market) => {
     const matchesCategory =
       activeCategory === "All Markets" ||
       market.category === activeCategory;
-
-    const query = search.trim().toLowerCase();
 
     const matchesSearch =
       market.question.toLowerCase().includes(query) ||
@@ -151,148 +183,184 @@ function App() {
     return matchesCategory && matchesSearch;
   });
 
-  const connectedToTestnet =
-    wallet?.chainId === ASSET_CHAIN_TESTNET.chainId;
+  function navigateTo(nextPage: Page) {
+    setPage(nextPage);
+    setMobileMenuOpen(false);
+    setSearch("");
+    setActiveCategory("All Markets");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-  return (
-    <div className="app">
-      <header className="header">
-        <a className="brand" href="#" aria-label="Asset Oracle home">
-          <span className="brand-mark" aria-hidden="true">A</span>
-          <span>
-            <span className="brand-name">ASSET ORACLE</span>
-            <span className="brand-tagline">
-              REAL-WORLD TRUTH, ON-CHAIN.
+  function renderMarketCard(market: (typeof marketExamples)[number]) {
+    return (
+      <article className="market-card" key={market.id}>
+        <div className="market-card-top">
+          <span className="market-symbol">{market.symbol}</span>
+          <span className="market-category">{market.label}</span>
+        </div>
+
+        <h3>{market.question}</h3>
+        <p className="market-description">{market.description}</p>
+
+        <div className="market-meta">
+          <span>Resolution date</span>
+          <span>{market.endDate}</span>
+        </div>
+
+        <div className="market-card-bottom">
+          <span className="preview-label">Example market</span>
+          <button
+            className="text-action"
+            type="button"
+            onClick={() =>
+              setWalletMessage(
+                "This is a preview. Market participation will be enabled after market records and smart contracts are implemented.",
+              )
+            }
+          >
+            View details <ArrowUpRight size={15} />
+          </button>
+        </div>
+      </article>
+    );
+  }
+
+  function renderPageContent() {
+    if (page === "Home") {
+      return (
+        <>
+          <section className="hero">
+            <span className="eyebrow">
+              PREDICT <span>·</span> VERIFY <span>·</span> BUILD
             </span>
-          </span>
-        </a>
 
-        <button
-          className="connect-button"
-          type="button"
-          onClick={handleConnectWallet}
-          disabled={walletBusy}
-        >
-          {walletBusy
-            ? "Connecting..."
-            : wallet
-              ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
-              : "Connect Wallet"}
-        </button>
-      </header>
+            <h1>
+              Real-world truth.
+              <br />
+              <span>On-chain.</span>
+            </h1>
 
-      {wallet && (
-        <section className="wallet-status" aria-live="polite">
-          <div>
-            <strong>
-              {connectedToTestnet
-                ? "Asset Chain Testnet"
-                : "Wallet connected"}
-            </strong>
-            <p>
-              {wallet.address.slice(0, 10)}...
-              {wallet.address.slice(-8)}
+            <p className="hero-description">
+              Explore real-world questions, understand how outcomes
+              are verified, and follow transparent settlement.
             </p>
-            {!connectedToTestnet && (
-              <p>Connected to chain ID {wallet.chainId}</p>
-            )}
-          </div>
 
-          {!connectedToTestnet && (
-            <button
-              className="primary-button"
-              type="button"
-              onClick={handleSwitchNetwork}
-              disabled={walletBusy}
-            >
-              Switch Network
-            </button>
-          )}
-        </section>
-      )}
+            <div className="hero-actions">
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => navigateTo("Markets")}
+              >
+                Explore all markets <ArrowUpRight size={16} />
+              </button>
 
-      {walletMessage && (
-        <p className="wallet-message" role="status">
-          {walletMessage}
-        </p>
-      )}
-
-      <main>
-        <section className="hero">
-          <span className="eyebrow">
-            PREDICT <span>·</span> VERIFY <span>·</span> BUILD
-          </span>
-
-          <h1>
-            Real-world truth.
-            <br />
-            <span>On-chain.</span>
-          </h1>
-
-          <p className="hero-description">
-            Explore future outcomes, understand how they will be
-            verified, and follow transparent on-chain settlement.
-          </p>
-
-          <div className="hero-actions">
-            <a className="primary-button" href="#markets">
-              Explore markets <span aria-hidden="true">↗</span>
-            </a>
-
-            <span className="network-label">
-              <span className="network-dot" />
-              Asset Chain · Testnet development
-            </span>
-          </div>
-
-          <div className="hero-footnote">
-            Verification-first prediction infrastructure
-          </div>
-        </section>
-
-        <section className="principles" aria-label="Platform principles">
-          <article className="principle">
-            <span className="principle-number">01</span>
-            <h2>Predict</h2>
-            <p>Explore YES or NO outcomes for clearly defined events.</p>
-          </article>
-
-          <article className="principle">
-            <span className="principle-number">02</span>
-            <h2>Verify</h2>
-            <p>Identify the sources and rules that determine results.</p>
-          </article>
-
-          <article className="principle">
-            <span className="principle-number">03</span>
-            <h2>Settle</h2>
-            <p>Make settlement evidence and transaction records transparent.</p>
-          </article>
-        </section>
-
-        <section className="markets-section" id="markets">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">EXPLORE THE POSSIBILITIES</span>
-              <h2>Prediction markets</h2>
-              <p>
-                Explore crypto, sports, economics, RWA, and regional events.
-              </p>
+              <span className="network-label">
+                <span className="network-dot" />
+                Asset Chain · Testnet development
+              </span>
             </div>
 
-            <span className="preview-badge">UI PREVIEW</span>
-          </div>
+            <div className="hero-footnote">
+              Verification-first prediction infrastructure
+            </div>
+          </section>
+
+          <section className="principles" aria-label="How it works">
+            <article className="principle">
+              <span className="principle-number">01</span>
+              <h2>Find a market</h2>
+              <p>Choose a question that interests you.</p>
+            </article>
+
+            <article className="principle">
+              <span className="principle-number">02</span>
+              <h2>Choose YES or NO</h2>
+              <p>Understand the rules before participating.</p>
+            </article>
+
+            <article className="principle">
+              <span className="principle-number">03</span>
+              <h2>Check the result</h2>
+              <p>See the evidence used to verify the outcome.</p>
+            </article>
+          </section>
+
+          <section className="markets-section">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">A QUICK LOOK</span>
+                <h2>Featured markets</h2>
+                <p>A small selection from the market catalogue.</p>
+              </div>
+
+              <button
+                className="text-action"
+                type="button"
+                onClick={() => navigateTo("Markets")}
+              >
+                All markets <ArrowUpRight size={15} />
+              </button>
+            </div>
+
+            <div className="market-grid">
+              {marketExamples.slice(0, 3).map(renderMarketCard)}
+            </div>
+
+            <p className="market-disclaimer">
+              Illustrative examples only. These are not live markets,
+              and the play counts and odds are not available yet.
+            </p>
+          </section>
 
           <BitcoinPriceCard />
+          <MarketSourcePanel />
+
+          <section className="verification-banner">
+            <div>
+              <span className="eyebrow">BUILT AROUND EVIDENCE</span>
+              <h2>Every outcome needs a reason.</h2>
+              <p>
+                Learn how market rules, data providers, and evidence
+                will be used to establish final outcomes.
+              </p>
+              <button
+                className="text-action"
+                type="button"
+                onClick={() => navigateTo("Markets")}
+              >
+                Explore markets <ArrowUpRight size={15} />
+              </button>
+            </div>
+            <ShieldCheck
+              className="verification-icon"
+              size={42}
+              aria-hidden="true"
+            />
+          </section>
+        </>
+      );
+    }
+
+    if (page === "Markets") {
+      return (
+        <section className="markets-section page-section">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">EXPLORE</span>
+              <h1>All markets</h1>
+              <p>Search questions or choose a category.</p>
+            </div>
+            <span className="preview-badge">PREVIEW</span>
+          </div>
 
           <label className="search-box">
-            <span aria-hidden="true">⌕</span>
+            <Search size={19} aria-hidden="true" />
             <input
               type="search"
-              placeholder="Search market questions..."
+              placeholder="Search markets..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              aria-label="Search market questions"
+              aria-label="Search markets"
             />
           </label>
 
@@ -315,59 +383,203 @@ function App() {
           </div>
 
           <div className="market-grid">
-            {filteredMarkets.map((market) => (
-              <article className="market-card" key={market.id}>
-                <div className="market-card-top">
-                  <span className="market-symbol">{market.symbol}</span>
-                  <span className="market-category">{market.label}</span>
-                </div>
-
-                <h3>{market.question}</h3>
-                <p className="market-description">{market.description}</p>
-
-                <div className="market-meta">
-                  <span>Resolution date</span>
-                  <span>{market.endDate}</span>
-                </div>
-
-                <div className="market-card-bottom">
-                  <span className="preview-label">
-                    Illustrative example
-                  </span>
-                  <span className="arrow" aria-hidden="true">↗</span>
-                </div>
-              </article>
-            ))}
+            {filteredMarkets.map(renderMarketCard)}
           </div>
 
           {filteredMarkets.length === 0 && (
             <div className="empty-state">
-              <h3>No matching examples</h3>
-              <p>Try another search term or select a different category.</p>
+              <h3>No matching markets</h3>
+              <p>Try another search or choose a different category.</p>
             </div>
           )}
 
           <p className="market-disclaimer">
-            These are illustrative examples, not live markets. No stakes,
-            live odds, or actual settlement data are available yet.
+            These examples are for interface development only.
+            Real participation is not yet enabled.
           </p>
         </section>
+      );
+    }
 
-        <MarketSourcePanel />
+    const pageInfo = {
+      Portfolio: {
+        eyebrow: "YOUR ACTIVITY",
+        title: "Your portfolio",
+        description:
+          "Your available funds, open predictions, and potential returns will appear here.",
+        icon: BriefcaseBusiness,
+        action: "Explore markets",
+      },
+      Claims: {
+        eyebrow: "YOUR REWARDS",
+        title: "Claim winnings",
+        description:
+          "Eligible winnings and refunds will appear here after the relevant market has been settled.",
+        icon: WalletCards,
+        action: "Explore markets",
+      },
+      History: {
+        eyebrow: "YOUR RECORDS",
+        title: "Activity history",
+        description:
+          "Review your past predictions, market outcomes, claims, and refunds here.",
+        icon: History,
+        action: "Explore markets",
+      },
+    }[page];
 
-        <section className="verification-banner">
+    const PageIcon = pageInfo.icon;
+
+    return (
+      <section className="page-section simple-page">
+        <span className="eyebrow">{pageInfo.eyebrow}</span>
+
+        <div className="simple-page-icon">
+          <PageIcon size={30} />
+        </div>
+
+        <h1>{pageInfo.title}</h1>
+        <p>{pageInfo.description}</p>
+
+        {!wallet && (
+          <p className="page-hint">
+            Connect your wallet to prepare to use this feature.
+          </p>
+        )}
+
+        <button
+          className="primary-button"
+          type="button"
+          onClick={() => navigateTo("Markets")}
+        >
+          {pageInfo.action} <ArrowUpRight size={16} />
+        </button>
+
+        <div className="empty-state">
+          <CircleHelp size={23} />
+          <h3>Nothing to display yet</h3>
+          <p>
+            This section will become functional when live market data,
+            contract positions, and transaction records are connected.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <div className="app">
+      <header className="header">
+        <button
+          className="brand"
+          type="button"
+          onClick={() => navigateTo("Home")}
+          aria-label="Go to Asset Oracle home"
+        >
+          <span className="brand-mark" aria-hidden="true">A</span>
+          <span>
+            <span className="brand-name">ASSET ORACLE</span>
+            <span className="brand-tagline">
+              REAL-WORLD TRUTH, ON-CHAIN.
+            </span>
+          </span>
+        </button>
+
+        <nav className="desktop-navigation" aria-label="Main navigation">
+          {navigation.map(({ label, icon: Icon }) => (
+            <button
+              className={page === label ? "nav-link active" : "nav-link"}
+              key={label}
+              type="button"
+              onClick={() => navigateTo(label)}
+              aria-current={page === label ? "page" : undefined}
+            >
+              <Icon size={17} />
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="header-actions">
+          <button
+            className="connect-button"
+            type="button"
+            onClick={handleConnectWallet}
+            disabled={walletBusy}
+          >
+            {walletBusy
+              ? "Connecting..."
+              : wallet
+                ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
+                : "Connect wallet"}
+          </button>
+
+          <button
+            className="mobile-menu-button"
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        </div>
+      </header>
+
+      {mobileMenuOpen && (
+        <nav className="mobile-navigation" aria-label="Mobile navigation">
+          {navigation.map(({ label, icon: Icon }) => (
+            <button
+              className={page === label ? "nav-link active" : "nav-link"}
+              key={label}
+              type="button"
+              onClick={() => navigateTo(label)}
+            >
+              <Icon size={19} />
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
+
+      {wallet && (
+        <section className="wallet-status" aria-live="polite">
           <div>
-            <span className="eyebrow">BUILT AROUND EVIDENCE</span>
-            <h2>Every outcome needs a reason.</h2>
+            <strong>
+              {wallet.chainId === ASSET_CHAIN_TESTNET.chainId
+                ? "Asset Chain Testnet"
+                : "Wallet connected"}
+            </strong>
             <p>
-              The planned settlement record will identify the actual
-              data providers, verification evidence, decision rule,
-              final outcome, and available on-chain transactions.
+              {wallet.address.slice(0, 10)}...
+              {wallet.address.slice(-8)}
             </p>
+            {wallet.chainId !== ASSET_CHAIN_TESTNET.chainId && (
+              <p>Connected to chain ID {wallet.chainId}</p>
+            )}
           </div>
 
-          <span className="verification-icon" aria-hidden="true">✓</span>
+          {wallet.chainId !== ASSET_CHAIN_TESTNET.chainId && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleSwitchNetwork}
+              disabled={walletBusy}
+            >
+              {walletBusy ? "Switching..." : "Switch network"}
+            </button>
+          )}
         </section>
+      )}
+
+      {walletMessage && (
+        <p className="wallet-message" role="status">
+          {walletMessage}
+        </p>
+      )}
+
+      <main key={page} className="page-content">
+        {renderPageContent()}
       </main>
 
       <footer className="footer">
@@ -375,8 +587,32 @@ function App() {
           <strong>ASSET ORACLE</strong>
           <p>REAL-WORLD TRUTH, ON-CHAIN.</p>
         </div>
+        <button
+          className="footer-help"
+          type="button"
+          onClick={() => setWalletMessage(
+            "Asset Oracle helps users explore prediction markets and understand how outcomes are verified. Live participation is not yet enabled.",
+          )}
+        >
+          <CircleHelp size={15} /> Help
+        </button>
         <span>Early development · Testnet first</span>
       </footer>
+
+      <nav className="bottom-navigation" aria-label="Quick navigation">
+        {navigation.map(({ label, icon: Icon }) => (
+          <button
+            className={page === label ? "bottom-nav-link active" : "bottom-nav-link"}
+            key={label}
+            type="button"
+            onClick={() => navigateTo(label)}
+            aria-current={page === label ? "page" : undefined}
+          >
+            <Icon size={19} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
