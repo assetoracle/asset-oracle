@@ -1,4 +1,3 @@
-
 import {
   marketSources,
   type MarketSource,
@@ -11,9 +10,13 @@ export function listMarketSources(): MarketSource[] {
 export function findMarketSource(
   sourceId: string,
 ): MarketSource | undefined {
-  return marketSources.find(
-    (source) => source.id === sourceId,
-  );
+  return marketSources.find((source) => source.id === sourceId);
+}
+
+export function getMarketSource(
+  sourceId: string,
+): MarketSource | undefined {
+  return findMarketSource(sourceId);
 }
 
 export function listMarketSourcesByCategory(
@@ -21,13 +24,10 @@ export function listMarketSourcesByCategory(
 ): MarketSource[] {
   return marketSources.filter(
     (source) =>
-      source.category.toLowerCase() ===
-      category.toLowerCase(),
+      source.category.toLowerCase() === category.toLowerCase(),
   );
 }
 
 export function listEnabledMarketSources(): MarketSource[] {
-  return marketSources.filter(
-    (source) => source.enabled,
-  );
+  return marketSources.filter((source) => source.enabled);
 }
