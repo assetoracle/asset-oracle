@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import MarketDetailPage from "./components/MarketDetailPage";
-
 import {
   connectWallet,
   switchToAssetChainTestnet,
@@ -58,7 +57,7 @@ const marketExamples = [
     label: "CRYPTO",
     question: "Will Bitcoin reach $150,000 by December 31, 2026?",
     description:
-      "A preview of how a crypto market could define its price source and resolution rule.",
+      "A crypto market needs a defined price source and resolution rule.",
     endDate: "Dec 31, 2026",
   },
   {
@@ -68,7 +67,7 @@ const marketExamples = [
     label: "SPORTS",
     question: "Will a selected football team win its next scheduled match?",
     description:
-      "A real market requires a specific fixture, match time, and official result source.",
+      "The fixture, match time, and official result source must be specified.",
     endDate: "Fixture required",
   },
   {
@@ -78,7 +77,7 @@ const marketExamples = [
     label: "AFRICAN ECONOMICS",
     question: "Will Nigeria's next published inflation rate be lower?",
     description:
-      "A real market must specify the NBS release and comparison period.",
+      "The NBS release and comparison period must be specified.",
     endDate: "Release required",
   },
   {
@@ -88,7 +87,7 @@ const marketExamples = [
     label: "REAL-WORLD ASSETS",
     question: "Will a specified real-world asset metric increase?",
     description:
-      "The asset, data provider, measurement date, and decision rule must be defined.",
+      "The asset, provider, measurement date, and resolution rule must be defined.",
     endDate: "Rules required",
   },
   {
@@ -98,7 +97,7 @@ const marketExamples = [
     label: "REGIONAL & GLOBAL EVENTS",
     question: "Will a selected economic indicator change this month?",
     description:
-      "The region, authoritative source, publication date, and decision rule must be specified.",
+      "The region, authoritative source, and publication date must be specified.",
     endDate: "Release required",
   },
 ];
@@ -111,7 +110,6 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedMarket, setSelectedMarket] =
     useState<(typeof marketExamples)[number] | null>(null);
-
   const [wallet, setWallet] = useState<WalletConnection | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
@@ -123,7 +121,6 @@ function App() {
     try {
       const connection = await connectWallet();
       setWallet(connection);
-
       setWalletMessage(
         connection.chainId === ASSET_CHAIN_TESTNET.chainId
           ? "Wallet connected to Asset Chain testnet."
@@ -131,9 +128,7 @@ function App() {
       );
     } catch (error) {
       setWalletMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to connect the wallet.",
+        error instanceof Error ? error.message : "Unable to connect the wallet.",
       );
     } finally {
       setWalletBusy(false);
@@ -148,7 +143,6 @@ function App() {
       await switchToAssetChainTestnet();
       const connection = await connectWallet();
       setWallet(connection);
-
       setWalletMessage(
         connection.chainId === ASSET_CHAIN_TESTNET.chainId
           ? "Connected to Asset Chain testnet."
@@ -156,9 +150,7 @@ function App() {
       );
     } catch (error) {
       setWalletMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to switch networks.",
+        error instanceof Error ? error.message : "Unable to switch networks.",
       );
     } finally {
       setWalletBusy(false);
@@ -178,9 +170,7 @@ function App() {
 
   const filteredMarkets = marketExamples.filter((market) => {
     const matchesCategory =
-      activeCategory === "All Markets" ||
-      market.category === activeCategory;
-
+      activeCategory === "All Markets" || market.category === activeCategory;
     const matchesSearch =
       market.question.toLowerCase().includes(query) ||
       market.category.toLowerCase().includes(query) ||
@@ -194,15 +184,13 @@ function App() {
       <article className="market-card" key={market.id}>
         <div className="market-card-top">
           <span className="market-symbol">{market.symbol}</span>
-
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
-            <span className="preview-badge">PREVIEW</span>
+            <span className="market-status">Setup required</span>
           </div>
         </div>
 
         <h3>{market.question}</h3>
-
         <p className="market-description">{market.description}</p>
 
         <div className="market-meta">
@@ -211,8 +199,7 @@ function App() {
         </div>
 
         <div className="market-card-bottom">
-          <span className="preview-label">Not yet active</span>
-
+          <span className="market-status-note">Not yet listed on-chain</span>
           <button
             className="text-action"
             type="button"
@@ -251,33 +238,28 @@ function App() {
             <span className="eyebrow">
               PREDICT <span>·</span> VERIFY <span>·</span> BUILD
             </span>
-
             <h1>
               Real-world truth.
               <br />
               <span>On-chain.</span>
             </h1>
-
             <p className="hero-description">
-              Explore real-world questions, understand how outcomes
-              are verified, and follow transparent settlement.
+              Explore real-world questions, understand how outcomes are
+              verified, and follow transparent settlement.
             </p>
-
             <div className="hero-actions">
               <button
                 className="primary-button"
                 type="button"
                 onClick={() => navigateTo("Markets")}
               >
-                Explore all markets <ArrowUpRight size={16} />
+                Explore markets <ArrowUpRight size={16} />
               </button>
-
               <span className="network-label">
                 <span className="network-dot" />
                 Asset Chain · Testnet development
               </span>
             </div>
-
             <div className="hero-footnote">
               Verification-first prediction infrastructure
             </div>
@@ -287,30 +269,27 @@ function App() {
             <article className="principle">
               <span className="principle-number">01</span>
               <h2>Find a market</h2>
-              <p>Explore a question and its predefined rules.</p>
+              <p>Explore a question and its resolution rules.</p>
             </article>
-
             <article className="principle">
               <span className="principle-number">02</span>
               <h2>Understand the rules</h2>
-              <p>Review the source and resolution criteria.</p>
+              <p>Know how the outcome will be established.</p>
             </article>
-
             <article className="principle">
               <span className="principle-number">03</span>
               <h2>Verify the result</h2>
-              <p>Follow the evidence behind the final outcome.</p>
+              <p>Trace the evidence behind the final outcome.</p>
             </article>
           </section>
 
           <section className="markets-section">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">A QUICK LOOK</span>
+                <span className="eyebrow">DISCOVER</span>
                 <h2>Featured markets</h2>
-                <p>A small selection from the market catalogue.</p>
+                <p>Explore the market categories being developed.</p>
               </div>
-
               <button
                 className="text-action"
                 type="button"
@@ -323,10 +302,9 @@ function App() {
             <div className="market-grid">
               {marketExamples.slice(0, 3).map(renderMarketCard)}
             </div>
-
             <p className="market-disclaimer">
-              These are illustrative previews, not live markets.
-              Participation, live odds, and play counts are not available.
+              Market examples are illustrative until real market records
+              and on-chain status are connected.
             </p>
           </section>
 
@@ -335,18 +313,17 @@ function App() {
               <span className="eyebrow">BUILT AROUND EVIDENCE</span>
               <h2>Every outcome needs a reason.</h2>
               <p>
-                Market rules, authoritative data providers, and
-                traceable evidence will help establish final outcomes.
+                Defined rules, authoritative data sources, and traceable
+                evidence will underpin market resolution.
               </p>
               <button
                 className="text-action"
                 type="button"
                 onClick={() => navigateTo("Markets")}
               >
-                Explore markets <ArrowUpRight size={15} />
+                Explore categories <ArrowUpRight size={15} />
               </button>
             </div>
-
             <ShieldCheck
               className="verification-icon"
               size={42}
@@ -362,11 +339,11 @@ function App() {
         <section className="markets-section page-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">EXPLORE</span>
-              <h1>All markets</h1>
-              <p>Search questions or choose a category.</p>
+              <span className="eyebrow">DISCOVER</span>
+              <h1>Markets</h1>
+              <p>Browse market concepts by category.</p>
             </div>
-            <span className="preview-badge">PREVIEW</span>
+            <span className="market-status">Development</span>
           </div>
 
           <label className="search-box">
@@ -408,10 +385,8 @@ function App() {
               <p>Try another search or choose a different category.</p>
             </div>
           )}
-
           <p className="market-disclaimer">
-            These examples are for interface development only.
-            Real participation is not yet enabled.
+            These are interface examples, not published or tradable markets.
           </p>
         </section>
       );
@@ -422,25 +397,22 @@ function App() {
         eyebrow: "YOUR ACTIVITY",
         title: "Your portfolio",
         description:
-          "Your available funds, open predictions, and potential returns will appear here.",
+          "Your funds and open predictions will appear here when contract data is connected.",
         icon: BriefcaseBusiness,
-        action: "Explore markets",
       },
       Claims: {
         eyebrow: "YOUR REWARDS",
-        title: "Claim winnings",
+        title: "Claims",
         description:
-          "Eligible winnings and refunds will appear here after the relevant market has been settled.",
+          "Eligible winnings and refunds will appear here after verified settlement.",
         icon: WalletCards,
-        action: "Explore markets",
       },
       History: {
         eyebrow: "YOUR RECORDS",
-        title: "Activity history",
+        title: "History",
         description:
-          "Review your past predictions, market outcomes, claims, and refunds here.",
+          "Review your past predictions, outcomes, claims, and refunds here.",
         icon: History,
-        action: "Explore markets",
       },
     }[page];
 
@@ -449,34 +421,29 @@ function App() {
     return (
       <section className="page-section simple-page">
         <span className="eyebrow">{pageInfo.eyebrow}</span>
-
         <div className="simple-page-icon">
           <PageIcon size={30} />
         </div>
-
         <h1>{pageInfo.title}</h1>
         <p>{pageInfo.description}</p>
-
         {!wallet && (
           <p className="page-hint">
-            Connect your wallet to prepare to use this feature.
+            Connect your wallet when you're ready to use this feature.
           </p>
         )}
-
         <button
           className="primary-button"
           type="button"
           onClick={() => navigateTo("Markets")}
         >
-          {pageInfo.action} <ArrowUpRight size={16} />
+          Explore markets <ArrowUpRight size={16} />
         </button>
-
         <div className="empty-state">
           <CircleHelp size={23} />
-          <h3>Nothing to display yet</h3>
+          <h3>No activity yet</h3>
           <p>
-            This section will become functional when live market data,
-            contract positions, and transaction records are connected.
+            This section will display verified information when the relevant
+            market, contract, and transaction integrations are implemented.
           </p>
         </div>
       </section>
@@ -492,14 +459,14 @@ function App() {
           onClick={() => navigateTo("Home")}
           aria-label="Go to Asset Oracle home"
         >
-          <span className="brand-mark" aria-hidden="true">
-            A
-          </span>
+          <img
+            className="brand-logo"
+            src="/asset-oracle-logo.png"
+            alt="Asset Oracle"
+          />
           <span>
             <span className="brand-name">ASSET ORACLE</span>
-            <span className="brand-tagline">
-              REAL-WORLD TRUTH, ON-CHAIN.
-            </span>
+            <span className="brand-tagline">REAL-WORLD TRUTH, ON-CHAIN.</span>
           </span>
         </button>
 
@@ -531,7 +498,6 @@ function App() {
                 ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
                 : "Connect wallet"}
           </button>
-
           <button
             className="mobile-menu-button"
             type="button"
@@ -572,12 +538,10 @@ function App() {
               {wallet.address.slice(0, 10)}...
               {wallet.address.slice(-8)}
             </p>
-
             {wallet.chainId !== ASSET_CHAIN_TESTNET.chainId && (
               <p>Connected to chain ID {wallet.chainId}</p>
             )}
           </div>
-
           {wallet.chainId !== ASSET_CHAIN_TESTNET.chainId && (
             <button
               className="primary-button"
@@ -612,14 +576,14 @@ function App() {
           type="button"
           onClick={() =>
             setWalletMessage(
-              "Asset Oracle helps users explore prediction markets and understand how outcomes are verified. Live participation is not yet enabled.",
+              "Asset Oracle is building transparent prediction markets and verifiable settlement infrastructure. Market participation is not yet enabled.",
             )
           }
         >
           <CircleHelp size={15} /> Help
         </button>
 
-        <span>Early development · Testnet first</span>
+        <span>Building on Asset Chain</span>
 
         <div className="footer-socials" aria-label="Official social channels">
           <a
@@ -636,7 +600,6 @@ function App() {
               />
             </svg>
           </a>
-
           <a
             href="https://t.me/assetoracle"
             target="_blank"
@@ -651,7 +614,6 @@ function App() {
               />
             </svg>
           </a>
-
           <a
             href="https://discord.gg/2HfFcsWEFq"
             target="_blank"
@@ -662,7 +624,7 @@ function App() {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="currentColor"
-                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1-1.9 2.1Z"
+                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Z"
               />
             </svg>
           </a>
