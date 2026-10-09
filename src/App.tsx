@@ -2,6 +2,12 @@
 import { useState } from "react";
 import MarketSourcePanel from "./components/MarketSourcePanel";
 import BitcoinPriceCard from "./components/BitcoinPriceCard";
+import {
+  connectWallet,
+  switchToAssetChainTestnet,
+  ASSET_CHAIN_TESTNET,
+  type WalletConnection,
+} from "./wallet";
 
 type MarketCategory =
   | "All Markets"
@@ -77,6 +83,58 @@ function App() {
   const [activeCategory, setActiveCategory] =
     useState<MarketCategory>("All Markets");
   const [search, setSearch] = useState("");
+  const [wallet, setWallet] = useState<WalletConnection | null>(null);
+  const [walletBusy, setWalletBusy] = useState(false);
+  const [walletMessage, setWalletMessage] = useState("");
+
+  async function handleConnectWallet() {
+    setWalletBusy(true);
+    setWalletMessage("");
+
+    try {
+      const connection = await connectWallet();
+      setWallet(connection);
+
+      if (connection.chainId !== ASSET_CHAIN_TESTNET.chainId) {
+        setWalletMessage(
+          "Wallet connected. Switch to Asset Chain testnet to continue.",
+        );
+      }
+    } catch (error) {
+      setWalletMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to connect the wallet.",
+      );
+    } finally {
+      setWalletBusy(false);
+    }
+  }
+
+  async function handleSwitchNetwork() {
+    setWalletBusy(true);
+    setWalletMessage("");
+
+    try {
+      await switchToAssetChainTestnet();
+      const connection = await connectWallet();
+      setWallet(connection);
+
+      if (connection.chainId === ASSET_CHAIN_TESTNET.chainId) {
+        setWalletMessage("Connected to Asset Chain testnet.");
+      } else {
+        setWalletMessage("Please confirm the network in your wallet.");
+      }
+    } catch (error) {
+      setWalletMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to switch networks.",
+      );
+    } finally {
+      setWalletBusy(false);
+    }
+  }
 
   const filteredMarkets = marketExamples.filter((market) => {
     const matchesCategory =
@@ -93,13 +151,14 @@ function App() {
     return matchesCategory && matchesSearch;
   });
 
+  const connectedToTestnet =
+    wallet?.chainId === ASSET_CHAIN_TESTNET.chainId;
+
   return (
     <div className="app">
       <header className="header">
         <a className="brand" href="#" aria-label="Asset Oracle home">
-          <span className="brand-mark" aria-hidden="true">
-            A
-          </span>
+          <span className="brand-mark" aria-hidden="true">A</span>
           <span>
             <span className="brand-name">ASSET ORACLE</span>
             <span className="brand-tagline">
@@ -111,15 +170,52 @@ function App() {
         <button
           className="connect-button"
           type="button"
-          onClick={() =>
-            window.alert(
-              "Wallet connection will be implemented in a later development stage.",
-            )
-          }
+          onClick={handleConnectWallet}
+          disabled={walletBusy}
         >
-          Connect Wallet
+          {walletBusy
+            ? "Connecting..."
+            : wallet
+              ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
+              : "Connect Wallet"}
         </button>
       </header>
+
+      {wallet && (
+        <section className="wallet-status" aria-live="polite">
+          <div>
+            <strong>
+              {connectedToTestnet
+                ? "Asset Chain Testnet"
+                : "Wallet connected"}
+            </strong>
+            <p>
+              {wallet.address.slice(0, 10)}...
+              {wallet.address.slice(-8)}
+            </p>
+            {!connectedToTestnet && (
+              <p>Connected to chain ID {wallet.chainId}</p>
+            )}
+          </div>
+
+          {!connectedToTestnet && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleSwitchNetwork}
+              disabled={walletBusy}
+            >
+              Switch Network
+            </button>
+          )}
+        </section>
+      )}
+
+      {walletMessage && (
+        <p className="wallet-message" role="status">
+          {walletMessage}
+        </p>
+      )}
 
       <main>
         <section className="hero">
@@ -238,9 +334,7 @@ function App() {
                   <span className="preview-label">
                     Illustrative example
                   </span>
-                  <span className="arrow" aria-hidden="true">
-                    ↗
-                  </span>
+                  <span className="arrow" aria-hidden="true">↗</span>
                 </div>
               </article>
             ))}
@@ -272,9 +366,7 @@ function App() {
             </p>
           </div>
 
-          <span className="verification-icon" aria-hidden="true">
-            ✓
-          </span>
+          <span className="verification-icon" aria-hidden="true">✓</span>
         </section>
       </main>
 
