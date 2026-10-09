@@ -131,7 +131,6 @@ function App() {
   const [wallet, setWallet] = useState<WalletConnection | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
-  const [referralLink, setReferralLink] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
 
   async function handleConnectWallet() {
@@ -141,7 +140,6 @@ function App() {
     try {
       const connection = await connectWallet();
       setWallet(connection);
-      setReferralLink("");
       setWalletMessage(
         connection.chainId === ASSET_CHAIN_TESTNET.chainId
           ? "Wallet connected to Asset Chain testnet."
