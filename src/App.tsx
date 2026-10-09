@@ -630,7 +630,56 @@ function App() {
           <CircleHelp size={15} /> Help
         </button>
 
-        <span>Early development · Testnet first</span>
+      
+<span>Early development · Testnet first</span>
+
+<div className="footer-socials" aria-label="Official social channels">
+  <a
+    href="https://x.com/assetoracle"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Asset Oracle on X"
+    title="Follow Asset Oracle on X"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-8-7 8H1.9l7.3-8.4L1.3 2h6.5l4.4 7.4L18.9 2Zm-1.1 17.9h1.7L6.8 4H5L17.8 19.9Z"
+      />
+    </svg>
+  </a>
+
+  <a
+    href="https://t.me/assetoracle"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Join Asset Oracle on Telegram"
+    title="Join Asset Oracle on Telegram"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M21.9 3.4 18.7 20c-.2 1.2-.9 1.5-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6.1 13.6l-5-1.6c-1.1-.3-1.1-1.1.2-1.6L20.8 2c.9-.3 1.7.2 1.1 1.4Z"
+      />
+    </svg>
+  </a>
+
+  <a
+    href="https://discord.gg/2HfFcsWEFq"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Join Asset Oracle on Discord"
+    title="Join Asset Oracle on Discord"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Z"
+      />
+    </svg>
+  </a>
+</div>
+
       </footer>
 
       <nav className="bottom-navigation" aria-label="Quick navigation">
