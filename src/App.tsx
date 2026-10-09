@@ -202,10 +202,15 @@ function App() {
       <article className="market-card" key={market.id}>
         <div className="market-card-top">
           <span className="market-symbol">{market.symbol}</span>
-          <span className="market-category">{market.label}</span>
+
+          <div className="market-card-badges">
+            <span className="market-category">{market.label}</span>
+            <span className="preview-badge">PREVIEW</span>
+          </div>
         </div>
 
         <h3>{market.question}</h3>
+
         <p className="market-description">{market.description}</p>
 
         <div className="market-meta">
@@ -214,7 +219,8 @@ function App() {
         </div>
 
         <div className="market-card-bottom">
-          <span className="preview-label">Example market</span>
+          <span className="preview-label">Not yet active</span>
+
           <button
             className="text-action"
             type="button"
