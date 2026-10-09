@@ -2,23 +2,26 @@ name: Asset Oracle Build Check
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: asset-oracle-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    name: Install and Build
+    name: Verify and Build Asset Oracle
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - name: Get repository code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -26,8 +29,61 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install dependencies
-        run: npm install
+      - name: Verify essential files
+        run: |
+          echo "Checking project files..."
 
-      - name: Check TypeScript and build app
+          files=(
+            "package.json"
+            "index.html"
+            "tsconfig.json"
+            "tsconfig.app.json"
+            "tsconfig.node.json"
+            "vite.config.ts"
+            "src/main.tsx"
+            "src/App.tsx"
+            "src/wallet.ts"
+            "src/style.css"
+            "src/markets/validateMarket.ts"
+            "src/data/marketSourceUtils.ts"
+            "src/components/MarketDetailPage.tsx"
+            "src/components/MarketSourcePanel.tsx"
+            "src/components/BitcoinPriceCard.tsx"
+          )
+
+          missing=0
+
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "FOUND: $file"
+            else
+              echo "MISSING: $file"
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            echo "One or more essential files are missing."
+            exit 1
+          fi
+
+      - name: Set up npm cache
+        run: npm config set fund false
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Check wallet exports
+        run: |
+          grep -q "export async function connectWallet" src/wallet.ts
+          grep -q "export async function switchToAssetChainTestnet" src/wallet.ts
+          grep -q "export const ASSET_CHAIN_TESTNET" src/wallet.ts
+          echo "Wallet exports verified."
+
+      - name: Check market source exports
+        run: |
+          grep -q "export function getMarketSource" src/data/marketSourceUtils.ts
+          echo "Market source export verified."
+
+      - name: Build application
         run: npm run build
