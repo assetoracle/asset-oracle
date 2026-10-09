@@ -1,4 +1,4 @@
-import { findMarketSource } from "../data/marketSourceUtils";
+import { getMarketSource } from "../data/marketSourceUtils";
 import type { MarketRecord } from "./marketTypes";
 
 export type MarketValidationResult = {
@@ -43,7 +43,9 @@ export function validateMarket(
     errors.push("The market must include YES and NO outcomes.");
   }
 
-  const source = findMarketSource(market.resolutionRule?.sourceId);
+  const source = getMarketSource(
+    market.resolutionRule?.sourceId ?? "",
+  );
 
   if (!source) {
     errors.push("The selected resolution data source is not registered.");
@@ -63,9 +65,11 @@ export function validateMarket(
     errors.push("A valid resolution target is required.");
   }
 
-  if (!["gt", "gte", "lt", "lte", "eq"].includes(
-    market.resolutionRule?.comparison ?? "",
-  )) {
+  if (
+    !["gt", "gte", "lt", "lte", "eq"].includes(
+      market.resolutionRule?.comparison ?? "",
+    )
+  ) {
     errors.push("A valid resolution comparison is required.");
   }
 
