@@ -1,45 +1,97 @@
+import { findMarketSource } from "../data/marketSourceUtils";
+import type {
+  MarketRecord,
+  MarketValidationResult,
+} from "./marketTypes";
 
-export type MarketOutcome = "YES" | "NO";
+export function validateMarket(
+  market: MarketRecord,
+): MarketValidationResult {
+  const errors: string[] = [];
 
-export type MarketStatus =
-  | "DRAFT"
-  | "OPEN"
-  | "CLOSED"
-  | "RESOLVED"
-  | "CANCELLED";
+  if (!market.id?.trim()) {
+    errors.push("A market ID is required.");
+  }
 
-export type MarketCategory =
-  | "Crypto"
-  | "Sports"
-  | "Economics"
-  | "RWA"
-  | "Regional";
+  if (!market.question?.trim()) {
+    errors.push("A market question is required.");
+  }
 
-export type MarketResolutionRule = {
-  sourceId: string;
-  metric: string;
-  comparison: "ABOVE" | "BELOW" | "EQUALS";
-  targetValue: number;
-  currency?: string;
-  observationTime: string;
-  description: string;
-};
+  if (!market.description?.trim()) {
+    errors.push("A market description is required.");
+  }
 
-export type MarketRecord = {
-  id: string;
-  question: string;
-  description: string;
-  category: MarketCategory;
-  outcomes: readonly ["YES", "NO"];
-  status: MarketStatus;
-  createdAt: string;
-  closesAt: string;
-  resolvesAt: string;
-  resolutionRule: MarketResolutionRule;
-  createdBy: string;
-};
+  if (!market.createdBy?.trim()) {
+    errors.push("A market creator is required.");
+  }
 
-export type MarketValidationResult = {
-  valid: boolean;
-  errors: string[];
-};
+  const closesAt = Date.parse(market.closesAt);
+  const resolvesAt = Date.parse(market.resolvesAt);
+
+  if (!Number.isFinite(closesAt)) {
+    errors.push("A valid market closing time is required.");
+  } else if (closesAt <= Date.now()) {
+    errors.push("The market closing time must be in the future.");
+  }
+
+  if (!Number.isFinite(resolvesAt)) {
+    errors.push("A valid market resolution time is required.");
+  } else if (
+    Number.isFinite(closesAt) &&
+    resolvesAt < closesAt
+  ) {
+    errors.push(
+      "The resolution time cannot be before the closing time.",
+    );
+  }
+
+  if (
+    !Array.isArray(market.outcomes) ||
+    !market.outcomes.includes("YES") ||
+    !market.outcomes.includes("NO") ||
+    market.outcomes.length !== 2
+  ) {
+    errors.push("A market must have exactly YES and NO outcomes.");
+  }
+
+  const rule = market.resolutionRule;
+  const source = findMarketSource(rule?.sourceId ?? "");
+
+  if (!source) {
+    errors.push("The selected resolution data source is not registered.");
+  } else if (!source.enabled) {
+    errors.push("The selected resolution data source is disabled.");
+  }
+
+  if (!rule?.metric?.trim()) {
+    errors.push("A resolution metric is required.");
+  }
+
+  if (
+    rule?.targetValue === undefined ||
+    !Number.isFinite(rule.targetValue)
+  ) {
+    errors.push("A valid numeric resolution target is required.");
+  }
+
+  if (
+    !["ABOVE", "BELOW", "EQUALS"].includes(
+      rule?.comparison ?? "",
+    )
+  ) {
+    errors.push("A valid resolution comparison is required.");
+  }
+
+  if (!rule?.observationTime?.trim()) {
+    errors.push("A resolution observation time is required.");
+  }
+
+  if (!rule?.description?.trim()) {
+    errors.push("A resolution rule description is required.");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
