@@ -1596,4 +1596,39 @@ input:focus-visible {
   .market-detail-status {
     padding: 16px;
   }
+}/* Market card status indicators */
+.market-card-badges {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.market-card-badges .market-category {
+  overflow-wrap: anywhere;
+}
+
+.market-card-badges .preview-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.market-card .preview-label {
+  color: #8da9b3;
+  font-size: 12px;
+}
+
+.market-card .text-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.market-card .text-action:focus-visible,
+.market-detail-page button:focus-visible {
+  outline: 2px solid #63f3ff;
+  outline-offset: 4px;
 }
