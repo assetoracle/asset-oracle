@@ -579,6 +579,13 @@ const [proposalMessage, setProposalMessage] = useState("");
     );
   }
 
+function handleProposalCreated(proposal: StoredMarketProposal) {
+  setProposalFormOpen(false);
+  setProposalMessage(
+    `Proposal submitted successfully. Status: ${proposal.status}. Reference: ${proposal.id}`
+  );
+}
+
   function renderMarkets() {
     return (
       <section className="markets-section page-section">
