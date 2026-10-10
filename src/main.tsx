@@ -1,11 +1,10 @@
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./style.css";
-import { wagmiConfig } from "./walletConnect";
+import { appKit } from "./walletConnect";
 
 const queryClient = new QueryClient();
 
@@ -17,10 +16,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <React.StrictMode>
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </WagmiProvider>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </React.StrictMode>
 );
