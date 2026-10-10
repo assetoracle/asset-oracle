@@ -176,6 +176,8 @@ function App() {
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [walletHelpOpen, setWalletHelpOpen] = useState(false);
+  const [proposalFormOpen, setProposalFormOpen] = useState(false);
+const [proposalMessage, setProposalMessage] = useState("");
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
