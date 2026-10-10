@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   useAccount,
@@ -29,6 +28,7 @@ import {
 } from "lucide-react";
 
 import MarketDetailPage from "./components/MarketDetailPage";
+import WalletHelpPanel from "./components/WalletHelpPanel";
 import { listPublishedMarkets } from "./markets/marketApi";
 
 type Page =
@@ -171,6 +171,7 @@ function App() {
     useState<MarketCategory>("All Markets");
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [walletHelpOpen, setWalletHelpOpen] = useState(false);
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
@@ -205,7 +206,6 @@ function App() {
         }
       : null;
 
-  // Clear stale referral messages when the account changes.
   useEffect(() => {
     setReferralMessage("");
   }, [address]);
@@ -259,7 +259,7 @@ function App() {
     };
   }, []);
 
-  // Keep the status message aligned with AppKit's account and network.
+  // Keep the status message aligned with the active account and network.
   useEffect(() => {
     if (!wallet) return;
 
@@ -276,7 +276,15 @@ function App() {
     }
   }, [wallet?.address, wallet?.chainId]);
 
+  // Open the help panel for users who are not connected.
+  function handleOpenWalletHelp() {
+    setWalletMessage("");
+    setWalletHelpOpen(true);
+  }
+
+  // Called by the help panel's wallet-selector button.
   async function handleConnectWallet() {
+    setWalletHelpOpen(false);
     setWalletBusy(true);
     setWalletMessage("");
 
@@ -711,10 +719,10 @@ function App() {
             <button
               className="primary-button"
               type="button"
-              onClick={handleConnectWallet}
+              onClick={handleOpenWalletHelp}
               disabled={walletBusy}
             >
-              {walletBusy ? "Opening wallet selector..." : "Connect wallet"}
+              Connect wallet
             </button>
           )}
 
@@ -1009,10 +1017,10 @@ function App() {
             <button
               className="connect-button"
               type="button"
-              onClick={handleConnectWallet}
+              onClick={handleOpenWalletHelp}
               disabled={walletBusy}
             >
-              {walletBusy ? "Opening wallet selector..." : "Connect wallet"}
+              Connect wallet
             </button>
           )}
 
@@ -1143,7 +1151,7 @@ function App() {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="currentColor"
-                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1Z"
+                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1-1.9 2.1Z"
               />
             </svg>
           </a>
@@ -1179,6 +1187,13 @@ function App() {
           <span>Referrals</span>
         </button>
       </nav>
+
+      {walletHelpOpen && (
+        <WalletHelpPanel
+          onConnect={handleConnectWallet}
+          onClose={() => setWalletHelpOpen(false)}
+        />
+      )}
     </div>
   );
 }
