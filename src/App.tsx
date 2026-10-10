@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from "react";
 import {
   useAccount,
   useDisconnect,
   useSwitchChain,
+  useSignMessage,
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import {
@@ -32,6 +34,8 @@ import WalletHelpPanel from "./components/WalletHelpPanel";
 import MarketProposalForm from "./components/MarketProposalForm";
 import {
   listPublishedMarkets,
+  requestWalletNonce,
+  getMyProposals,
   type StoredMarketProposal,
 } from "./markets/marketApi";
 
@@ -179,7 +183,7 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [walletHelpOpen, setWalletHelpOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
-const [proposalMessage, setProposalMessage] = useState("");
+  const [proposalMessage, setProposalMessage] = useState("");
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
@@ -193,18 +197,22 @@ const [proposalMessage, setProposalMessage] = useState("");
   const [walletMessage, setWalletMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
 
-  // Reown AppKit opens the cross-platform wallet selector.
+  const [myProposals, setMyProposals] =
+    useState<StoredMarketProposal[]>([]);
+  const [myProposalsLoading, setMyProposalsLoading] =
+    useState(false);
+  const [myProposalsError, setMyProposalsError] =
+    useState("");
+  const [myProposalsLoaded, setMyProposalsLoaded] =
+    useState(false);
+
+  // Keep the existing Reown AppKit wallet connection.
   const { open } = useAppKit();
 
-  // Wagmi tracks the actual wallet account and active chain.
-  const {
-    address,
-    chainId,
-    isConnected,
-  } = useAccount();
-
+  const { address, chainId, isConnected } = useAccount();
   const { disconnectAsync } = useDisconnect();
   const { switchChainAsync } = useSwitchChain();
+  const { signMessageAsync } = useSignMessage();
 
   const wallet: WalletConnection | null =
     isConnected && address
@@ -214,8 +222,12 @@ const [proposalMessage, setProposalMessage] = useState("");
         }
       : null;
 
+  // Clear account-specific data when the connected wallet changes.
   useEffect(() => {
     setReferralMessage("");
+    setMyProposals([]);
+    setMyProposalsLoaded(false);
+    setMyProposalsError("");
   }, [address]);
 
   // Load only markets approved for publication.
@@ -253,7 +265,7 @@ const [proposalMessage, setProposalMessage] = useState("");
         setMarketsError(
           error instanceof Error
             ? error.message
-            : "Unable to load published markets."
+            : "Unable to load published markets.",
         );
       } finally {
         if (active) setMarketsLoading(false);
@@ -267,30 +279,31 @@ const [proposalMessage, setProposalMessage] = useState("");
     };
   }, []);
 
-  // Keep the status message aligned with the active account and network.
+  // Keep the wallet status aligned with the active account and network.
   useEffect(() => {
-    if (!wallet) return;
+    if (!wallet) {
+      setWalletMessage("");
+      return;
+    }
 
     if (isTestnet(wallet.chainId)) {
       setWalletMessage(
-        "Wallet connected to Asset Chain Testnet."
+        "Wallet connected to Asset Chain Testnet.",
       );
     } else {
       setWalletMessage(
         `Wallet connected on chain ID ${displayChainId(
-          wallet.chainId
-        )}. Switch to Asset Chain Testnet to continue.`
+          wallet.chainId,
+        )}. Switch to Asset Chain Testnet to continue.`,
       );
     }
   }, [wallet?.address, wallet?.chainId]);
 
-  // Open the help panel for users who are not connected.
   function handleOpenWalletHelp() {
     setWalletMessage("");
     setWalletHelpOpen(true);
   }
 
-  // Called by the help panel's wallet-selector button.
   async function handleConnectWallet() {
     setWalletHelpOpen(false);
     setWalletBusy(true);
@@ -302,7 +315,7 @@ const [proposalMessage, setProposalMessage] = useState("");
       setWalletMessage(
         error instanceof Error
           ? error.message
-          : "Unable to open the wallet selector."
+          : "Unable to open the wallet selector.",
       );
     } finally {
       setWalletBusy(false);
@@ -319,13 +332,13 @@ const [proposalMessage, setProposalMessage] = useState("");
       });
 
       setWalletMessage(
-        "Successfully switched to Asset Chain Testnet (42421)."
+        "Successfully switched to Asset Chain Testnet (42421).",
       );
     } catch (error) {
       setWalletMessage(
         error instanceof Error
           ? error.message
-          : "Unable to switch networks. Check your wallet and try again."
+          : "Unable to switch networks. Check your wallet and try again.",
       );
     } finally {
       setWalletBusy(false);
@@ -338,15 +351,16 @@ const [proposalMessage, setProposalMessage] = useState("");
 
     try {
       await disconnectAsync();
-      setWalletMessage(
-        "Wallet disconnected from Asset Oracle."
-      );
+      setWalletMessage("Wallet disconnected from Asset Oracle.");
       setReferralMessage("");
+      setMyProposals([]);
+      setMyProposalsLoaded(false);
+      setMyProposalsError("");
     } catch (error) {
       setWalletMessage(
         error instanceof Error
           ? error.message
-          : "Unable to disconnect the wallet."
+          : "Unable to disconnect the wallet.",
       );
     } finally {
       setWalletBusy(false);
@@ -581,45 +595,88 @@ const [proposalMessage, setProposalMessage] = useState("");
     );
   }
 
-function handleProposalCreated(proposal: StoredMarketProposal) {
-  setProposalFormOpen(false);
-  setProposalMessage(
-    `Proposal submitted successfully. Status: ${proposal.status}. Reference: ${proposal.id}`
-  );
-}
+  async function handleLoadMyProposals() {
+    if (!address) {
+      setMyProposalsError("Connect your wallet first.");
+      return;
+    }
+
+    setMyProposalsLoading(true);
+    setMyProposalsError("");
+
+    try {
+      const { message } = await requestWalletNonce(address);
+      const signature = await signMessageAsync({ message });
+
+      const result = await getMyProposals(
+        address,
+        message,
+        signature,
+      );
+
+      setMyProposals(result.proposals);
+      setMyProposalsLoaded(true);
+    } catch (error) {
+      setMyProposalsError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load your proposals.",
+      );
+    } finally {
+      setMyProposalsLoading(false);
+    }
+  }
+
+  function handleProposalCreated(proposal: StoredMarketProposal) {
+    setProposalFormOpen(false);
+    setProposalMessage(
+      `Proposal submitted successfully. Status: ${proposal.status}. Reference: ${proposal.id}`,
+    );
+
+    setMyProposalsLoaded(false);
+  }
 
   function renderMarkets() {
     return (
       <section className="markets-section page-section">
         <div className="section-heading">
-  <div>
-    <span className="eyebrow">DISCOVER</span>
-    <h1>Markets</h1>
-    <p>Browse approved markets by category.</p>
-  </div>
+          <div>
+            <span className="eyebrow">DISCOVER</span>
+            <h1>Markets</h1>
+            <p>Browse approved markets by category.</p>
+          </div>
 
-  <button
-    className="primary-button"
-    type="button"
-    onClick={() => {
-      setProposalMessage("");
-      setProposalFormOpen(true);
-    }}
-  >
-    Propose a Market
-  </button>
-</div>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => {
+              setProposalMessage("");
+              setProposalFormOpen(true);
+            }}
+          >
+            Propose a Market
+          </button>
+        </div>
 
-{proposalMessage && (
-  <div className="empty-state" role="status">
-    <h3>Proposal received</h3>
-    <p>{proposalMessage}</p>
-    <p>
-      Your proposal is awaiting review. Submission does not guarantee
-      approval or publication.
-    </p>
-  </div>
-)}
+        {proposalMessage && (
+          <div className="empty-state" role="status">
+            <h3>Proposal received</h3>
+            <p>{proposalMessage}</p>
+            <p>
+              Your proposal is awaiting review. Submission does not
+              guarantee approval or publication.
+            </p>
+            {wallet && (
+              <button
+                className="text-action"
+                type="button"
+                onClick={() => navigateTo("My Proposals")}
+              >
+                Track my proposal <ArrowUpRight size={15} />
+              </button>
+            )}
+          </div>
+        )}
 
         <label className="search-box">
           <Search size={19} aria-hidden="true" />
@@ -670,6 +727,105 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
     );
   }
 
+  function renderMyProposals() {
+    return (
+      <section className="page-section account-page">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">YOUR SUBMISSIONS</span>
+            <h1>My Proposals</h1>
+            <p>Track the review status of your market proposals.</p>
+          </div>
+        </div>
+
+        {!wallet ? (
+          <div className="empty-state">
+            <h3>Connect your wallet</h3>
+            <p>
+              Connect the wallet you used to submit your proposals.
+            </p>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleOpenWalletHelp}
+            >
+              Connect wallet
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleLoadMyProposals}
+              disabled={myProposalsLoading}
+            >
+              {myProposalsLoading
+                ? "Verifying wallet..."
+                : "Load my proposals"}
+            </button>
+
+            {myProposalsError && (
+              <div className="empty-state" role="alert">
+                <h3>Unable to load proposals</h3>
+                <p>{myProposalsError}</p>
+              </div>
+            )}
+
+            {myProposalsLoaded && myProposals.length === 0 && (
+              <div className="empty-state">
+                <h3>No proposals found</h3>
+                <p>
+                  No submissions were found for this wallet.
+                </p>
+              </div>
+            )}
+
+            <div className="market-grid">
+              {myProposals.map((proposal) => (
+                <article className="market-card" key={proposal.id}>
+                  <div className="market-card-top">
+                    <span className="market-category">
+                      {categoryLabel(proposal.category)}
+                    </span>
+                    <span className="market-status">
+                      {proposal.status.replaceAll("_", " ")}
+                    </span>
+                  </div>
+
+                  <h3>{proposal.question}</h3>
+                  <p className="market-description">
+                    {proposal.description}
+                  </p>
+
+                  <div className="market-meta">
+                    <span>Submitted</span>
+                    <span>{formatDate(proposal.submittedAt)}</span>
+                  </div>
+
+                  <div className="market-meta">
+                    <span>Market closes</span>
+                    <span>{formatDate(proposal.closesAt)}</span>
+                  </div>
+
+                  <div className="market-meta">
+                    <span>Resolution date</span>
+                    <span>{formatDate(proposal.resolvesAt)}</span>
+                  </div>
+
+                  <div className="market-meta">
+                    <span>Reference</span>
+                    <span>{proposal.id.slice(0, 8)}…</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+    );
+  }
+
   function renderAccountPage() {
     const pageInfo = {
       Portfolio: {
@@ -709,32 +865,18 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
         ],
       },
     } as const;
-    
+
     if (page === "My Proposals") {
-  return (
-    <section className="page-section account-page">
-      <div className="section-heading">
-        <div>
-          <span className="eyebrow">YOUR SUBMISSIONS</span>
-          <h1>My Proposals</h1>
-          <p>Track the review status of your market proposals.</p>
-        </div>
-      </div>
+      return renderMyProposals();
+    }
 
-      <div className="empty-state">
-        <h3>Proposal tracking is being connected</h3>
-        <p>
-          Your submitted proposals and their approval status will appear
-          here once wallet ownership and secure proposal filtering are
-          connected to the backend.
-        </p>
-      </div>
-    </section>
-  );
-}
+    if (page === "Referrals") {
+      return renderReferralLeaderboard();
+    }
 
-    if (page === "Referrals") return renderReferralLeaderboard();
-    if (page === "Home" || page === "Markets") return null;
+    if (page === "Home" || page === "Markets") {
+      return null;
+    }
 
     const info = pageInfo[page];
     const PageIcon = info.icon;
@@ -800,20 +942,20 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
   async function handleCopyReferralLink() {
     if (!wallet) {
       setReferralMessage(
-        "Connect your wallet before generating a referral link."
+        "Connect your wallet before generating a referral link.",
       );
       return;
     }
 
     if (!isTestnet(wallet.chainId)) {
       setReferralMessage(
-        "Switch to Asset Chain testnet before continuing."
+        "Switch to Asset Chain testnet before continuing.",
       );
       return;
     }
 
     setReferralMessage(
-      "Referral link generation requires a backend-issued referral code. That service is not connected yet."
+      "Referral link generation requires a backend-issued referral code. That service is not connected yet.",
     );
   }
 
@@ -848,19 +990,27 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
 
         <div className="referral-overview-grid">
           <article className="referral-stat-card">
-            <span className="referral-stat-icon"><Users size={19} /></span>
+            <span className="referral-stat-icon">
+              <Users size={19} />
+            </span>
             <span>Total verified referrals</span>
             <strong>—</strong>
             <small>Awaiting verified data</small>
           </article>
+
           <article className="referral-stat-card">
-            <span className="referral-stat-icon"><Medal size={19} /></span>
+            <span className="referral-stat-icon">
+              <Medal size={19} />
+            </span>
             <span>Your current rank</span>
             <strong>—</strong>
             <small>Connect tracking to view rank</small>
           </article>
+
           <article className="referral-stat-card">
-            <span className="referral-stat-icon"><Gift size={19} /></span>
+            <span className="referral-stat-icon">
+              <Gift size={19} />
+            </span>
             <span>Rewards earned</span>
             <strong>—</strong>
             <small>Reward rules not configured</small>
@@ -869,12 +1019,14 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
 
         <section className="referral-link-card">
           <div className="referral-link-heading">
-            <div className="referral-link-icon"><Link2 size={21} /></div>
+            <div className="referral-link-icon">
+              <Link2 size={21} />
+            </div>
             <div>
               <h2>Your referral link</h2>
               <p>
-                Your unique link will be issued after referral services are
-                connected.
+                Your unique link will be issued after referral services
+                are connected.
               </p>
             </div>
           </div>
@@ -909,7 +1061,10 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
               <span className="eyebrow">COMMUNITY RANKINGS</span>
               <h2>Top referrers</h2>
             </div>
-            <div className="referral-period-tabs" aria-label="Leaderboard period">
+            <div
+              className="referral-period-tabs"
+              aria-label="Leaderboard period"
+            >
               {periods.map((period) => (
                 <button
                   type="button"
@@ -934,7 +1089,8 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
 
           <div className="referral-table-footer">
             <ShieldCheck size={16} />
-            Rankings will use verified referral records, not self-reported counts.
+            Rankings will use verified referral records, not
+            self-reported counts.
           </div>
         </section>
 
@@ -943,24 +1099,29 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
             <CheckCircle2 size={21} />
             <h2>How referral eligibility will work</h2>
           </div>
+
           <div className="referral-rule">
             <span>01</span>
             <div>
               <strong>Use a valid referral link</strong>
               <p>
-                The referral must be attributed to a registered referral code.
+                The referral must be attributed to a registered
+                referral code.
               </p>
             </div>
           </div>
+
           <div className="referral-rule">
             <span>02</span>
             <div>
               <strong>Meet eligibility requirements</strong>
               <p>
-                The programme will define qualifying activity and anti-abuse checks.
+                The programme will define qualifying activity and
+                anti-abuse checks.
               </p>
             </div>
           </div>
+
           <div className="referral-rule">
             <span>03</span>
             <div>
@@ -1000,6 +1161,7 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
 
     if (page === "Home") return renderHome();
     if (page === "Markets") return renderMarkets();
+
     return renderAccountPage();
   }
 
@@ -1040,6 +1202,7 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
               {label}
             </button>
           ))}
+
           <button
             className={page === "Referrals" ? "nav-link active" : "nav-link"}
             type="button"
@@ -1158,17 +1321,19 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
           <strong>ASSET ORACLE</strong>
           <p>REAL-WORLD TRUTH, ON-CHAIN.</p>
         </div>
+
         <button
           className="footer-help"
           type="button"
           onClick={() =>
             setWalletMessage(
-              "Asset Oracle is building transparent prediction markets and verifiable settlement infrastructure. Market participation is not yet enabled."
+              "Asset Oracle is building transparent prediction markets and verifiable settlement infrastructure. Market participation is not yet enabled.",
             )
           }
         >
           <CircleHelp size={15} /> Help
         </button>
+
         <span>Building on Asset Chain</span>
 
         <div className="footer-socials" aria-label="Official social channels">
@@ -1186,6 +1351,7 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
               />
             </svg>
           </a>
+
           <a
             href="https://t.me/assetoracle"
             target="_blank"
@@ -1200,6 +1366,7 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
               />
             </svg>
           </a>
+
           <a
             href="https://discord.gg/2HfFcsWEFq"
             target="_blank"
@@ -1210,7 +1377,7 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="currentColor"
-                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1-1.9 2.1Z"
+                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Z"
               />
             </svg>
           </a>
@@ -1232,6 +1399,7 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
             <span>{label}</span>
           </button>
         ))}
+
         <button
           className={
             page === "Referrals"
@@ -1254,13 +1422,16 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
         />
       )}
 
-{proposalFormOpen && (
-  <MarketProposalForm
-    onClose={() => setProposalFormOpen(false)}
-    onCreated={handleProposalCreated}
-  />
-)}
-
+      {proposalFormOpen && (
+        <MarketProposalForm
+          address={address ?? ""}
+          signMessage={(message) =>
+            signMessageAsync({ message })
+          }
+          onClose={() => setProposalFormOpen(false)}
+          onCreated={handleProposalCreated}
+        />
+      )}
     </div>
   );
 }
