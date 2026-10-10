@@ -55,7 +55,7 @@ export async function connectWallet(): Promise<WalletConnection> {
 
   return {
     address: accounts[0],
-    chainId,
+    chainId: chainId.toLowerCase(),
   };
 }
 
@@ -71,12 +71,51 @@ export async function switchToAssetChainTestnet(): Promise<void> {
     const walletError = error as { code?: number };
 
     if (walletError.code !== 4902) {
-      throw error;
+      if (walletError.code === 4001) {
+        throw new Error(
+          "Network switching was rejected. Approve the request in your wallet to continue.",
+        );
+      }
+
+      throw new Error(
+        "Unable to switch networks. Check your wallet and try again.",
+      );
     }
 
-    await provider.request({
-      method: "wallet_addEthereumChain",
-      params: [ASSET_CHAIN_TESTNET],
-    });
+    try {
+      await provider.request({
+        method: "wallet_addEthereumChain",
+        params: [ASSET_CHAIN_TESTNET],
+      });
+
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: ASSET_CHAIN_TESTNET.chainId }],
+      });
+    } catch (addError) {
+      const walletAddError = addError as { code?: number };
+
+      if (walletAddError.code === 4001) {
+        throw new Error(
+          "Adding or switching networks was rejected in your wallet.",
+        );
+      }
+
+      throw new Error(
+        "Could not add or switch to Asset Chain Testnet. Check the network settings in your wallet.",
+      );
+    }
+  }
+
+  const activeChainId = (
+    (await provider.request({
+      method: "eth_chainId",
+    })) as string
+  ).toLowerCase();
+
+  if (activeChainId !== ASSET_CHAIN_TESTNET.chainId) {
+    throw new Error(
+      "Your wallet is still connected to another network. Switch to Asset Chain Testnet in your wallet and try again.",
+    );
   }
 }
