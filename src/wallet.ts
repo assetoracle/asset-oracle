@@ -47,7 +47,7 @@ declare global {
 }
 
 export const ASSET_CHAIN_TESTNET = {
-  chainId: "0xa574",
+  chainId: "0xa575",
   chainName: "Asset Chain Testnet",
   nativeCurrency: {
     name: "Real World Asset",
