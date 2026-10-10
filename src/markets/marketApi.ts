@@ -90,3 +90,9 @@ export async function getMarketProposal(id: string) {
     proposal: StoredMarketProposal;
   }>(`/api/markets/proposals/${encodeURIComponent(id)}`);
 }
+export async function listPublishedMarkets() {
+  return request<{
+    markets: StoredMarketProposal[];
+    count: number;
+  }>("/api/markets/public");
+}
