@@ -378,12 +378,6 @@ function App() {
     }
   }
 
-  function handleDisconnectWallet() {
-    setWallet(null);
-    setWalletMessage("Wallet disconnected from Asset Oracle.");
-    setReferralMessage("");
-  }
-
   function navigateTo(nextPage: Page) {
     setPage(nextPage);
     setSelectedMarket(null);
