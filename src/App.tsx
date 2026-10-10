@@ -1,6 +1,12 @@
 
 import { useEffect, useState } from "react";
 import {
+  useAccount,
+  useDisconnect,
+  useSwitchChain,
+} from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
+import {
   House,
   ChartNoAxesCombined,
   BriefcaseBusiness,
@@ -23,13 +29,7 @@ import {
 } from "lucide-react";
 
 import MarketDetailPage from "./components/MarketDetailPage";
-import {
-  connectWallet,
-  switchToAssetChainTestnet,
-  ASSET_CHAIN_TESTNET,
-  getAvailableWallets,
-  type WalletConnection,
-} from "./wallet";
+import { ASSET_CHAIN_TESTNET } from "./wallet";
 import { listPublishedMarkets } from "./markets/marketApi";
 
 type Page =
@@ -60,6 +60,13 @@ type DisplayMarket = {
   label: string;
   endDate: string;
 };
+
+type WalletConnection = {
+  address: string;
+  chainId: string;
+};
+
+const ASSET_CHAIN_ID = 42421;
 
 const categories: MarketCategory[] = [
   "All Markets",
@@ -120,20 +127,40 @@ function categorySymbol(category: string): string {
   return symbols[category] ?? "AO";
 }
 
-function normalizeChainId(chainId: string): string {
-  return chainId.toLowerCase();
+function normalizeChainId(chainId: string | number): string {
+  if (typeof chainId === "number") {
+    return `0x${chainId.toString(16)}`;
+  }
+
+  const normalized = chainId.toLowerCase();
+
+  if (normalized.startsWith("0x")) {
+    return normalized;
+  }
+
+  const decimal = Number(normalized);
+
+  if (Number.isFinite(decimal) && decimal >= 0) {
+    return `0x${decimal.toString(16)}`;
+  }
+
+  return normalized;
 }
 
 function isTestnet(chainId: string): boolean {
   return (
     normalizeChainId(chainId) ===
-    normalizeChainId(ASSET_CHAIN_TESTNET.chainId)
+    normalizeChainId(ASSET_CHAIN_ID)
   );
 }
 
 function displayChainId(chainId: string): string {
   try {
-    return `${parseInt(chainId, 16)} (${chainId})`;
+    if (chainId.toLowerCase().startsWith("0x")) {
+      return `${parseInt(chainId, 16)} (${chainId})`;
+    }
+
+    return `${Number(chainId)} (${chainId})`;
   } catch {
     return chainId;
   }
@@ -154,11 +181,35 @@ function App() {
   const [selectedMarket, setSelectedMarket] =
     useState<DisplayMarket | null>(null);
 
-  const [wallet, setWallet] =
-    useState<WalletConnection | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
+
+  // Reown AppKit opens the cross-platform wallet selector.
+  const { open } = useAppKit();
+
+  // Wagmi tracks the actual wallet account and active chain.
+  const {
+    address,
+    chainId,
+    isConnected,
+  } = useAccount();
+
+  const { disconnectAsync } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
+
+  const wallet: WalletConnection | null =
+    isConnected && address
+      ? {
+          address,
+          chainId: normalizeChainId(chainId ?? ""),
+        }
+      : null;
+
+  // Clear stale referral messages when the account changes.
+  useEffect(() => {
+    setReferralMessage("");
+  }, [address]);
 
   // Load only markets approved for publication.
   useEffect(() => {
@@ -209,131 +260,34 @@ function App() {
     };
   }, []);
 
-  // Restore an existing authorized wallet connection after refresh.
-  // eth_accounts checks permission without opening an approval popup.
+  // Keep the status message aligned with AppKit's account and network.
   useEffect(() => {
-    let active = true;
+    if (!wallet) return;
 
-    async function restoreWallet() {
-      try {
-        const wallets = await getAvailableWallets();
-
-        if (!active || wallets.length === 0) return;
-
-        // connectWallet() requests permission, so use the provider's
-        // existing account permission directly instead.
-        const provider = wallets[0].provider;
-
-        const accounts = (await provider.request({
-          method: "eth_accounts",
-        })) as string[];
-
-        if (!active || !accounts?.length) return;
-
-        const chainId = (await provider.request({
-          method: "eth_chainId",
-        })) as string;
-
-        if (!active) return;
-
-        setWallet({
-          address: accounts[0],
-          chainId: normalizeChainId(chainId),
-        });
-
-        setWalletMessage(
-          isTestnet(chainId)
-            ? "Wallet connection restored on Asset Chain Testnet."
-            : "Wallet connection restored. Switch to Asset Chain Testnet to continue."
-        );
-      } catch {
-        // Restoration is optional. The user can connect manually.
-      }
-    }
-
-    void restoreWallet();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Track account and network changes from the available injected provider.
-  useEffect(() => {
-    const provider = window.ethereum;
-
-    if (!provider?.on) return;
-
-    const handleAccountsChanged = (...args: unknown[]) => {
-      const accounts = args[0] as string[] | undefined;
-
-      if (!accounts?.length) {
-        setWallet(null);
-        setWalletMessage("No wallet account is currently connected.");
-        setReferralMessage("");
-        return;
-      }
-
-      setWallet((current) =>
-        current ? { ...current, address: accounts[0] } : current
-      );
-
-      setWalletMessage("");
-    };
-
-    const handleChainChanged = (...args: unknown[]) => {
-      const chainId = args[0] as string;
-
-      setWallet((current) =>
-        current
-          ? { ...current, chainId: normalizeChainId(chainId) }
-          : current
-      );
-
+    if (isTestnet(wallet.chainId)) {
       setWalletMessage(
-        isTestnet(chainId)
-          ? "Connected to Asset Chain Testnet."
-          : `Network changed to chain ID ${displayChainId(chainId)}. Switch to Asset Chain Testnet to continue.`
+        "Wallet connected to Asset Chain Testnet."
       );
-    };
-
-    provider.on("accountsChanged", handleAccountsChanged);
-    provider.on("chainChanged", handleChainChanged);
-
-    return () => {
-      provider.removeListener?.(
-        "accountsChanged",
-        handleAccountsChanged
+    } else {
+      setWalletMessage(
+        `Wallet connected on chain ID ${displayChainId(
+          wallet.chainId
+        )}. Switch to Asset Chain Testnet to continue.`
       );
-      provider.removeListener?.(
-        "chainChanged",
-        handleChainChanged
-      );
-    };
-  }, []);
+    }
+  }, [wallet?.address, wallet?.chainId]);
 
   async function handleConnectWallet() {
     setWalletBusy(true);
     setWalletMessage("");
 
     try {
-      const connection = await connectWallet();
-
-      setWallet({
-        ...connection,
-        chainId: normalizeChainId(connection.chainId),
-      });
-
-      setWalletMessage(
-        isTestnet(connection.chainId)
-          ? "Wallet connected to Asset Chain Testnet."
-          : `Wallet connected on chain ID ${displayChainId(connection.chainId)}. Switch to Asset Chain Testnet to continue.`
-      );
+      await open({ view: "Connect" });
     } catch (error) {
       setWalletMessage(
         error instanceof Error
           ? error.message
-          : "Unable to connect the wallet."
+          : "Unable to open the wallet selector."
       );
     } finally {
       setWalletBusy(false);
@@ -345,33 +299,39 @@ function App() {
     setWalletMessage("");
 
     try {
-      await switchToAssetChainTestnet();
-
-      const connection = await connectWallet();
-
-      const normalizedChainId = normalizeChainId(
-        connection.chainId
-      );
-
-      setWallet({
-        ...connection,
-        chainId: normalizedChainId,
+      await switchChainAsync({
+        chainId: ASSET_CHAIN_ID,
       });
 
-      if (!isTestnet(normalizedChainId)) {
-        throw new Error(
-          `The wallet reports chain ID ${displayChainId(normalizedChainId)} after switching. Expected 42421 (0xa575).`
-        );
-      }
-
       setWalletMessage(
-        "Successfully connected to Asset Chain Testnet (42421)."
+        "Successfully switched to Asset Chain Testnet (42421)."
       );
     } catch (error) {
       setWalletMessage(
         error instanceof Error
           ? error.message
-          : "Unable to switch networks."
+          : "Unable to switch networks. Check your wallet and try again."
+      );
+    } finally {
+      setWalletBusy(false);
+    }
+  }
+
+  async function handleDisconnectWallet() {
+    setWalletBusy(true);
+    setWalletMessage("");
+
+    try {
+      await disconnectAsync();
+      setWalletMessage(
+        "Wallet disconnected from Asset Oracle."
+      );
+      setReferralMessage("");
+    } catch (error) {
+      setWalletMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to disconnect the wallet."
       );
     } finally {
       setWalletBusy(false);
@@ -755,7 +715,7 @@ function App() {
               onClick={handleConnectWallet}
               disabled={walletBusy}
             >
-              {walletBusy ? "Connecting..." : "Connect wallet"}
+              {walletBusy ? "Opening wallet selector..." : "Connect wallet"}
             </button>
           )}
 
@@ -1033,21 +993,17 @@ function App() {
                 type="button"
                 onClick={handleConnectWallet}
                 disabled={walletBusy}
-                title="Connected wallet"
+                title="Manage connected wallet"
               >
                 {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
               </button>
               <button
                 className="disconnect-button"
                 type="button"
-                onClick={() => {
-                  setWallet(null);
-                  setWalletMessage("Wallet disconnected from Asset Oracle.");
-                  setReferralMessage("");
-                }}
+                onClick={handleDisconnectWallet}
                 disabled={walletBusy}
               >
-                Disconnect
+                {walletBusy ? "Please wait..." : "Disconnect"}
               </button>
             </div>
           ) : (
@@ -1057,7 +1013,7 @@ function App() {
               onClick={handleConnectWallet}
               disabled={walletBusy}
             >
-              {walletBusy ? "Connecting..." : "Connect wallet"}
+              {walletBusy ? "Opening wallet selector..." : "Connect wallet"}
             </button>
           )}
 
