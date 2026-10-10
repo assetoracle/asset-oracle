@@ -66,17 +66,31 @@ export async function validateMarketProposal(
   });
 }
 
+
 export async function createMarketProposal(
   proposal: MarketProposalInput,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
 ) {
+  const { message } = await requestWalletNonce(address);
+  const signature = await signMessage(message);
+
   return request<{
     message: string;
     proposal: StoredMarketProposal;
   }>("/api/markets/proposals", {
     method: "POST",
-    body: JSON.stringify(proposal),
+    body: JSON.stringify({
+      proposal,
+      walletAuth: {
+        address,
+        message,
+        signature,
+      },
+    }),
   });
 }
+
 
 export async function listMarketProposals() {
   return request<{
