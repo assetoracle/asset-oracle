@@ -2522,3 +2522,39 @@ input:focus-visible {
     padding: 30px 17px;
   }
 }
+.wallet-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.disconnect-button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.disconnect-button:hover {
+  opacity: 0.75;
+}
+
+.disconnect-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+  .wallet-header-actions {
+    gap: 5px;
+  }
+
+  .disconnect-button {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
