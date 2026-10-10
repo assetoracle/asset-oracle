@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   House,
@@ -26,6 +27,7 @@ import {
   connectWallet,
   switchToAssetChainTestnet,
   ASSET_CHAIN_TESTNET,
+  getAvailableWallets,
   type WalletConnection,
 } from "./wallet";
 import { listPublishedMarkets } from "./markets/marketApi";
@@ -58,6 +60,27 @@ type DisplayMarket = {
   label: string;
   endDate: string;
 };
+
+type EthereumProvider = {
+  request: (args: {
+    method: string;
+    params?: unknown[];
+  }) => Promise<unknown>;
+  on?: (
+    event: string,
+    listener: (...args: unknown[]) => void
+  ) => void;
+  removeListener?: (
+    event: string,
+    listener: (...args: unknown[]) => void
+  ) => void;
+};
+
+declare global {
+  interface Window {
+    ethereum?: EthereumProvider;
+  }
+}
 
 const categories: MarketCategory[] = [
   "All Markets",
@@ -118,25 +141,34 @@ function categorySymbol(category: string): string {
   return symbols[category] ?? "AO";
 }
 
+function normalizeChainId(chainId: string): string {
+  return chainId.toLowerCase();
+}
+
 function isTestnet(chainId: string): boolean {
   return (
-    chainId.toLowerCase() ===
-    ASSET_CHAIN_TESTNET.chainId.toLowerCase()
+    normalizeChainId(chainId) ===
+    normalizeChainId(ASSET_CHAIN_TESTNET.chainId)
   );
+}
+
+function displayChainId(chainId: string): string {
+  try {
+    return `${parseInt(chainId, 16)} (${chainId})`;
+  } catch {
+    return chainId;
+  }
 }
 
 function App() {
   const [page, setPage] = useState<Page>("Home");
-
   const [activeCategory, setActiveCategory] =
     useState<MarketCategory>("All Markets");
-
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
-
   const [marketsLoading, setMarketsLoading] = useState(true);
   const [marketsError, setMarketsError] = useState("");
 
@@ -145,12 +177,11 @@ function App() {
 
   const [wallet, setWallet] =
     useState<WalletConnection | null>(null);
-
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
 
-  // Load only markets returned by the backend's public endpoint.
+  // Load only markets approved for publication.
   useEffect(() => {
     let active = true;
 
@@ -185,12 +216,10 @@ function App() {
         setMarketsError(
           error instanceof Error
             ? error.message
-            : "Unable to load published markets.",
+            : "Unable to load published markets."
         );
       } finally {
-        if (active) {
-          setMarketsLoading(false);
-        }
+        if (active) setMarketsLoading(false);
       }
     }
 
@@ -201,7 +230,56 @@ function App() {
     };
   }, []);
 
-  // Track account and network changes reported by the wallet.
+  // Restore an existing authorized wallet connection after refresh.
+  // eth_accounts checks permission without opening an approval popup.
+  useEffect(() => {
+    let active = true;
+
+    async function restoreWallet() {
+      try {
+        const wallets = await getAvailableWallets();
+
+        if (!active || wallets.length === 0) return;
+
+        // connectWallet() requests permission, so use the provider's
+        // existing account permission directly instead.
+        const provider = wallets[0].provider as EthereumProvider;
+
+        const accounts = (await provider.request({
+          method: "eth_accounts",
+        })) as string[];
+
+        if (!active || !accounts?.length) return;
+
+        const chainId = (await provider.request({
+          method: "eth_chainId",
+        })) as string;
+
+        if (!active) return;
+
+        setWallet({
+          address: accounts[0],
+          chainId: normalizeChainId(chainId),
+        });
+
+        setWalletMessage(
+          isTestnet(chainId)
+            ? "Wallet connection restored on Asset Chain Testnet."
+            : "Wallet connection restored. Switch to Asset Chain Testnet to continue."
+        );
+      } catch {
+        // Restoration is optional. The user can connect manually.
+      }
+    }
+
+    void restoreWallet();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Track account and network changes from the available injected provider.
   useEffect(() => {
     const provider = window.ethereum;
 
@@ -210,17 +288,15 @@ function App() {
     const handleAccountsChanged = (...args: unknown[]) => {
       const accounts = args[0] as string[] | undefined;
 
-      if (!accounts || accounts.length === 0) {
+      if (!accounts?.length) {
         setWallet(null);
-        setWalletMessage("Wallet disconnected from Asset Oracle.");
+        setWalletMessage("No wallet account is currently connected.");
         setReferralMessage("");
         return;
       }
 
-      const address = accounts[0];
-
       setWallet((current) =>
-        current ? { ...current, address } : current,
+        current ? { ...current, address: accounts[0] } : current
       );
 
       setWalletMessage("");
@@ -231,14 +307,14 @@ function App() {
 
       setWallet((current) =>
         current
-          ? { ...current, chainId: chainId.toLowerCase() }
-          : current,
+          ? { ...current, chainId: normalizeChainId(chainId) }
+          : current
       );
 
       setWalletMessage(
         isTestnet(chainId)
           ? "Connected to Asset Chain Testnet."
-          : "Your wallet switched networks. Switch back to Asset Chain Testnet to continue.",
+          : `Network changed to chain ID ${displayChainId(chainId)}. Switch to Asset Chain Testnet to continue.`
       );
     };
 
@@ -248,12 +324,11 @@ function App() {
     return () => {
       provider.removeListener?.(
         "accountsChanged",
-        handleAccountsChanged,
+        handleAccountsChanged
       );
-
       provider.removeListener?.(
         "chainChanged",
-        handleChainChanged,
+        handleChainChanged
       );
     };
   }, []);
@@ -265,18 +340,21 @@ function App() {
     try {
       const connection = await connectWallet();
 
-      setWallet(connection);
+      setWallet({
+        ...connection,
+        chainId: normalizeChainId(connection.chainId),
+      });
 
       setWalletMessage(
         isTestnet(connection.chainId)
           ? "Wallet connected to Asset Chain Testnet."
-          : "Wallet connected. Switch to Asset Chain Testnet to continue.",
+          : `Wallet connected on chain ID ${displayChainId(connection.chainId)}. Switch to Asset Chain Testnet to continue.`
       );
     } catch (error) {
       setWalletMessage(
         error instanceof Error
           ? error.message
-          : "Unable to connect the wallet.",
+          : "Unable to connect the wallet."
       );
     } finally {
       setWalletBusy(false);
@@ -292,26 +370,35 @@ function App() {
 
       const connection = await connectWallet();
 
-      if (!isTestnet(connection.chainId)) {
+      const normalizedChainId = normalizeChainId(
+        connection.chainId
+      );
+
+      setWallet({
+        ...connection,
+        chainId: normalizedChainId,
+      });
+
+      if (!isTestnet(normalizedChainId)) {
         throw new Error(
-          "Network verification failed. Your wallet is not on Asset Chain Testnet.",
+          `The wallet reports chain ID ${displayChainId(normalizedChainId)} after switching. Expected 42421 (0xa575).`
         );
       }
 
-      setWallet(connection);
-      setWalletMessage("Connected to Asset Chain Testnet.");
+      setWalletMessage(
+        "Successfully connected to Asset Chain Testnet (42421)."
+      );
     } catch (error) {
       setWalletMessage(
         error instanceof Error
           ? error.message
-          : "Unable to switch networks.",
+          : "Unable to switch networks."
       );
     } finally {
       setWalletBusy(false);
     }
   }
 
-  // Disconnect the application session without revoking wallet permissions.
   function handleDisconnectWallet() {
     setWallet(null);
     setWalletMessage("Wallet disconnected from Asset Oracle.");
@@ -325,7 +412,6 @@ function App() {
     setSearch("");
     setActiveCategory("All Markets");
     setReferralMessage("");
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -350,7 +436,6 @@ function App() {
       <article className="market-card" key={market.id}>
         <div className="market-card-top">
           <span className="market-symbol">{market.symbol}</span>
-
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
             <span className="market-status">Approved</span>
@@ -358,7 +443,6 @@ function App() {
         </div>
 
         <h3>{market.question}</h3>
-
         <p className="market-description">{market.description}</p>
 
         <div className="market-meta">
@@ -367,10 +451,7 @@ function App() {
         </div>
 
         <div className="market-card-bottom">
-          <span className="market-status-note">
-            Published market
-          </span>
-
+          <span className="market-status-note">Published market</span>
           <button
             className="text-action"
             type="button"
@@ -400,7 +481,6 @@ function App() {
       <div className="empty-state" role="alert">
         <h3>Unable to load markets</h3>
         <p>{marketsError}</p>
-
         <button
           className="primary-button"
           type="button"
@@ -431,18 +511,15 @@ function App() {
           <span className="eyebrow">
             PREDICT <span>·</span> VERIFY <span>·</span> BUILD
           </span>
-
           <h1>
             Real-world truth.
             <br />
             <span>On-chain.</span>
           </h1>
-
           <p className="hero-description">
             Explore real-world questions, understand how outcomes are
             verified, and follow transparent settlement.
           </p>
-
           <div className="hero-actions">
             <button
               className="primary-button"
@@ -451,13 +528,11 @@ function App() {
             >
               Explore markets <ArrowUpRight size={16} />
             </button>
-
             <span className="network-label">
               <span className="network-dot" />
               Asset Chain · Testnet development
             </span>
           </div>
-
           <div className="hero-footnote">
             Verification-first prediction infrastructure
           </div>
@@ -469,13 +544,11 @@ function App() {
             <h2>Find a market</h2>
             <p>Explore a question and its resolution rules.</p>
           </article>
-
           <article className="principle">
             <span className="principle-number">02</span>
             <h2>Understand the rules</h2>
             <p>Know how the outcome will be established.</p>
           </article>
-
           <article className="principle">
             <span className="principle-number">03</span>
             <h2>Verify the result</h2>
@@ -490,7 +563,6 @@ function App() {
               <h2>Published markets</h2>
               <p>Explore markets approved for publication.</p>
             </div>
-
             <button
               className="text-action"
               type="button"
@@ -500,29 +572,27 @@ function App() {
             </button>
           </div>
 
-          {marketsLoading ? (
-            renderMarketLoading()
-          ) : marketsError ? (
-            renderMarketError()
-          ) : publishedMarkets.length === 0 ? (
-            renderMarketEmptyState()
-          ) : (
-            <div className="market-grid">
-              {publishedMarkets.slice(0, 3).map(renderMarketCard)}
-            </div>
-          )}
+          {marketsLoading
+            ? renderMarketLoading()
+            : marketsError
+              ? renderMarketError()
+              : publishedMarkets.length === 0
+                ? renderMarketEmptyState()
+                : (
+                  <div className="market-grid">
+                    {publishedMarkets.slice(0, 3).map(renderMarketCard)}
+                  </div>
+                )}
         </section>
 
         <section className="verification-banner">
           <div>
             <span className="eyebrow">BUILT AROUND EVIDENCE</span>
             <h2>Every outcome needs a reason.</h2>
-
             <p>
               Defined rules, authoritative data sources, and traceable
               evidence will underpin market resolution.
             </p>
-
             <button
               className="text-action"
               type="button"
@@ -531,7 +601,6 @@ function App() {
               Explore markets <ArrowUpRight size={15} />
             </button>
           </div>
-
           <ShieldCheck
             className="verification-icon"
             size={42}
@@ -543,18 +612,15 @@ function App() {
           <div className="referral-promo-icon">
             <Users size={24} />
           </div>
-
           <div className="referral-promo-copy">
             <span className="eyebrow">GROW THE COMMUNITY</span>
             <h2>Bring others into the Oracle.</h2>
-
             <p>
               Explore the referral programme interface and leaderboard.
               Referral tracking and rewards will be enabled after backend
               integration.
             </p>
           </div>
-
           <button
             className="primary-button"
             type="button"
@@ -576,13 +642,11 @@ function App() {
             <h1>Markets</h1>
             <p>Browse approved markets by category.</p>
           </div>
-
           <span className="market-status">Development</span>
         </div>
 
         <label className="search-box">
           <Search size={19} aria-hidden="true" />
-
           <input
             type="search"
             placeholder="Search markets..."
@@ -610,17 +674,17 @@ function App() {
           ))}
         </div>
 
-        {marketsLoading ? (
-          renderMarketLoading()
-        ) : marketsError ? (
-          renderMarketError()
-        ) : filteredMarkets.length === 0 ? (
-          renderMarketEmptyState()
-        ) : (
-          <div className="market-grid">
-            {filteredMarkets.map(renderMarketCard)}
-          </div>
-        )}
+        {marketsLoading
+          ? renderMarketLoading()
+          : marketsError
+            ? renderMarketError()
+            : filteredMarkets.length === 0
+              ? renderMarketEmptyState()
+              : (
+                <div className="market-grid">
+                  {filteredMarkets.map(renderMarketCard)}
+                </div>
+              )}
 
         <p className="market-disclaimer">
           Only markets returned by the approved public-market API are
@@ -670,13 +734,8 @@ function App() {
       },
     } as const;
 
-    if (page === "Referrals") {
-      return renderReferralLeaderboard();
-    }
-
-    if (page === "Home" || page === "Markets") {
-      return null;
-    }
+    if (page === "Referrals") return renderReferralLeaderboard();
+    if (page === "Home" || page === "Markets") return null;
 
     const info = pageInfo[page];
     const PageIcon = info.icon;
@@ -689,7 +748,6 @@ function App() {
             <h1>{info.title}</h1>
             <p>{info.description}</p>
           </div>
-
           <div className="account-page-icon">
             <PageIcon size={25} />
           </div>
@@ -708,11 +766,9 @@ function App() {
           <div className="account-empty-icon">
             <CircleHelp size={25} />
           </div>
-
           <h2>
             {wallet ? "No records available yet" : "Connect your wallet"}
           </h2>
-
           <p>
             {wallet
               ? "Your wallet is connected, but verified account records are not yet available. This page will populate when the market contracts and account data services are integrated."
@@ -745,20 +801,20 @@ function App() {
   async function handleCopyReferralLink() {
     if (!wallet) {
       setReferralMessage(
-        "Connect your wallet before generating a referral link.",
+        "Connect your wallet before generating a referral link."
       );
       return;
     }
 
     if (!isTestnet(wallet.chainId)) {
       setReferralMessage(
-        "Switch to Asset Chain testnet before continuing.",
+        "Switch to Asset Chain testnet before continuing."
       );
       return;
     }
 
     setReferralMessage(
-      "Referral link generation requires a backend-issued referral code. That service is not connected yet.",
+      "Referral link generation requires a backend-issued referral code. That service is not connected yet."
     );
   }
 
@@ -775,7 +831,6 @@ function App() {
               Discover community growth and track your referral progress.
             </p>
           </div>
-
           <div className="referral-heading-icon">
             <Trophy size={28} />
           </div>
@@ -783,7 +838,6 @@ function App() {
 
         <div className="referral-status-banner">
           <CircleAlert size={19} />
-
           <div>
             <strong>Leaderboard data is not connected yet</strong>
             <p>
@@ -795,27 +849,19 @@ function App() {
 
         <div className="referral-overview-grid">
           <article className="referral-stat-card">
-            <span className="referral-stat-icon">
-              <Users size={19} />
-            </span>
+            <span className="referral-stat-icon"><Users size={19} /></span>
             <span>Total verified referrals</span>
             <strong>—</strong>
             <small>Awaiting verified data</small>
           </article>
-
           <article className="referral-stat-card">
-            <span className="referral-stat-icon">
-              <Medal size={19} />
-            </span>
+            <span className="referral-stat-icon"><Medal size={19} /></span>
             <span>Your current rank</span>
             <strong>—</strong>
             <small>Connect tracking to view rank</small>
           </article>
-
           <article className="referral-stat-card">
-            <span className="referral-stat-icon">
-              <Gift size={19} />
-            </span>
+            <span className="referral-stat-icon"><Gift size={19} /></span>
             <span>Rewards earned</span>
             <strong>—</strong>
             <small>Reward rules not configured</small>
@@ -824,10 +870,7 @@ function App() {
 
         <section className="referral-link-card">
           <div className="referral-link-heading">
-            <div className="referral-link-icon">
-              <Link2 size={21} />
-            </div>
-
+            <div className="referral-link-icon"><Link2 size={21} /></div>
             <div>
               <h2>Your referral link</h2>
               <p>
@@ -843,7 +886,6 @@ function App() {
                 ? `${wallet.address.slice(0, 8)}…${wallet.address.slice(-6)} · Referral code pending`
                 : "Connect your wallet to get started"}
             </span>
-
             <button
               className="referral-copy-button"
               type="button"
@@ -868,11 +910,7 @@ function App() {
               <span className="eyebrow">COMMUNITY RANKINGS</span>
               <h2>Top referrers</h2>
             </div>
-
-            <div
-              className="referral-period-tabs"
-              aria-label="Leaderboard period"
-            >
+            <div className="referral-period-tabs" aria-label="Leaderboard period">
               {periods.map((period) => (
                 <button
                   type="button"
@@ -906,7 +944,6 @@ function App() {
             <CheckCircle2 size={21} />
             <h2>How referral eligibility will work</h2>
           </div>
-
           <div className="referral-rule">
             <span>01</span>
             <div>
@@ -916,7 +953,6 @@ function App() {
               </p>
             </div>
           </div>
-
           <div className="referral-rule">
             <span>02</span>
             <div>
@@ -926,7 +962,6 @@ function App() {
               </p>
             </div>
           </div>
-
           <div className="referral-rule">
             <span>03</span>
             <div>
@@ -966,7 +1001,6 @@ function App() {
 
     if (page === "Home") return renderHome();
     if (page === "Markets") return renderMarkets();
-
     return renderAccountPage();
   }
 
@@ -986,7 +1020,6 @@ function App() {
             src="/asset-oracle-logo.png"
             alt="Asset Oracle"
           />
-
           <span>
             <span className="brand-name">ASSET ORACLE</span>
             <span className="brand-tagline">
@@ -1008,7 +1041,6 @@ function App() {
               {label}
             </button>
           ))}
-
           <button
             className={page === "Referrals" ? "nav-link active" : "nav-link"}
             type="button"
@@ -1032,11 +1064,14 @@ function App() {
               >
                 {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
               </button>
-
               <button
                 className="disconnect-button"
                 type="button"
-                onClick={handleDisconnectWallet}
+                onClick={() => {
+                  setWallet(null);
+                  setWalletMessage("Wallet disconnected from Asset Oracle.");
+                  setReferralMessage("");
+                }}
                 disabled={walletBusy}
               >
                 Disconnect
@@ -1088,17 +1123,16 @@ function App() {
             <strong>
               {isTestnet(wallet.chainId)
                 ? "Asset Chain Testnet"
-                : "Wallet connected"}
+                : "Wallet connected · Wrong network"}
             </strong>
-
             <p>
               {wallet.address.slice(0, 10)}...
               {wallet.address.slice(-8)}
             </p>
-
-            {!isTestnet(wallet.chainId) && (
-              <p>Connected to chain ID {wallet.chainId}</p>
-            )}
+            <p>
+              Chain ID: {displayChainId(wallet.chainId)}
+              {isTestnet(wallet.chainId) ? " · Correct network" : ""}
+            </p>
           </div>
 
           {!isTestnet(wallet.chainId) && (
@@ -1129,19 +1163,17 @@ function App() {
           <strong>ASSET ORACLE</strong>
           <p>REAL-WORLD TRUTH, ON-CHAIN.</p>
         </div>
-
         <button
           className="footer-help"
           type="button"
           onClick={() =>
             setWalletMessage(
-              "Asset Oracle is building transparent prediction markets and verifiable settlement infrastructure. Market participation is not yet enabled.",
+              "Asset Oracle is building transparent prediction markets and verifiable settlement infrastructure. Market participation is not yet enabled."
             )
           }
         >
           <CircleHelp size={15} /> Help
         </button>
-
         <span>Building on Asset Chain</span>
 
         <div className="footer-socials" aria-label="Official social channels">
@@ -1159,7 +1191,6 @@ function App() {
               />
             </svg>
           </a>
-
           <a
             href="https://t.me/assetoracle"
             target="_blank"
@@ -1174,7 +1205,6 @@ function App() {
               />
             </svg>
           </a>
-
           <a
             href="https://discord.gg/2HfFcsWEFq"
             target="_blank"
@@ -1185,7 +1215,7 @@ function App() {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="currentColor"
-                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1-1.9 2.1Z"
+                d="M19.7 5.2A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.2C1.5 9.4.7 13.5 1.1 17.5a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.6-.8-8.7-3.2-12.3ZM8.8 14.7c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1Zm6.4 0c-1.1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1Z"
               />
             </svg>
           </a>
@@ -1207,7 +1237,6 @@ function App() {
             <span>{label}</span>
           </button>
         ))}
-
         <button
           className={
             page === "Referrals"
