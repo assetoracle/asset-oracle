@@ -5,7 +5,7 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./style.css";
-import { wagmiAdapter } from "./walletConnect";
+import { wagmiConfig } from "./walletConnect";
 
 const queryClient = new QueryClient();
 
