@@ -245,9 +245,41 @@ export default function Portfolio({
           <div className="portfolio-token-list">
             <article className="portfolio-token-card">
               <div className="portfolio-token-identity">
-                <div className="portfolio-token-icon portfolio-token-usdc">
-                  <span>U</span>
-                </div>
+             
+<div className="portfolio-token-icon portfolio-token-usdc">
+  <svg
+    viewBox="0 0 48 48"
+    width="42"
+    height="42"
+    role="img"
+    aria-label="USDC logo"
+  >
+    <circle cx="24" cy="24" r="24" fill="#2775CA" />
+    <g
+      fill="none"
+      stroke="#FFFFFF"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+    >
+      <path d="M17 10.5c-4 3.2-6.2 8-6.2 13.5s2.2 10.3 6.2 13.5" />
+      <path d="M31 10.5c4 3.2 6.2 8 6.2 13.5s-2.2 10.3-6.2 13.5" />
+    </g>
+    <path
+      d="M28.5 17.8c-1.1-1-2.7-1.5-4.6-1.5-3.2 0-5.2 1.5-5.2 3.9 0 2.3 1.8 3.3 5.1 4l1.5.3c2.2.5 3.2 1.1 3.2 2.4 0 1.4-1.5 2.3-3.9 2.3-2 0-3.8-.7-5-2"
+      fill="none"
+      stroke="#FFFFFF"
+      strokeWidth="2.8"
+      strokeLinecap="round"
+    />
+    <path
+      d="M24 13.5v21"
+      stroke="#FFFFFF"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    />
+  </svg>
+</div>
+
                 <div>
                   <strong>USDC</strong>
                   <p>Bridged USD Coin</p>
