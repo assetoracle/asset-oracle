@@ -23,7 +23,7 @@ const TESTNET_RPC = "https://enugu-rpc.assetchain.org";
 const TESTNET_EXPLORER = "https://scan-testnet.assetchain.org";
 
 const USDC_ADDRESS =
-  "0x39C6b75fAeAb6B54541BE34860AE6250263377e9" as Address;
+  "0xc33741fddEBeA854d265db6F9707900Efb0211a2" as Address;
 
 const publicClient = createPublicClient({
   transport: http(TESTNET_RPC, {
