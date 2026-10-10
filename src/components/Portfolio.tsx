@@ -55,17 +55,17 @@ const TOKENS = [
   {
     symbol: "USDT",
     name: "Tether USD",
-    address: "0x26E490d30e73c36800788DC6d6315946C4BbEa24",
+    address: "0x04f868C5b3F0A100a207c7e9312946c2C2c48a7a3",
   },
   {
     symbol: "USDC",
     name: "USD Coin",
-    address: "0x2B7C1342Cc64add10B2a79C8f9767d2667DE64B2",
+    address: "0x39C6b75fAeAb6B54541BE34860AE6250263377e9",
   },
   {
     symbol: "cNGN",
     name: "Compliant Nigerian Naira",
-    address: "0x7923C0f6FA3d1BA6EAFCAedAaD93e737Fd22FC4F",
+    address: "",
   },
 ] as const;
 
