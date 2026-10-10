@@ -1425,9 +1425,9 @@ function App() {
       {proposalFormOpen && (
         <MarketProposalForm
           address={address ?? ""}
-          signMessage={(message) =>
-            signMessageAsync({ message })
-          }
+          signMessage={(message: string) =>
+  signMessageAsync({ message })
+}
           onClose={() => setProposalFormOpen(false)}
           onCreated={handleProposalCreated}
         />
