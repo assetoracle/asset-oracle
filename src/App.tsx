@@ -222,7 +222,7 @@ function App() {
 
         // connectWallet() requests permission, so use the provider's
         // existing account permission directly instead.
-        const provider = wallets[0].provider as EthereumProvider;
+        const provider = wallets[0].provider;
 
         const accounts = (await provider.request({
           method: "eth_accounts",
