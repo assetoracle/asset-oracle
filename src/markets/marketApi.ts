@@ -96,3 +96,30 @@ export async function listPublishedMarkets() {
     count: number;
   }>("/api/markets/public");
 }
+export async function requestWalletNonce(address: string) {
+  return request<{
+    nonce: string;
+    message: string;
+  }>("/api/markets/auth/nonce", {
+    method: "POST",
+    body: JSON.stringify({ address }),
+  });
+}
+
+export async function getMyProposals(
+  address: string,
+  message: string,
+  signature: string,
+) {
+  return request<{
+    proposals: StoredMarketProposal[];
+    count: number;
+  }>("/api/markets/proposals/mine", {
+    method: "POST",
+    body: JSON.stringify({
+      address,
+      message,
+      signature,
+    }),
+  });
+}
