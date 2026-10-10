@@ -3,7 +3,7 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { assetChainTestnet } from "./walletConfig";
 
-const projectId = import.meta.env.VITE_REOWN_PROJECT_ID;
+const projectId = "31b59192af5764277976dd36db7754ba";
 
 if (!projectId) {
   throw new Error(
