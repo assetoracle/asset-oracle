@@ -8,6 +8,14 @@ type EthereumProvider = {
     method: string;
     params?: unknown[];
   }) => Promise<unknown>;
+  on?: (
+    event: string,
+    listener: (...args: unknown[]) => void,
+  ) => void;
+  removeListener?: (
+    event: string,
+    listener: (...args: unknown[]) => void,
+  ) => void;
 };
 
 declare global {
@@ -20,18 +28,20 @@ export const ASSET_CHAIN_TESTNET = {
   chainId: "0xa575",
   chainName: "Asset Chain Testnet",
   nativeCurrency: {
-    name: "ASSET",
-    symbol: "ASSET",
+    name: "Real World Asset",
+    symbol: "RWA",
     decimals: 18,
   },
   rpcUrls: ["https://enugu-rpc.assetchain.org"],
-  blockExplorerUrls: ["https://scan.assetchain.org"],
+  blockExplorerUrls: [
+    "https://scan-testnet.assetchain.org",
+  ],
 };
 
 function getProvider(): EthereumProvider {
   if (!window.ethereum) {
     throw new Error(
-      "No compatible wallet found. Open Asset Oracle in a browser with a supported wallet.",
+      "No compatible wallet was detected. Open Asset Oracle in a supported wallet browser or enable your browser wallet extension.",
     );
   }
 
@@ -70,41 +80,27 @@ export async function switchToAssetChainTestnet(): Promise<void> {
   } catch (error) {
     const walletError = error as { code?: number };
 
-    if (walletError.code !== 4902) {
-      if (walletError.code === 4001) {
-        throw new Error(
-          "Network switching was rejected. Approve the request in your wallet to continue.",
-        );
-      }
+    if (walletError.code === 4001) {
+      throw new Error(
+        "You rejected the network-switching request.",
+      );
+    }
 
+    if (walletError.code !== 4902) {
       throw new Error(
         "Unable to switch networks. Check your wallet and try again.",
       );
     }
 
-    try {
-      await provider.request({
-        method: "wallet_addEthereumChain",
-        params: [ASSET_CHAIN_TESTNET],
-      });
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [ASSET_CHAIN_TESTNET],
+    });
 
-      await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: ASSET_CHAIN_TESTNET.chainId }],
-      });
-    } catch (addError) {
-      const walletAddError = addError as { code?: number };
-
-      if (walletAddError.code === 4001) {
-        throw new Error(
-          "Adding or switching networks was rejected in your wallet.",
-        );
-      }
-
-      throw new Error(
-        "Could not add or switch to Asset Chain Testnet. Check the network settings in your wallet.",
-      );
-    }
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: ASSET_CHAIN_TESTNET.chainId }],
+    });
   }
 
   const activeChainId = (
@@ -115,7 +111,7 @@ export async function switchToAssetChainTestnet(): Promise<void> {
 
   if (activeChainId !== ASSET_CHAIN_TESTNET.chainId) {
     throw new Error(
-      "Your wallet is still connected to another network. Switch to Asset Chain Testnet in your wallet and try again.",
+      "Network verification failed. Your wallet is not connected to Asset Chain Testnet.",
     );
   }
 }
