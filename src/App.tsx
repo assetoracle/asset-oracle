@@ -879,6 +879,15 @@ function App() {
       return null;
     }
 
+    if (page === "Portfolio") {
+  return (
+    <Portfolio
+      address={address}
+      onConnect={handleOpenWalletHelp}
+    />
+  );
+}
+
     const info = pageInfo[page];
     const PageIcon = info.icon;
 
