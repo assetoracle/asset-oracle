@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 type WalletHelpPanelProps = {
@@ -45,6 +46,18 @@ export default function WalletHelpPanel({
   const [showTroubleshooting, setShowTroubleshooting] =
     useState(false);
 
+  const buttonStyle = {
+    width: "100%",
+    padding: 15,
+    border: "1px solid #12D9F5",
+    borderRadius: 12,
+    background: "linear-gradient(110deg, #12D9F5, #00B8A9)",
+    color: "#071A24",
+    fontSize: 15,
+    fontWeight: 800,
+    cursor: "pointer",
+  } as const;
+
   return (
     <div
       role="dialog"
@@ -58,8 +71,9 @@ export default function WalletHelpPanel({
         alignItems: "center",
         justifyContent: "center",
         padding: 16,
-        background: "rgba(0, 0, 0, 0.72)",
+        background: "rgba(3, 13, 19, 0.86)",
         overflowY: "auto",
+        backdropFilter: "blur(8px)",
       }}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -73,12 +87,15 @@ export default function WalletHelpPanel({
           maxWidth: 520,
           maxHeight: "90vh",
           overflowY: "auto",
-          background: "#111827",
-          color: "#f9fafb",
-          border: "1px solid #293548",
+          background:
+            "radial-gradient(ellipse at 100% 0%, rgba(18,217,245,0.09), transparent 45%), #071A24",
+          color: "#F2FCFF",
+          border: "1px solid #1D6675",
           borderRadius: 20,
           padding: 24,
           boxSizing: "border-box",
+          boxShadow: "0 20px 70px rgba(0,0,0,0.45)",
+          fontFamily: "'Bricolage Grotesque', sans-serif",
         }}
       >
         <div
@@ -92,10 +109,10 @@ export default function WalletHelpPanel({
           <div>
             <p
               style={{
-                color: "#60a5fa",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: 2,
+                color: "#12D9F5",
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: 2.5,
                 margin: "0 0 8px",
               }}
             >
@@ -105,12 +122,26 @@ export default function WalletHelpPanel({
             <h2
               id="wallet-help-title"
               style={{
-                fontSize: 24,
+                fontSize: 25,
+                fontWeight: 800,
+                letterSpacing: "-0.6px",
+                lineHeight: 1.2,
                 margin: 0,
               }}
             >
               Connect your wallet
             </h2>
+
+            <p
+              style={{
+                color: "#8DA9B3",
+                fontSize: 12,
+                letterSpacing: 0.5,
+                margin: "8px 0 0",
+              }}
+            >
+              CONNECT TO ON-CHAIN INTELLIGENCE
+            </p>
           </div>
 
           <button
@@ -118,69 +149,92 @@ export default function WalletHelpPanel({
             onClick={onClose}
             aria-label="Close wallet assistance"
             style={{
-              background: "#1f2937",
-              color: "#fff",
-              border: "1px solid #374151",
+              display: "grid",
+              placeItems: "center",
+              width: 38,
+              height: 38,
+              flexShrink: 0,
+              background: "#0B2A35",
+              color: "#63F3FF",
+              border: "1px solid rgba(18,217,245,0.25)",
               borderRadius: 10,
-              padding: "8px 12px",
+              fontSize: 18,
               cursor: "pointer",
             }}
           >
-            ✕
+            ×
           </button>
         </div>
 
         <p
           style={{
-            color: "#9ca3af",
-            lineHeight: 1.6,
-            margin: "14px 0 20px",
+            color: "#8DA9B3",
+            lineHeight: 1.8,
+            fontSize: 14,
+            margin: "18px 0 20px",
           }}
         >
-          Connect using Reown's wallet selector, or get help
-          opening Asset Oracle inside your preferred wallet app.
+          Connect using the wallet selector, or get help opening
+          Asset Oracle inside your preferred wallet app.
         </p>
 
         <button
           type="button"
           onClick={onConnect}
-          style={{
-            width: "100%",
-            padding: 15,
-            border: 0,
-            borderRadius: 12,
-            background: "#2563eb",
-            color: "#fff",
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
+          style={buttonStyle}
         >
-          Open wallet selector
+          Open wallet selector →
         </button>
 
         <div
           style={{
-            height: 1,
-            background: "#293548",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
             margin: "24px 0",
+            color: "#8DA9B3",
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: 1.5,
           }}
-        />
+        >
+          <span
+            style={{
+              height: 1,
+              flex: 1,
+              background: "rgba(29,102,117,0.7)",
+            }}
+          />
+          OTHER WALLET OPTIONS
+          <span
+            style={{
+              height: 1,
+              flex: 1,
+              background: "rgba(29,102,117,0.7)",
+            }}
+          />
+        </div>
 
-        <h3 style={{ fontSize: 17, margin: "0 0 8px" }}>
+        <h3
+          style={{
+            fontSize: 17,
+            fontWeight: 800,
+            margin: "0 0 8px",
+          }}
+        >
           Having trouble connecting?
         </h3>
 
         <p
           style={{
-            color: "#9ca3af",
-            fontSize: 14,
-            lineHeight: 1.6,
+            color: "#8DA9B3",
+            fontSize: 13,
+            lineHeight: 1.8,
             margin: "0 0 16px",
           }}
         >
-          On mobile, open Asset Oracle in your wallet's
-          built-in browser, then select Connect Wallet.
+          On mobile, try opening Asset Oracle in your wallet's
+          built-in browser before connecting.
         </p>
 
         <div
@@ -198,25 +252,46 @@ export default function WalletHelpPanel({
               rel="noopener noreferrer"
               style={{
                 display: "block",
+                minWidth: 0,
                 textDecoration: "none",
-                color: "#f9fafb",
-                background: "#1b2535",
-                border: "1px solid #354257",
+                color: "#F2FCFF",
+                background:
+                  "linear-gradient(145deg, #102F3A, #0B2A35)",
+                border: "1px solid rgba(29,102,117,0.65)",
                 borderRadius: 12,
                 padding: 13,
+                transition:
+                  "border-color 160ms ease, background 160ms ease",
+              }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.borderColor = "#12D9F5";
+                event.currentTarget.style.background = "#103744";
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.borderColor =
+                  "rgba(29,102,117,0.65)";
+                event.currentTarget.style.background =
+                  "linear-gradient(145deg, #102F3A, #0B2A35)";
               }}
             >
-              <strong style={{ display: "block", fontSize: 14 }}>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  overflowWrap: "anywhere",
+                }}
+              >
                 {wallet.name}
               </strong>
 
               <span
                 style={{
                   display: "block",
-                  color: "#9ca3af",
+                  color: "#8DA9B3",
                   fontSize: 12,
-                  lineHeight: 1.5,
-                  marginTop: 6,
+                  lineHeight: 1.6,
+                  marginTop: 7,
                 }}
               >
                 {wallet.description}
@@ -225,9 +300,10 @@ export default function WalletHelpPanel({
               <span
                 style={{
                   display: "block",
-                  color: "#60a5fa",
-                  fontSize: 12,
-                  marginTop: 8,
+                  color: "#63F3FF",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  marginTop: 10,
                 }}
               >
                 Official website ↗
@@ -245,28 +321,33 @@ export default function WalletHelpPanel({
           style={{
             width: "100%",
             marginTop: 20,
-            padding: 13,
-            background: "transparent",
-            border: "1px solid #354257",
+            padding: 14,
+            background: "rgba(18,217,245,0.04)",
+            border: "1px solid rgba(18,217,245,0.2)",
             borderRadius: 10,
-            color: "#dbeafe",
+            color: "#63F3FF",
             textAlign: "left",
+            fontSize: 13,
+            fontWeight: 700,
             cursor: "pointer",
           }}
         >
-          {showTroubleshooting ? "Hide troubleshooting ▲" : "Connection troubleshooting ▼"}
+          {showTroubleshooting
+            ? "Hide troubleshooting ↑"
+            : "Connection troubleshooting ↓"}
         </button>
 
         {showTroubleshooting && (
           <div
             style={{
-              background: "#1b2535",
+              background: "#0B2A35",
+              border: "1px solid rgba(29,102,117,0.55)",
               borderRadius: 10,
-              padding: 14,
+              padding: 15,
               marginTop: 10,
-              color: "#d1d5db",
-              fontSize: 14,
-              lineHeight: 1.7,
+              color: "#8DA9B3",
+              fontSize: 13,
+              lineHeight: 1.8,
             }}
           >
             <ol style={{ paddingLeft: 20, margin: 0 }}>
@@ -284,18 +365,39 @@ export default function WalletHelpPanel({
           </div>
         )}
 
-        <p
+        <div
           style={{
-            color: "#6b7280",
-            fontSize: 11,
-            lineHeight: 1.5,
-            margin: "18px 0 0",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 9,
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: "1px solid rgba(29,102,117,0.45)",
           }}
         >
-          Wallet links open official wallet websites. They do not
-          guarantee that the wallet app will open or that a connection
-          will succeed.
-        </p>
+          <span
+            style={{
+              color: "#00B8A9",
+              fontSize: 15,
+              lineHeight: 1.5,
+            }}
+          >
+            ●
+          </span>
+
+          <p
+            style={{
+              color: "#8DA9B3",
+              fontSize: 11,
+              lineHeight: 1.7,
+              margin: 0,
+            }}
+          >
+            Wallet links open official wallet websites. They do not
+            guarantee that the wallet app will open or that a connection
+            will succeed.
+          </p>
+        </div>
       </section>
     </div>
   );
