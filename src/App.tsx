@@ -84,6 +84,7 @@ const categories: MarketCategory[] = [
 const navigation = [
   { label: "Home" as const, icon: House },
   { label: "Markets" as const, icon: ChartNoAxesCombined },
+  { label: "My Proposals" as const, icon: BriefcaseBusiness },
   { label: "Portfolio" as const, icon: BriefcaseBusiness },
   { label: "Claims" as const, icon: WalletCards },
   { label: "History" as const, icon: History },
