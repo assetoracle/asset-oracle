@@ -301,8 +301,8 @@ function App() {
   }, [wallet?.address, wallet?.chainId]);
 
   function handleOpenWalletHelp() {
-    setWalletMessage("");
-    setWalletHelpOpen(true);
+  setWalletMessage("");
+  void handleConnectWallet();
   }
 
   async function handleConnectWallet() {
