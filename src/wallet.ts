@@ -55,7 +55,7 @@ export const ASSET_CHAIN_TESTNET = {
     symbol: "RWA",
     decimals: 18,
   },
-  rpcUrls: ["https://42421.rpc.thirdweb.com"],
+  rpcUrls: ["https://enugu-rpc.assetchain.org"],
   blockExplorerUrls: [
     "https://scan-testnet.assetchain.org",
   ],
