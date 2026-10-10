@@ -46,7 +46,7 @@ type MarketCategory =
   | "RWA"
   | "Regional";
 
-type PublishedMarket = {
+type DisplayMarket = {
   id: string;
   question: string;
   description: string;
@@ -54,9 +54,6 @@ type PublishedMarket = {
   closesAt: string;
   resolvesAt: string;
   status: string;
-};
-
-type DisplayMarket = PublishedMarket & {
   symbol: string;
   label: string;
   endDate: string;
@@ -121,6 +118,13 @@ function categorySymbol(category: string): string {
   return symbols[category] ?? "AO";
 }
 
+function isTestnet(chainId: string): boolean {
+  return (
+    chainId.toLowerCase() ===
+    ASSET_CHAIN_TESTNET.chainId.toLowerCase()
+  );
+}
+
 function App() {
   const [page, setPage] = useState<Page>("Home");
 
@@ -139,11 +143,14 @@ function App() {
   const [selectedMarket, setSelectedMarket] =
     useState<DisplayMarket | null>(null);
 
-  const [wallet, setWallet] = useState<WalletConnection | null>(null);
+  const [wallet, setWallet] =
+    useState<WalletConnection | null>(null);
+
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
 
+  // Load only markets returned by the backend's public endpoint.
   useEffect(() => {
     let active = true;
 
@@ -194,6 +201,63 @@ function App() {
     };
   }, []);
 
+  // Track account and network changes reported by the wallet.
+  useEffect(() => {
+    const provider = window.ethereum;
+
+    if (!provider?.on) return;
+
+    const handleAccountsChanged = (...args: unknown[]) => {
+      const accounts = args[0] as string[] | undefined;
+
+      if (!accounts || accounts.length === 0) {
+        setWallet(null);
+        setWalletMessage("Wallet disconnected from Asset Oracle.");
+        setReferralMessage("");
+        return;
+      }
+
+      const address = accounts[0];
+
+      setWallet((current) =>
+        current ? { ...current, address } : current,
+      );
+
+      setWalletMessage("");
+    };
+
+    const handleChainChanged = (...args: unknown[]) => {
+      const chainId = args[0] as string;
+
+      setWallet((current) =>
+        current
+          ? { ...current, chainId: chainId.toLowerCase() }
+          : current,
+      );
+
+      setWalletMessage(
+        isTestnet(chainId)
+          ? "Connected to Asset Chain Testnet."
+          : "Your wallet switched networks. Switch back to Asset Chain Testnet to continue.",
+      );
+    };
+
+    provider.on("accountsChanged", handleAccountsChanged);
+    provider.on("chainChanged", handleChainChanged);
+
+    return () => {
+      provider.removeListener?.(
+        "accountsChanged",
+        handleAccountsChanged,
+      );
+
+      provider.removeListener?.(
+        "chainChanged",
+        handleChainChanged,
+      );
+    };
+  }, []);
+
   async function handleConnectWallet() {
     setWalletBusy(true);
     setWalletMessage("");
@@ -204,10 +268,9 @@ function App() {
       setWallet(connection);
 
       setWalletMessage(
-        connection.chainId.toLowerCase() ===
-          ASSET_CHAIN_TESTNET.chainId.toLowerCase()
-          ? "Wallet connected to Asset Chain testnet."
-          : "Wallet connected. Switch to Asset Chain testnet to continue.",
+        isTestnet(connection.chainId)
+          ? "Wallet connected to Asset Chain Testnet."
+          : "Wallet connected. Switch to Asset Chain Testnet to continue.",
       );
     } catch (error) {
       setWalletMessage(
@@ -229,18 +292,14 @@ function App() {
 
       const connection = await connectWallet();
 
-      setWallet(connection);
-
-      if (
-        connection.chainId.toLowerCase() !==
-        ASSET_CHAIN_TESTNET.chainId.toLowerCase()
-      ) {
+      if (!isTestnet(connection.chainId)) {
         throw new Error(
-          "The wallet has not switched to Asset Chain testnet.",
+          "Network verification failed. Your wallet is not on Asset Chain Testnet.",
         );
       }
 
-      setWalletMessage("Connected to Asset Chain testnet.");
+      setWallet(connection);
+      setWalletMessage("Connected to Asset Chain Testnet.");
     } catch (error) {
       setWalletMessage(
         error instanceof Error
@@ -250,6 +309,13 @@ function App() {
     } finally {
       setWalletBusy(false);
     }
+  }
+
+  // Disconnect the application session without revoking wallet permissions.
+  function handleDisconnectWallet() {
+    setWallet(null);
+    setWalletMessage("Wallet disconnected from Asset Oracle.");
+    setReferralMessage("");
   }
 
   function navigateTo(nextPage: Page) {
@@ -684,10 +750,7 @@ function App() {
       return;
     }
 
-    if (
-      wallet.chainId.toLowerCase() !==
-      ASSET_CHAIN_TESTNET.chainId.toLowerCase()
-    ) {
+    if (!isTestnet(wallet.chainId)) {
       setReferralMessage(
         "Switch to Asset Chain testnet before continuing.",
       );
@@ -958,18 +1021,37 @@ function App() {
         </nav>
 
         <div className="header-actions">
-          <button
-            className="connect-button"
-            type="button"
-            onClick={handleConnectWallet}
-            disabled={walletBusy}
-          >
-            {walletBusy
-              ? "Connecting..."
-              : wallet
-                ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
-                : "Connect wallet"}
-          </button>
+          {wallet ? (
+            <div className="wallet-header-actions">
+              <button
+                className="connect-button"
+                type="button"
+                onClick={handleConnectWallet}
+                disabled={walletBusy}
+                title="Connected wallet"
+              >
+                {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
+              </button>
+
+              <button
+                className="disconnect-button"
+                type="button"
+                onClick={handleDisconnectWallet}
+                disabled={walletBusy}
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button
+              className="connect-button"
+              type="button"
+              onClick={handleConnectWallet}
+              disabled={walletBusy}
+            >
+              {walletBusy ? "Connecting..." : "Connect wallet"}
+            </button>
+          )}
 
           <button
             className="mobile-menu-button"
@@ -1004,8 +1086,7 @@ function App() {
         <section className="wallet-status" aria-live="polite">
           <div>
             <strong>
-              {wallet.chainId.toLowerCase() ===
-              ASSET_CHAIN_TESTNET.chainId.toLowerCase()
+              {isTestnet(wallet.chainId)
                 ? "Asset Chain Testnet"
                 : "Wallet connected"}
             </strong>
@@ -1015,14 +1096,12 @@ function App() {
               {wallet.address.slice(-8)}
             </p>
 
-            {wallet.chainId.toLowerCase() !==
-              ASSET_CHAIN_TESTNET.chainId.toLowerCase() && (
+            {!isTestnet(wallet.chainId) && (
               <p>Connected to chain ID {wallet.chainId}</p>
             )}
           </div>
 
-          {wallet.chainId.toLowerCase() !==
-            ASSET_CHAIN_TESTNET.chainId.toLowerCase() && (
+          {!isTestnet(wallet.chainId) && (
             <button
               className="primary-button"
               type="button"
