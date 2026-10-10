@@ -590,13 +590,34 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
     return (
       <section className="markets-section page-section">
         <div className="section-heading">
-          <div>
-            <span className="eyebrow">DISCOVER</span>
-            <h1>Markets</h1>
-            <p>Browse approved markets by category.</p>
-          </div>
-          <span className="market-status">Development</span>
-        </div>
+  <div>
+    <span className="eyebrow">DISCOVER</span>
+    <h1>Markets</h1>
+    <p>Browse approved markets by category.</p>
+  </div>
+
+  <button
+    className="primary-button"
+    type="button"
+    onClick={() => {
+      setProposalMessage("");
+      setProposalFormOpen(true);
+    }}
+  >
+    Propose a Market
+  </button>
+</div>
+
+{proposalMessage && (
+  <div className="empty-state" role="status">
+    <h3>Proposal received</h3>
+    <p>{proposalMessage}</p>
+    <p>
+      Your proposal is awaiting review. Submission does not guarantee
+      approval or publication.
+    </p>
+  </div>
+)}
 
         <label className="search-box">
           <Search size={19} aria-hidden="true" />
@@ -1207,6 +1228,14 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
           onClose={() => setWalletHelpOpen(false)}
         />
       )}
+
+{proposalFormOpen && (
+  <MarketProposalForm
+    onClose={() => setProposalFormOpen(false)}
+    onCreated={handleProposalCreated}
+  />
+)}
+
     </div>
   );
 }
