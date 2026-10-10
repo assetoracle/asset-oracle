@@ -387,3 +387,21 @@ export async function switchToAssetChainTestnet(): Promise<void> {
 export function disconnectWallet(): void {
   selectedProvider = null;
 }
+export async function signWalletMessage(
+  message: string,
+): Promise<string> {
+  const provider = getProvider();
+
+  const accounts = (await provider.request({
+    method: "eth_accounts",
+  })) as string[];
+
+  if (!accounts?.length) {
+    throw new Error("Connect your wallet before signing.");
+  }
+
+  return (await provider.request({
+    method: "personal_sign",
+    params: [message, accounts[0]],
+  })) as string;
+}
