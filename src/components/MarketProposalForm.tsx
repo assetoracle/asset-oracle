@@ -126,7 +126,11 @@ export function MarketProposalForm({
         return;
       }
 
-      const result = await createMarketProposal(proposal);
+      const result = await createMarketProposal(
+  proposal,
+  address,
+  signMessage,
+);
       onCreated(result.proposal);
     } catch (error) {
       setMessage(
