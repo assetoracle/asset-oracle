@@ -38,6 +38,7 @@ import {
 type Page =
   | "Home"
   | "Markets"
+  | "My Proposals"
   | "Portfolio"
   | "Claims"
   | "History"
