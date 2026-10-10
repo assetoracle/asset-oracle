@@ -24,7 +24,10 @@ const TESTNET_RPC = "https://enugu-rpc.assetchain.org";
 const TESTNET_EXPLORER = "https://scan-testnet.assetchain.org";
 
 const publicClient = createPublicClient({
-  transport: http(TESTNET_RPC),
+  transport: http(TESTNET_RPC, {
+    timeout: 12_000,
+    retryCount: 0,
+  }),
 });
 
 const ERC20_ABI = [
@@ -65,7 +68,7 @@ const TOKENS = [
   {
     symbol: "cNGN",
     name: "Compliant Nigerian Naira",
-    address: "",
+    address: "0x069404d2F76Aa4519819a41B4E385074A9F4E8eA",
   },
 ] as const;
 
@@ -138,7 +141,7 @@ export default function Portfolio({
 
         if (actualChainId !== TESTNET_CHAIN_ID) {
           throw new Error(
-            `The configured RPC returned chain ID ${actualChainId}, not ${TESTNET_CHAIN_ID}.`,
+            `RPC returned chain ID ${actualChainId}; expected ${TESTNET_CHAIN_ID}.`,
           );
         }
 
@@ -147,6 +150,10 @@ export default function Portfolio({
             const tokenAddress = token.address as Address;
 
             try {
+              if (!isAddress(tokenAddress)) {
+                throw new Error("Token contract address is invalid.");
+              }
+
               const code = await publicClient.getBytecode({
                 address: tokenAddress,
               });
@@ -178,12 +185,11 @@ export default function Portfolio({
                 ]);
 
               if (
-                typeof onChainSymbol !== "string" ||
                 onChainSymbol.trim().toLowerCase() !==
-                  token.symbol.toLowerCase()
+                token.symbol.toLowerCase()
               ) {
                 throw new Error(
-                  `Expected ${token.symbol}, but the contract reports ${String(onChainSymbol)}.`,
+                  `Expected ${token.symbol}, but contract reports ${onChainSymbol}.`,
                 );
               }
 
@@ -225,7 +231,7 @@ export default function Portfolio({
             address: token.address as Address,
             balance: "",
             loading: false,
-            error: "Balance unavailable because the network could not be verified.",
+            error: "Could not verify the network.",
           })),
         );
       } finally {
@@ -251,7 +257,6 @@ export default function Portfolio({
             wallet on Asset Chain Testnet.
           </p>
         </div>
-
         <div className="account-page-icon">
           <WalletCards size={25} />
         </div>
@@ -315,7 +320,6 @@ export default function Portfolio({
               <h2>Token balances</h2>
               <p>Read directly from token contracts.</p>
             </div>
-
             <button
               className="portfolio-refresh-button"
               type="button"
