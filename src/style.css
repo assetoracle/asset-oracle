@@ -2761,3 +2761,67 @@ input:focus-visible {
     animation: none;
   }
 }
+
+/* Portfolio readability improvements */
+.portfolio-wallet-card,
+.portfolio-token-card,
+.portfolio-network-banner {
+  color: #172b3a;
+}
+
+.portfolio-wallet-card span,
+.portfolio-token-balance span,
+.portfolio-token-identity p,
+.portfolio-network-banner p,
+.portfolio-token-heading p {
+  color: #526575;
+}
+
+.portfolio-wallet-card strong,
+.portfolio-token-identity strong,
+.portfolio-token-balance strong,
+.portfolio-network-banner strong {
+  color: #102b3a;
+  opacity: 1;
+}
+
+.portfolio-token-balance strong {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.portfolio-token-balance small {
+  color: #526575;
+}
+
+.portfolio-token-error {
+  color: #a32222;
+  font-weight: 500;
+}
+
+.portfolio-token-link,
+.portfolio-network-banner a {
+  color: #245ea8;
+}
+
+.portfolio-token-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portfolio-token-icon svg {
+  display: block;
+  width: 48px;
+  height: 48px;
+}
+
+.portfolio-wallet-card,
+.portfolio-token-card,
+.portfolio-network-banner {
+  opacity: 1;
+}
