@@ -29,7 +29,6 @@ import {
 } from "lucide-react";
 
 import MarketDetailPage from "./components/MarketDetailPage";
-import { ASSET_CHAIN_TESTNET } from "./wallet";
 import { listPublishedMarkets } from "./markets/marketApi";
 
 type Page =
