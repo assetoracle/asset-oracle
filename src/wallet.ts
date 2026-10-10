@@ -1,4 +1,3 @@
-
 export type WalletConnection = {
   address: string;
   chainId: string;
@@ -37,14 +36,17 @@ type EIP6963ProviderDetail = {
   provider: EthereumProvider;
 };
 
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
+type AvailableWallet = {
+  name: string;
+  provider: EthereumProvider;
+};
 
-  interface WindowEventMap {
-    "eip6963:announceProvider": CustomEvent<EIP6963ProviderDetail>;
-  }
+type EthereumWindow = Window & {
+  ethereum?: EthereumProvider;
+};
+
+function getEthereumWindow(): EthereumWindow {
+  return window as EthereumWindow;
 }
 
 export const ASSET_CHAIN_TESTNET = {
@@ -59,11 +61,6 @@ export const ASSET_CHAIN_TESTNET = {
   blockExplorerUrls: [
     "https://scan-testnet.assetchain.org",
   ],
-};
-
-type AvailableWallet = {
-  name: string;
-  provider: EthereumProvider;
 };
 
 let selectedProvider: EthereumProvider | null = null;
@@ -92,7 +89,7 @@ function withTimeout<T>(
         window.clearTimeout(timer);
         resolve(value);
       },
-      (error) => {
+      (error: unknown) => {
         window.clearTimeout(timer);
         reject(error);
       }
@@ -107,10 +104,7 @@ function getWalletName(
   const rdns = detail.info.rdns.toLowerCase();
   const provider = detail.provider;
 
-  if (
-    name.includes("rabby") ||
-    rdns.includes("rabby")
-  ) {
+  if (name.includes("rabby") || rdns.includes("rabby")) {
     return "Rabby";
   }
 
@@ -124,7 +118,8 @@ function getWalletName(
 
   if (
     name.includes("trust") ||
-    rdns.includes("trust")
+    rdns.includes("trust") ||
+    provider.isTrust
   ) {
     return "Trust Wallet";
   }
@@ -158,10 +153,10 @@ function getWalletName(
 
 async function discoverProviders(): Promise<void> {
   await new Promise<void>((resolve) => {
-    const handleAnnouncement = (
-      event: WindowEventMap["eip6963:announceProvider"]
-    ) => {
-      const detail = event.detail;
+    const handleAnnouncement = (event: Event) => {
+      const detail = (
+        event as CustomEvent<EIP6963ProviderDetail>
+      ).detail;
 
       if (
         detail?.provider &&
@@ -200,7 +195,6 @@ export async function getAvailableWallets(): Promise<
   await discoverProviders();
 
   const wallets: AvailableWallet[] = [];
-
   const seenProviders = new Set<EthereumProvider>();
 
   for (const [uuid, provider] of discoveredProviders) {
@@ -223,17 +217,19 @@ export async function getAvailableWallets(): Promise<
     });
   }
 
+  const injectedProvider = getEthereumWindow().ethereum;
+
   if (
     wallets.length === 0 &&
-    window.ethereum
+    injectedProvider
   ) {
     wallets.push({
-      name: window.ethereum.isRabby
+      name: injectedProvider.isRabby
         ? "Rabby"
-        : window.ethereum.isMetaMask
+        : injectedProvider.isMetaMask
           ? "MetaMask"
           : "Injected Wallet",
-      provider: window.ethereum,
+      provider: injectedProvider,
     });
   }
 
@@ -245,13 +241,15 @@ function getProvider(): EthereumProvider {
     return selectedProvider;
   }
 
-  if (window.ethereum) {
-    selectedProvider = window.ethereum;
-    return selectedProvider;
+  const provider = getEthereumWindow().ethereum;
+
+  if (provider) {
+    selectedProvider = provider;
+    return provider;
   }
 
   throw new Error(
-    "No wallet provider detected. Open Asset Oracle in a browser that supports your wallet extension, or use your wallet's built-in browser."
+    "No wallet provider detected. Use Reown AppKit to connect a wallet, or open Asset Oracle in your wallet's browser."
   );
 }
 
@@ -262,7 +260,7 @@ export async function connectWallet(): Promise<
 
   if (wallets.length === 0) {
     throw new Error(
-      "No compatible wallet detected. Open Asset Oracle in your wallet browser or enable your wallet extension."
+      "No injected wallet detected. Use Reown AppKit to connect a compatible wallet."
     );
   }
 
@@ -277,10 +275,10 @@ export async function connectWallet(): Promise<
       method: "eth_requestAccounts",
     }) as Promise<string[]>,
     60000,
-    "Wallet connection timed out. Open your wallet and approve the connection, then try again."
+    "Wallet connection timed out. Open your wallet and approve the connection."
   )) as string[];
 
-  if (!accounts || accounts.length === 0) {
+  if (!accounts?.length) {
     throw new Error(
       "No wallet account was returned. Unlock your wallet and try again."
     );
@@ -313,10 +311,7 @@ export async function switchToAssetChainTestnet(): Promise<void> {
     )) as string
   );
 
-  if (
-    currentChainId ===
-    ASSET_CHAIN_TESTNET.chainId
-  ) {
+  if (currentChainId === ASSET_CHAIN_TESTNET.chainId) {
     return;
   }
 
@@ -331,7 +326,7 @@ export async function switchToAssetChainTestnet(): Promise<void> {
         ],
       }),
       30000,
-      "The wallet did not respond to the network-switch request. Open your wallet and check for a pending confirmation."
+      "The wallet did not respond to the network-switch request."
     );
   } catch (error) {
     const walletError = error as {
@@ -378,16 +373,13 @@ export async function switchToAssetChainTestnet(): Promise<void> {
         method: "eth_chainId",
       }) as Promise<string>,
       15000,
-      "The wallet switched, but the resulting chain ID could not be verified."
+      "Could not verify the resulting chain ID."
     )) as string
   );
 
-  if (
-    verifiedChainId !==
-    ASSET_CHAIN_TESTNET.chainId
-  ) {
+  if (verifiedChainId !== ASSET_CHAIN_TESTNET.chainId) {
     throw new Error(
-      `Wrong network detected. Expected ${ASSET_CHAIN_TESTNET.chainId} (Asset Chain Testnet), but the wallet returned ${verifiedChainId}.`
+      `Wrong network detected. Expected ${ASSET_CHAIN_TESTNET.chainId}, but received ${verifiedChainId}.`
     );
   }
 }
