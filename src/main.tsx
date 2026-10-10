@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./style.css";
-import { appKit } from "./walletConnect";
 
 const queryClient = new QueryClient();
 
