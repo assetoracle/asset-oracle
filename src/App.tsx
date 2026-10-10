@@ -709,6 +709,29 @@ function handleProposalCreated(proposal: StoredMarketProposal) {
         ],
       },
     } as const;
+    
+    if (page === "My Proposals") {
+  return (
+    <section className="page-section account-page">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">YOUR SUBMISSIONS</span>
+          <h1>My Proposals</h1>
+          <p>Track the review status of your market proposals.</p>
+        </div>
+      </div>
+
+      <div className="empty-state">
+        <h3>Proposal tracking is being connected</h3>
+        <p>
+          Your submitted proposals and their approval status will appear
+          here once wallet ownership and secure proposal filtering are
+          connected to the backend.
+        </p>
+      </div>
+    </section>
+  );
+}
 
     if (page === "Referrals") return renderReferralLeaderboard();
     if (page === "Home" || page === "Markets") return null;
