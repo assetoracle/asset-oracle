@@ -29,7 +29,11 @@ import {
 
 import MarketDetailPage from "./components/MarketDetailPage";
 import WalletHelpPanel from "./components/WalletHelpPanel";
-import { listPublishedMarkets } from "./markets/marketApi";
+import MarketProposalForm from "./components/MarketProposalForm";
+import {
+  listPublishedMarkets,
+  type StoredMarketProposal,
+} from "./markets/marketApi";
 
 type Page =
   | "Home"
