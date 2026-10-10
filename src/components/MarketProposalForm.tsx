@@ -8,6 +8,8 @@ import {
 } from "../markets/marketApi";
 
 type Props = {
+  address: string;
+  signMessage: (message: string) => Promise<string>;
   onClose: () => void;
   onCreated: (proposal: StoredMarketProposal) => void;
 };
@@ -41,10 +43,13 @@ function toIsoDate(value: string): string {
   return new Date(value).toISOString();
 }
 
-export default function MarketProposalForm({
+export function MarketProposalForm({
+  address,
+  signMessage,
   onClose,
   onCreated,
-}: Props) {
+}: Props)
+ {
   const [question, setQuestion] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] =
