@@ -10,7 +10,6 @@ import {
 import {
   RefreshCw,
   WalletCards,
-  CircleAlert,
   ExternalLink,
 } from "lucide-react";
 
