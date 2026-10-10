@@ -31,7 +31,7 @@ import {
 
 import MarketDetailPage from "./components/MarketDetailPage";
 import WalletHelpPanel from "./components/WalletHelpPanel";
-import MarketProposalForm from "./components/MarketProposalForm";
+import { MarketProposalForm } from "./components/MarketProposalForm";
 import {
   listPublishedMarkets,
   requestWalletNonce,
