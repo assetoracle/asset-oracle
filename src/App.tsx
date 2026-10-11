@@ -851,9 +851,6 @@ function handleOpenNetworkSelector() {
   return null;
 }
 
-const info = pageInfo[page];
-      const PageIcon = info.icon;
-
     if (page === "My Proposals") {
       return renderMyProposals();
     }
@@ -862,7 +859,7 @@ const info = pageInfo[page];
       return renderReferralLeaderboard();
     }
 
-    if (page === "Home" || page === "Markets") {
+    if (page === "Home" || page === "Markets" || page === "Admin") {
       return null;
     }
 
