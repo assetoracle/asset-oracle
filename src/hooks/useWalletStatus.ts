@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import {
   useAccount,
@@ -9,6 +10,7 @@ import {
   displayChainId,
   isTestnet,
   normalizeChainId,
+  ASSET_CHAIN_ID,
 } from "../utils/chain";
 
 export type WalletConnection = {
@@ -20,21 +22,21 @@ export function useWalletStatus() {
   const { open } = useAppKit();
   const { address, chainId, isConnected } = useAccount();
   const { disconnectAsync } = useDisconnect();
-  const { switchChainAsync } = useSwitchChain();
   const config = useConfig();
 
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
 
-  // A user-initiated disconnect should retain its confirmation message
-  // even after wagmi reports that the account is disconnected.
   const userInitiatedDisconnectRef = useRef(false);
 
   const wallet: WalletConnection | null =
     isConnected && address
       ? {
           address,
-          chainId: normalizeChainId(chainId),
+          chainId:
+            chainId === undefined
+              ? null
+              : normalizeChainId(chainId),
         }
       : null;
 
@@ -65,14 +67,14 @@ export function useWalletStatus() {
       setWalletMessage("Detecting network...");
     } else if (networkState === "correct") {
       setWalletMessage("Wallet connected to Asset Chain Testnet.");
-    } else {
+    } else if (wallet.chainId !== null) {
       setWalletMessage(
         `Wallet connected on chain ID ${displayChainId(
-          wallet.chainId ?? undefined,
+          wallet.chainId,
         )}. Switch to Asset Chain Testnet to continue.`,
       );
     }
-  }, [address, chainId]);
+  }, [address, chainId, isConnected]);
 
   async function handleConnect() {
     setWalletBusy(true);
@@ -103,60 +105,68 @@ export function useWalletStatus() {
     }
   }
 
-async function handleSwitchNetwork() {
-  if (!wallet || wallet.chainId === null) {
-    setWalletMessage("Detecting network...");
-    return;
-  }
-
-  setWalletBusy(true);
-  setWalletMessage("");
-
-  try {
-    const connector = config.connectors.find(
-      (item) => item.uid === config.state.current,
-    );
-
-    if (!connector) {
-      throw new Error("No active wallet connector found.");
+  async function handleSwitchNetwork() {
+    if (!wallet || wallet.chainId === null) {
+      setWalletMessage("Detecting network...");
+      return;
     }
 
-    if (
-  !provider ||
-  typeof provider !== "object" ||
-  !("request" in provider) ||
-  typeof provider.request !== "function"
-) {
-  throw new Error("Wallet provider does not support network switching.");
-}
+    setWalletBusy(true);
+    setWalletMessage("");
 
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0xa595" }],
-    });
-
-    setWalletMessage(
-      "Successfully switched to Asset Chain Testnet (42421).",
-    );
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "";
-
-    console.error("Asset Chain network switch failed:", error);
-
-    if (/user rejected|user denied|user cancelled/i.test(errorMessage)) {
-      setWalletMessage(
-        "Network switch was cancelled. Try again, or switch to Asset Chain Testnet in your wallet.",
+    try {
+      const connector = config.connectors.find(
+        (item) => item.uid === config.state.current,
       );
-    } else {
+
+      if (!connector) {
+        throw new Error("No active wallet connector found.");
+      }
+
+      const provider = await connector.getProvider();
+
+      if (
+        !provider ||
+        typeof provider !== "object" ||
+        !("request" in provider) ||
+        typeof provider.request !== "function"
+      ) {
+        throw new Error(
+          "Wallet provider does not support network switching.",
+        );
+      }
+
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [
+          {
+            chainId: `0x${ASSET_CHAIN_ID.toString(16)}`,
+          },
+        ],
+      });
+
       setWalletMessage(
-        "Automatic network switching failed. Switch to Asset Chain Testnet manually. Chain ID: 42421.",
+        "Successfully switched to Asset Chain Testnet (42421).",
       );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "";
+
+      console.error("Asset Chain network switch failed:", error);
+
+      if (/user rejected|user denied|user cancelled/i.test(errorMessage)) {
+        setWalletMessage(
+          "Network switch was cancelled. Try again, or switch to Asset Chain Testnet in your wallet.",
+        );
+      } else {
+        setWalletMessage(
+          "Automatic network switching failed. Switch to Asset Chain Testnet manually. Chain ID: 42421.",
+        );
+      }
+    } finally {
+      setWalletBusy(false);
     }
-  } finally {
-    setWalletBusy(false);
   }
-}
 
   async function handleDisconnectWallet() {
     setWalletBusy(true);
