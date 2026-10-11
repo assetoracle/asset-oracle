@@ -61,11 +61,10 @@ const marketPublisherAbi = [
 
 type Props = {
   proposal: StoredMarketProposal;
-  address?: string;
   signMessage: (message: string) => Promise<string>;
 };
 
-export default function PublishApprovedMarket({ proposal, address, signMessage }: Props) {
+export default function PublishApprovedMarket({ proposal, signMessage }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
   const client = usePublicClient();
