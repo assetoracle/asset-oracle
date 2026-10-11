@@ -359,6 +359,10 @@ async function handleSwitchNetwork() {
 }
 
 
+function handleOpenNetworkSelector() {
+  void open({ view: "Networks" });
+}
+
   async function handleDisconnectWallet() {
     setWalletBusy(true);
     setWalletMessage("");
