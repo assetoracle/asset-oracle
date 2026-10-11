@@ -57,14 +57,10 @@ const categories: MarketCategory[] = [
  * Hiding the Admin link is not access control. The server must enforce
  * authorization on every admin operation.
  */
-function useIsAdmin(address: string | undefined): boolean {
-  const configuredAdminAddress =
-    undefined;
-  return Boolean(
-    address &&
-      configuredAdminAddress &&
-      address.toLowerCase() === configuredAdminAddress.toLowerCase(),
-  );
+function useIsAdmin(_address: string | undefined): boolean {
+  // TODO: Replace with a server-backed admin role check.
+  // Hiding this link is cosmetic; the server must enforce access.
+  return false;
 }
 
 function pathForPage(page: Page, marketId?: string): string {
