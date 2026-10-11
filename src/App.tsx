@@ -53,13 +53,22 @@ const categories: MarketCategory[] = [
 ];
 
 /**
- * This only controls navigation visibility. Every admin operation is
- * independently authenticated and authorized by the backend.
+ * Public frontend allowlist used only to show or hide admin navigation.
+ * Backend authorization remains mandatory for every admin operation.
+ *
+ * Configure VITE_ADMIN_WALLET_ADDRESSES as a comma-separated list of
+ * designated public wallet addresses in the frontend deployment settings.
  */
+const ADMIN_WALLET_ADDRESSES = (
+  import.meta.env.VITE_ADMIN_WALLET_ADDRESSES ?? ""
+)
+  .split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean);
+
 function useIsAdmin(address: string | undefined): boolean {
-  // Let connected users open the admin screen; the backend remains the
-  // source of truth and rejects wallets that are not authorized.
-  return Boolean(address);
+  if (!address) return false;
+  return ADMIN_WALLET_ADDRESSES.includes(address.toLowerCase());
 }
 
 function pathForPage(page: Page, marketId?: string): string {
