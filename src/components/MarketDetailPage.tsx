@@ -80,8 +80,14 @@ function MarketDetailPage({
       <div className="market-detail-grid">
         <article className="detail-info-card">
           <Clock3 size={22} />
-          <span>Market deadline</span>
+          <span>Market closing date</span>
           <strong>{closesAt || "Not configured"}</strong>
+        </article>
+
+        <article className="detail-info-card">
+          <Clock3 size={22} />
+          <span>Outcome resolution date</span>
+          <strong>{endDate || "Not configured"}</strong>
         </article>
 
         <article className="detail-info-card">
