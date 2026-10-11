@@ -206,6 +206,7 @@ const loadMarkets = useCallback(async () => {
         symbol: categorySymbol(market.category),
         label: categoryLabel(market.category),
         endDate: formatDate(market.resolvesAt),
+        resolutionRule: market.resolutionRule,
       }));
 
     setPublishedMarkets(markets);
