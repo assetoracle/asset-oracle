@@ -34,6 +34,8 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const [message, setMessage] = useState("");
   const [lastAction, setLastAction] = useState<"approve" | "stake" | "claim" | "refund" | null>(null);
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
+  const [referralAttributionReady, setReferralAttributionReady] = useState(false);
+  const [referralPreparing, setReferralPreparing] = useState(false);
   const manager = assetOracleMarketManagerAddress;
 
   const managerCode = useMemo(() => manager, [manager]);
@@ -162,9 +164,38 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     if (writeError) setMessage(writeError.message);
   }, [writeError]);
 
-  function submitStake() {
-    if (!canStake || !manager || parsedAmount === 0n) return;
+  async function submitStake() {
+    if (!canStake || !manager || parsedAmount === 0n || referralPreparing) return;
     setMessage("");
+    const referralCode = new URLSearchParams(window.location.search).get("ref");
+    if (referralCode && !referralAttributionReady && address) {
+      setReferralPreparing(true);
+      try {
+        const base = "https://asset-oracle-backend.onrender.com";
+        const nonceResponse = await fetch(`${base}/api/markets/auth/nonce`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ address }),
+        });
+        const nonceData = await nonceResponse.json();
+        if (!nonceResponse.ok || typeof nonceData.message !== "string") throw new Error("Could not obtain referral verification nonce.");
+        const signature = await signMessageAsync({ message: nonceData.message });
+        const attributionResponse = await fetch(`${base}/api/referrals/attribute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ address, message: nonceData.message, signature, referralCode }),
+        });
+        const attributionData = await attributionResponse.json();
+        if (!attributionResponse.ok) throw new Error(attributionData.error || "Referral attribution could not be confirmed.");
+        setReferralAttributionReady(true);
+        setMessage("Referral attribution confirmed. Continue with the stake transaction.");
+      } catch (error) {
+        setMessage("Stake paused: " + (error instanceof Error ? error.message : "referral attribution failed. You can retry."));
+        setReferralPreparing(false);
+        return;
+      }
+      setReferralPreparing(false);
+    }
     reset();
     if ((allowance.data ?? 0n) < parsedAmount) {
       setLastAction("approve");
@@ -266,14 +297,15 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
             <article className="detail-info-card"><span>Position status</span><strong>{claimed ? (hasPosition ? "Already claimed" : "No active position") : hasPosition ? "Unclaimed" : "No position"}</strong></article>
           </div>
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 < closeTime && <>
+            {new URLSearchParams(window.location.search).get("ref") && <p>Referral link detected. By continuing to stake, you can sign once to record the referral attribution; it counts only after this wallet’s first confirmed prediction.</p>}
             <label htmlFor={`onchain-amount-${marketId}`}>Stake amount (test USDC)</label>
             <input id={`onchain-amount-${marketId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="e.g. 5.00" />
             <div className="outcome-preview">
               <button type="button" aria-pressed={yesSide} onClick={() => setYesSide(true)}>YES</button>
               <button type="button" aria-pressed={!yesSide} onClick={() => setYesSide(false)}>NO</button>
             </div>
-            <button className="primary-button" type="button" disabled={!canStake || isWalletPending || receipt.isLoading || !amount.trim()} onClick={submitStake}>
-              {isWalletPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : (allowance.data ?? 0n) < parsedAmount ? "Approve exact USDC amount" : `Stake ${amount || "USDC"} on ${yesSide ? "YES" : "NO"}`}
+            <button className="primary-button" type="button" disabled={!canStake || isWalletPending || receipt.isLoading || referralPreparing || !amount.trim()} onClick={submitStake}>
+              {referralPreparing ? "Confirm referral in wallet…" : isWalletPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : (allowance.data ?? 0n) < parsedAmount ? "Approve exact USDC amount" : `Stake ${amount || "USDC"} on ${yesSide ? "YES" : "NO"}`}
             </button>
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
