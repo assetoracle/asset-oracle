@@ -34,9 +34,9 @@ import {
   requestWalletNonce,
   getMyProposals,
   getWalletRole,
-  getReferralCode,
-  attributeReferral,
+  createReferralCode,
   getReferralLeaderboard,
+  attributeReferral,
   type ReferralLeaderboardEntry,
   type StoredMarketProposal,
   type WalletRoleResponse,
@@ -142,7 +142,8 @@ export default function App() {
   const [referralLink, setReferralLink] = useState("");
   const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
-  const [referralCodeFromUrl] = useState(() => new URLSearchParams(window.location.search).get("ref") ?? "");
+  const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
+  const [referralActionLoading, setReferralActionLoading] = useState(false);
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
@@ -283,6 +284,7 @@ useEffect(() => {
 
   useEffect(() => {
     setReferralMessage("");
+    setReferralLink("");
     setMyProposals([]);
     setMyProposalsLoaded(false);
     setMyProposalsError("");
@@ -293,13 +295,22 @@ useEffect(() => {
 
   useEffect(() => {
     if (page !== "Referrals") return;
-    let cancelled = false;
+    let active = true;
     setReferralLeaderboardLoading(true);
+    setReferralLeaderboardError("");
     void getReferralLeaderboard()
-      .then((result) => { if (!cancelled) setReferralLeaderboard(result.leaderboard); })
-      .catch(() => { if (!cancelled) setReferralLeaderboard([]); })
-      .finally(() => { if (!cancelled) setReferralLeaderboardLoading(false); });
-    return () => { cancelled = true; };
+      .then((result) => {
+        if (active) setReferralLeaderboard(result.leaderboard);
+      })
+      .catch((error) => {
+        if (active) {
+          setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load referral leaderboard.");
+        }
+      })
+      .finally(() => {
+        if (active) setReferralLeaderboardLoading(false);
+      });
+    return () => { active = false; };
   }, [page]);
 
   const selectedMarket = selectedMarketId
@@ -469,7 +480,8 @@ useEffect(() => {
   }
 
   async function handleGetReferralLink() {
-    if (!wallet || !address) {
+    const requestedAddress = addressRef.current;
+    if (!requestedAddress || !wallet) {
       setReferralMessage("Connect your wallet before generating a referral link.");
       return;
     }
@@ -477,41 +489,63 @@ useEffect(() => {
       setReferralMessage("Switch to Asset Chain testnet before continuing.");
       return;
     }
+
+    setReferralActionLoading(true);
+    setReferralMessage("");
     try {
-      setReferralMessage("Requesting your referral code…");
-      const { message } = await requestWalletNonce(address);
+      const { message } = await requestWalletNonce(requestedAddress);
       const signature = await signMessageAsync({ message });
-      const result = await getReferralCode(address, message, signature);
-      const link = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(result.code)}#/`;
-      setReferralLink(link);
-      try {
-        await navigator.clipboard.writeText(link);
-        setReferralMessage("Referral link copied. A referral counts only after the invited wallet makes its first qualifying prediction.");
-      } catch {
-        setReferralMessage(`Your referral link: ${link}`);
-      }
+      const { code } = await createReferralCode(requestedAddress, message, signature);
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      const url = new URL(window.location.href);
+      url.searchParams.set("ref", code);
+      url.hash = "/referrals";
+      setReferralLink(url.toString());
+      setReferralMessage("Your referral link is ready. Copy it to share.");
     } catch (error) {
-      setReferralMessage(error instanceof Error ? error.message : "Unable to generate a referral link.");
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setReferralMessage(error instanceof Error ? error.message : "Unable to generate your referral link.");
+    } finally {
+      if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
+        setReferralActionLoading(false);
+      }
     }
   }
 
-  async function handleConfirmReferral() {
-    if (!address) {
-      setReferralMessage("Connect the invited wallet first.");
+  async function handleAttributeReferral() {
+    const requestedAddress = addressRef.current;
+    const referralCode = new URLSearchParams(window.location.search).get("ref");
+    if (!requestedAddress || !wallet) {
+      setReferralMessage("Connect your wallet to register this referral.");
       return;
     }
-    if (!referralCodeFromUrl) {
-      setReferralMessage("Open a valid referral link before confirming attribution.");
+    if (networkState !== "correct") {
+      setReferralMessage("Switch to Asset Chain testnet before continuing.");
       return;
     }
+    if (!referralCode) {
+      setReferralMessage("No referral code was found in this link.");
+      return;
+    }
+
+    setReferralActionLoading(true);
+    setReferralMessage("");
     try {
-      setReferralMessage("Confirming referral attribution…");
-      const { message } = await requestWalletNonce(address);
+      const { message } = await requestWalletNonce(requestedAddress);
       const signature = await signMessageAsync({ message });
-      const result = await attributeReferral(address, message, signature, referralCodeFromUrl);
+      const result = await attributeReferral(requestedAddress, message, signature, referralCode);
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
       setReferralMessage(result.message);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("ref");
+      window.history.replaceState(null, "", url.toString());
     } catch (error) {
-      setReferralMessage(error instanceof Error ? error.message : "Unable to confirm referral attribution.");
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setReferralMessage(error instanceof Error ? error.message : "Unable to register this referral.");
+    } finally {
+      if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
+        setReferralActionLoading(false);
+      }
     }
   }
 
@@ -627,11 +661,21 @@ useEffect(() => {
           address={address}
           message={referralMessage}
           referralLink={referralLink}
-          referralCodeFromUrl={referralCodeFromUrl}
+          referralCode={new URLSearchParams(window.location.search).get("ref") ?? ""}
           leaderboard={referralLeaderboard}
           leaderboardLoading={referralLeaderboardLoading}
+          leaderboardError={referralLeaderboardError}
+          actionLoading={referralActionLoading}
           onGetReferralLink={() => void handleGetReferralLink()}
-          onConfirmReferral={() => void handleConfirmReferral()}
+          onAttributeReferral={() => void handleAttributeReferral()}
+          onRetryLeaderboard={() => {
+            setReferralLeaderboardLoading(true);
+            setReferralLeaderboardError("");
+            void getReferralLeaderboard()
+              .then((result) => setReferralLeaderboard(result.leaderboard))
+              .catch((error) => setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load referral leaderboard."))
+              .finally(() => setReferralLeaderboardLoading(false));
+          }}
         />
       );
     }
