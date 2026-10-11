@@ -55,7 +55,7 @@ function formatCount(value: number | undefined) {
   return value === undefined ? "—" : value.toLocaleString();
 }
 
-function formatVolume(value: string | number | undefined) {
+function formatVolume(value: string | number | null | undefined) {
   if (value === undefined || value === null || value === "") return "—";
   const amount = Number(value);
   return Number.isFinite(amount)
