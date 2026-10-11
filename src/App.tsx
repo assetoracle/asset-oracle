@@ -12,8 +12,6 @@ import {
 import { useSignMessage } from "wagmi";
 
 import Header from "./components/Header";
-import { useEffect, useState } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BottomNav,
   type NavItem,
