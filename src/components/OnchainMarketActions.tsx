@@ -38,7 +38,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
 
   const managerCode = useMemo(() => manager, [manager]);
   useEffect(() => {
-    
+    let cancelled = false;
     setCodeCheckDone(false);
     setCodeVerified(false);
     if (!client || !managerCode || chainId !== ASSET_CHAIN_TESTNET_ID || !isAddress(TESTNET_USDC_ADDRESS)) {
@@ -57,7 +57,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
       setCodeVerified(false);
       setCodeCheckDone(true);
     });
-    
+    return () => { cancelled = true; };
   }, [client, managerCode, chainId]);
 
   const market = useReadContract({
