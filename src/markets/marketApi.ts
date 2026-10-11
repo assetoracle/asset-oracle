@@ -163,7 +163,7 @@ export type ReferralLeaderboardEntry = {
   verifiedReferrals: number;
 };
 
-export async function getReferralCode(
+export async function createReferralCode(
   address: string,
   message: string,
   signature: string,
@@ -174,6 +174,13 @@ export async function getReferralCode(
   });
 }
 
+export async function getReferralLeaderboard() {
+  return request<{
+    period: "ALL_TIME";
+    leaderboard: ReferralLeaderboardEntry[];
+  }>("/api/referrals/leaderboard");
+}
+
 export async function attributeReferral(
   address: string,
   message: string,
@@ -181,19 +188,11 @@ export async function attributeReferral(
   referralCode: string,
 ) {
   return request<{
-    status: "PENDING_PREDICTION" | "QUALIFIED" | "FLAGGED";
+    status: string;
     message: string;
-    ipSignalRecorded?: boolean;
     reviewFlagged?: boolean;
   }>("/api/referrals/attribute", {
     method: "POST",
     body: JSON.stringify({ address, message, signature, referralCode }),
   });
-}
-
-export async function getReferralLeaderboard() {
-  return request<{
-    period: "ALL_TIME";
-    leaderboard: ReferralLeaderboardEntry[];
-  }>("/api/referrals/leaderboard");
 }
