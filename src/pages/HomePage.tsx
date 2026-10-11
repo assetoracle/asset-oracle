@@ -113,12 +113,11 @@ function DashboardOverview() {
         {loading && <span className="network-label" role="status">Updating…</span>}
       </div>
       <div className="dashboard-stats-grid">
-        {items.map(({ label, value, icon: Icon, description }) => (
-          <article className={`dashboard-stat-card${description ? " dashboard-stat-card-wide" : ""}`} key={label}>
+        {items.map(({ label, value, icon: Icon }) => (
+          <article className="dashboard-stat-card" key={label}>
             <span className="dashboard-stat-icon"><Icon size={19} aria-hidden="true" /></span>
             <span className="dashboard-stat-label">{label}</span>
             <strong>{value}</strong>
-            {description && <p className="dashboard-stat-description">{description}</p>}
           </article>
         ))}
       </div>
