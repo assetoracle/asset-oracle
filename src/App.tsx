@@ -53,14 +53,13 @@ const categories: MarketCategory[] = [
 ];
 
 /**
- * TODO: replace this cosmetic allowlist with a server-backed role check.
- * Hiding the Admin link is not access control. The server must enforce
- * authorization on every admin operation.
+ * This only controls navigation visibility. Every admin operation is
+ * independently authenticated and authorized by the backend.
  */
-function useIsAdmin(_address: string | undefined): boolean {
-  // TODO: Replace with a server-backed admin role check.
-  // Hiding this link is cosmetic; the server must enforce access.
-  return false;
+function useIsAdmin(address: string | undefined): boolean {
+  // Let connected users open the admin screen; the backend remains the
+  // source of truth and rejects wallets that are not authorized.
+  return Boolean(address);
 }
 
 function pathForPage(page: Page, marketId?: string): string {
