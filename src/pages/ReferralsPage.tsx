@@ -63,22 +63,38 @@ export default function ReferralsPage({
         <div className="referral-link-field">
           <span>{address ? `${address.slice(0, 8)}…${address.slice(-6)} · Referral link` : "Connect your wallet to get started"}</span>
           <button className="referral-copy-button" type="button" onClick={onGetReferralLink} disabled={!address} aria-label="Get referral link">
-            <Copy size={16} /><span>Get link</span>
+            <Copy size={16} /><span>{referralLink ? "Copy again" : "Get link"}</span>
           </button>
         </div>
         {message && <p className="referral-message" role="status">{message}</p>}
       </section>
+
+      {referralCodeFromUrl && (
+        <section className="referral-link-card">
+          <h2>You arrived through a referral link</h2>
+          <p>Confirm pending attribution. It counts only after your first qualifying prediction is verified.</p>
+          <button className="primary-button" type="button" onClick={onConfirmReferral} disabled={!address}>Confirm referral</button>
+        </section>
+      )}
 
       <section className="referral-leaderboard-card">
         <div className="referral-table-heading">
           <div><span className="eyebrow">COMMUNITY RANKINGS</span><h2>Top referrers</h2></div>
           <span className="network-label">All time</span>
         </div>
-        <div className="referral-table-empty">
-          <Trophy size={30} />
-          <h3>Leaderboard data is being connected</h3>
-          <p>The leaderboard will rank wallets by verified qualifying referrals, not link clicks or self-reported totals.</p>
-        </div>
+        {leaderboardLoading ? (
+          <div className="referral-table-empty" role="status"><p>Loading verified leaderboard…</p></div>
+        ) : leaderboard.length === 0 ? (
+          <div className="referral-table-empty"><Trophy size={30} /><h3>No qualified referrals yet</h3><p>Only confirmed first predictions count.</p></div>
+        ) : (
+          <div className="referral-table-list">
+            {leaderboard.map((entry) => (
+              <div className="referral-rule" key={entry.wallet}>
+                <span>#{entry.rank}</span><div><strong>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}</strong><p>{entry.verifiedReferrals} verified referrals</p></div>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="referral-table-footer"><ShieldCheck size={16} />Only verified referral records count toward rankings.</div>
       </section>
 
