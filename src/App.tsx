@@ -1320,18 +1320,28 @@ function handleOpenNetworkSelector() {
             </p>
           </div>
 
-          {!isTestnet(wallet.chainId) && (
-            <button
-              className="primary-button"
-              type="button"
-              onClick={handleSwitchNetwork}
-              disabled={walletBusy}
-            >
-              {walletBusy ? "Switching..." : "Switch network"}
-            </button>
-          )}
-        </section>
-      )}
+         
+{!isTestnet(wallet.chainId) && (
+  <div>
+    <button
+      className="primary-button"
+      type="button"
+      onClick={handleSwitchNetwork}
+      disabled={walletBusy}
+    >
+      {walletBusy ? "Switching..." : "Switch network"}
+    </button>
+
+    <button
+      className="text-action"
+      type="button"
+      onClick={handleOpenNetworkSelector}
+      disabled={walletBusy}
+    >
+      Choose network in Reown
+    </button>
+  </div>
+)}
 
       {walletMessage && (
         <p className="wallet-message" role="status">
