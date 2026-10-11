@@ -34,6 +34,10 @@ import {
   requestWalletNonce,
   getMyProposals,
   getWalletRole,
+  getReferralCode,
+  attributeReferral,
+  getReferralLeaderboard,
+  type ReferralLeaderboardEntry,
   type StoredMarketProposal,
   type WalletRoleResponse,
 } from "./markets/marketApi";
@@ -135,6 +139,10 @@ export default function App() {
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
   const [proposalMessage, setProposalMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
+  const [referralLink, setReferralLink] = useState("");
+  const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
+  const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
+  const [referralCodeFromUrl] = useState(() => new URLSearchParams(window.location.search).get("ref") ?? "");
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
@@ -282,6 +290,17 @@ useEffect(() => {
     setRoleError("");
     setRoleLoading(false);
   }, [address]);
+
+  useEffect(() => {
+    if (page !== "Referrals") return;
+    let cancelled = false;
+    setReferralLeaderboardLoading(true);
+    void getReferralLeaderboard()
+      .then((result) => { if (!cancelled) setReferralLeaderboard(result.leaderboard); })
+      .catch(() => { if (!cancelled) setReferralLeaderboard([]); })
+      .finally(() => { if (!cancelled) setReferralLeaderboardLoading(false); });
+    return () => { cancelled = true; };
+  }, [page]);
 
   const selectedMarket = selectedMarketId
     ? publishedMarkets.find((market) => market.id === selectedMarketId) ?? null
@@ -449,25 +468,51 @@ useEffect(() => {
     setMyProposalsLoaded(false);
   }
 
-  function handleGetReferralLink() {
-    if (!wallet) {
-      setReferralMessage(
-        "Connect your wallet before generating a referral link.",
-      );
+  async function handleGetReferralLink() {
+    if (!wallet || !address) {
+      setReferralMessage("Connect your wallet before generating a referral link.");
       return;
     }
-
     if (networkState !== "correct") {
-      setReferralMessage(
-        "Switch to Asset Chain testnet before continuing.",
-      );
+      setReferralMessage("Switch to Asset Chain testnet before continuing.");
       return;
     }
+    try {
+      setReferralMessage("Requesting your referral code…");
+      const { message } = await requestWalletNonce(address);
+      const signature = await signMessageAsync({ message });
+      const result = await getReferralCode(address, message, signature);
+      const link = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(result.code)}#/`;
+      setReferralLink(link);
+      try {
+        await navigator.clipboard.writeText(link);
+        setReferralMessage("Referral link copied. A referral counts only after the invited wallet makes its first qualifying prediction.");
+      } catch {
+        setReferralMessage(`Your referral link: ${link}`);
+      }
+    } catch (error) {
+      setReferralMessage(error instanceof Error ? error.message : "Unable to generate a referral link.");
+    }
+  }
 
-    // TODO: connect this to a backend-issued referral code endpoint.
-    setReferralMessage(
-      "Referral link generation requires a backend-issued referral code. That service is not connected yet.",
-    );
+  async function handleConfirmReferral() {
+    if (!address) {
+      setReferralMessage("Connect the invited wallet first.");
+      return;
+    }
+    if (!referralCodeFromUrl) {
+      setReferralMessage("Open a valid referral link before confirming attribution.");
+      return;
+    }
+    try {
+      setReferralMessage("Confirming referral attribution…");
+      const { message } = await requestWalletNonce(address);
+      const signature = await signMessageAsync({ message });
+      const result = await attributeReferral(address, message, signature, referralCodeFromUrl);
+      setReferralMessage(result.message);
+    } catch (error) {
+      setReferralMessage(error instanceof Error ? error.message : "Unable to confirm referral attribution.");
+    }
   }
 
   function renderContent() {
@@ -581,7 +626,12 @@ useEffect(() => {
         <ReferralsPage
           address={address}
           message={referralMessage}
-          onGetReferralLink={handleGetReferralLink}
+          referralLink={referralLink}
+          referralCodeFromUrl={referralCodeFromUrl}
+          leaderboard={referralLeaderboard}
+          leaderboardLoading={referralLeaderboardLoading}
+          onGetReferralLink={() => void handleGetReferralLink()}
+          onConfirmReferral={() => void handleConfirmReferral()}
         />
       );
     }
