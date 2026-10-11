@@ -201,7 +201,7 @@ export default function AdminDashboard({
             </div>
 
             {proposal.status === "APPROVED" && (
-              <PublishApprovedMarket proposal={proposal} address={address} signMessage={signMessage} />
+              <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />
             )}
 
             {proposal.status === "PENDING_APPROVAL" && (
