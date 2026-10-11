@@ -222,7 +222,6 @@ export const MARKET_STATUS = {
   SETTLED: 3,
   REFUNDABLE: 4,
   CANCELLED: 5,
-  ARBITRATION: 6,
 } as const;
 
 export const MARKET_OUTCOME = {
