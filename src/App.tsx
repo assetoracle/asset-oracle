@@ -63,7 +63,7 @@ const ADMIN_WALLET_ADDRESSES = (
   import.meta.env.VITE_ADMIN_WALLET_ADDRESSES ?? ""
 )
   .split(",")
-  .map((value) => value.trim().toLowerCase())
+  .map((value: string) => value.trim().toLowerCase())
   .filter(Boolean);
 
 function useIsAdmin(address: string | undefined): boolean {
