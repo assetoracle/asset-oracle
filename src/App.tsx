@@ -323,28 +323,41 @@ function App() {
     }
   }
 
-  async function handleSwitchNetwork() {
-    setWalletBusy(true);
-    setWalletMessage("");
+  
+async function handleSwitchNetwork() {
+  setWalletBusy(true);
+  setWalletMessage("");
 
-    try {
-      await switchChainAsync({
-        chainId: ASSET_CHAIN_ID,
-      });
+  try {
+    await switchChainAsync({
+      chainId: ASSET_CHAIN_ID,
+    });
 
+    setWalletMessage(
+      "Successfully switched to Asset Chain Testnet (42421).",
+    );
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "";
+
+    console.error("Asset Chain network switch failed:", error);
+
+    if (
+      /user rejected|user denied|user cancelled/i.test(errorMessage)
+    ) {
       setWalletMessage(
-        "Successfully switched to Asset Chain Testnet (42421).",
+        "Network switch was cancelled. Try again, or switch to Asset Chain Testnet in your wallet.",
       );
-    } catch (error) {
+    } else {
       setWalletMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to switch networks. Check your wallet and try again.",
+        "Unable to switch networks from this browser. Open Asset Oracle in your wallet's built-in browser, or switch to Asset Chain Testnet manually. Chain ID: 42421.",
       );
-    } finally {
-      setWalletBusy(false);
     }
+  } finally {
+    setWalletBusy(false);
   }
+}
+
 
   async function handleDisconnectWallet() {
     setWalletBusy(true);
