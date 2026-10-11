@@ -32,7 +32,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const [codeVerified, setCodeVerified] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
   const [message, setMessage] = useState("");
-  const [lastAction, setLastAction] = useState<"approve" | "stake" | "claim" | "refund" | "timeout" | null>(null);
+  const [lastAction, setLastAction] = useState<"approve" | "stake" | "claim" | "refund" | "timeout" | "disputeTimeout" | null>(null);
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
@@ -149,6 +149,9 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const canStartTimeoutRefund = safe && isConnected && hasPosition && !claimed &&
     Number(marketData?.status) === MARKET_STATUS.CLOSED &&
     Date.now() / 1000 >= closeTime + Number(marketData?.challengePeriod ?? 0n);
+  const canStartDisputeTimeoutRefund = safe && isConnected && hasPosition && !claimed &&
+    Number(marketData?.status) === MARKET_STATUS.ARBITRATION &&
+    Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + 7 * 24 * 60 * 60;
 
   useEffect(() => {
     if (receipt.isSuccess) {
@@ -219,18 +222,25 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     });
   }
 
-  function submitAction(action: "claim" | "refund" | "timeout") {
+  function submitAction(action: "claim" | "refund" | "timeout" | "disputeTimeout") {
     if (!manager) return;
     if (action === "claim" && !canClaim) return;
     if (action === "refund" && !canRefund) return;
     if (action === "timeout" && !canStartTimeoutRefund) return;
+    if (action === "disputeTimeout" && !canStartDisputeTimeoutRefund) return;
     setMessage("");
     reset();
     setLastAction(action);
     writeContract({
       address: manager,
       abi: assetOracleMarketManagerAbi,
-      functionName: action === "claim" ? "claim" : action === "timeout" ? "refundTimedOutMarket" : "refundCancelled",
+      functionName: action === "claim"
+        ? "claim"
+        : action === "timeout"
+          ? "refundTimedOutMarket"
+          : action === "disputeTimeout"
+            ? "refundDisputedTimeout"
+            : "refundCancelled",
       args: [marketId],
     });
   }
@@ -316,6 +326,8 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
           {Number(marketData?.status) === MARKET_STATUS.SETTLED && <button className="primary-button" type="button" disabled={!canClaim || isWalletPending || receipt.isLoading} onClick={() => submitAction("claim")}>Claim settlement</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p>This market has closed but has not been resolved. After the contract timeout, an eligible participant can enable refunds.</p>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <button className="primary-button" type="button" disabled={!canStartTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("timeout")}>Enable timeout refunds</button>}
+          {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <p>A resolution dispute is under review. Refunds become available if arbitration is not completed within seven days of the dispute.</p>}
+          {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <button className="primary-button" type="button" disabled={!canStartDisputeTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("disputeTimeout")}>Enable dispute timeout refunds</button>}
           {(Number(marketData?.status) === MARKET_STATUS.CANCELLED || Number(marketData?.status) === MARKET_STATUS.REFUNDABLE) && <button className="primary-button" type="button" disabled={!canRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("refund")}>Refund position</button>}
           {Number(marketData?.outcome) === MARKET_OUTCOME.INVALID && <p>Invalid outcome: the contract returns the net stake through the settlement claim path.</p>}
         </>}
