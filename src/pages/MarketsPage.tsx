@@ -173,8 +173,7 @@ export default function MarketsPage({
       <OnchainMarkets />
 
       <p className="market-disclaimer">
-        Only markets returned by the approved public-market API are
-        displayed. Market participation is not yet enabled.
+        Published proposals come from the approved public-market API. On-chain markets and participation are shown separately when the verified Enugu testnet contract is configured.
       </p>
     </section>
   );
