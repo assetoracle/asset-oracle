@@ -17,7 +17,7 @@ import {
   ASSET_CHAIN_TESTNET_ID,
   assetOracleMarketManagerAddress,
 } from "../contracts/assetOracle";
-import type { StoredMarketProposal } from "../markets/marketApi";
+import { recordMarketPublication, type StoredMarketProposal } from "../markets/marketApi";
 
 const marketPublisherAbi = [
   {
@@ -61,9 +61,11 @@ const marketPublisherAbi = [
 
 type Props = {
   proposal: StoredMarketProposal;
+  address?: string;
+  signMessage: (message: string) => Promise<string>;
 };
 
-export default function PublishApprovedMarket({ proposal }: Props) {
+export default function PublishApprovedMarket({ proposal, address, signMessage }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
   const client = usePublicClient();
@@ -71,8 +73,10 @@ export default function PublishApprovedMarket({ proposal }: Props) {
   const [contractVerified, setContractVerified] = useState(false);
   const [checkingContract, setCheckingContract] = useState(false);
   const [error, setError] = useState("");
-  const [marketId, setMarketId] = useState<string | null>(null);
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
+  const [marketId, setMarketId] = useState<string | null>(proposal.onchainMarketId ?? null);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(proposal.onchainTxHash as `0x${string}` | undefined);
+  const [publicationSaved, setPublicationSaved] = useState(Boolean(proposal.onchainTxHash));
+  const [savingPublication, setSavingPublication] = useState(false);
   const { writeContractAsync, isPending, error: walletError } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({
     hash: txHash,
@@ -109,14 +113,34 @@ export default function PublishApprovedMarket({ proposal }: Props) {
     return () => { cancelled = true; };
   }, [client, manager, chainId]);
 
+  const savePublication = async (resolvedMarketId: string, hash: `0x${string}`) => {
+    if (!address) {
+      setError("Transaction confirmed. Connect the publishing wallet to record this publication with the backend.");
+      return;
+    }
+    setSavingPublication(true);
+    try {
+      await recordMarketPublication(proposal.id, hash, resolvedMarketId, address, signMessage);
+      setPublicationSaved(true);
+      setError("");
+    } catch (err) {
+      setPublicationSaved(false);
+      setError(err instanceof Error
+        ? `Transaction confirmed, but publication tracking failed: ${err.message}. Retry saving the publication; do not submit another blockchain transaction.`
+        : "Transaction confirmed, but publication tracking failed. Retry saving the publication; do not submit another blockchain transaction.");
+    } finally {
+      setSavingPublication(false);
+    }
+  };
+
   useEffect(() => {
-    if (!receipt.isSuccess || !receipt.data) return;
+    if (!receipt.isSuccess || !receipt.data || !txHash || marketId) return;
     try {
       const events = parseEventLogs({
         abi: marketPublisherAbi,
         logs: receipt.data.logs,
         eventName: "MarketCreated",
-        strict: false,
+        strict: true,
       });
       const matching = events.find((event) =>
         event.args.question === proposal.question &&
@@ -126,12 +150,13 @@ export default function PublishApprovedMarket({ proposal }: Props) {
         setError("Transaction confirmed, but the MarketCreated event could not be matched. Verify the transaction on the explorer before retrying.");
         return;
       }
-      setMarketId(matching.args.marketId.toString());
-      setError("");
+      const id = matching.args.marketId.toString();
+      setMarketId(id);
+      void savePublication(id, txHash);
     } catch {
       setError("Transaction confirmed, but its market ID could not be decoded. Verify the transaction on the explorer before retrying.");
     }
-  }, [receipt.isSuccess, receipt.data, proposal.question, address]);
+  }, [receipt.isSuccess, receipt.data, proposal.question, proposal.id, address, txHash, marketId, signMessage]);
 
   const stablecoinReady = Boolean(
     tokenConfig.data &&
@@ -204,6 +229,8 @@ export default function PublishApprovedMarket({ proposal }: Props) {
         <>
           <p role="status">Market created on-chain. Market ID: <strong>{marketId}</strong></p>
           {txHash && <p><a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${txHash}`} target="_blank" rel="noreferrer">View confirmed transaction</a></p>}
+          <p className="disabled-note">{publicationSaved ? "Publication verified and saved to Asset Oracle." : "The chain transaction is confirmed, but backend publication tracking is not yet saved."}</p>
+          {!publicationSaved && marketId && txHash && <button className="primary-button" type="button" disabled={savingPublication || !address} onClick={() => void savePublication(marketId, txHash)}>{savingPublication ? "Saving publication…" : "Retry saving publication"}</button>}
         </>
       ) : (
         <>
