@@ -1,9 +1,10 @@
-export const ASSET_CHAIN_ID = 42421;
+
+export { ASSET_CHAIN_ID } from "../config/assetChain";
 
 export function normalizeChainId(
   chainId: string | number | undefined,
 ): string | null {
-  if (chainId === undefined || chainId === null || chainId === "") {
+  if (chainId === undefined) {
     return null;
   }
 
@@ -19,30 +20,35 @@ export function normalizeChainId(
 
   const decimal = Number(normalized);
 
-  return Number.isFinite(decimal) && decimal >= 0
-    ? `0x${decimal.toString(16)}`
-    : normalized;
-}
-
-export function isTestnet(
-  chainId: string | number | undefined,
-): boolean {
-  const normalized = normalizeChainId(chainId);
-  return normalized === normalizeChainId(ASSET_CHAIN_ID);
-}
-
-export function displayChainId(
-  chainId: string | number | undefined,
-): string {
-  const normalized = normalizeChainId(chainId);
-
-  if (!normalized) {
-    return "Detecting network...";
-  }
-
-  if (normalized.startsWith("0x")) {
-    return `${parseInt(normalized, 16)} (${normalized})`;
+  if (Number.isFinite(decimal) && decimal >= 0) {
+    return `0x${decimal.toString(16)}`;
   }
 
   return normalized;
+}
+
+export function isTestnet(chainId: string | null): boolean {
+  if (chainId === null) {
+    return false;
+  }
+
+  return normalizeChainId(chainId) === "0xa575";
+}
+
+export function displayChainId(
+  chainId: string | null | undefined,
+): string {
+  if (chainId === null || chainId === undefined) {
+    return "Unknown";
+  }
+
+  try {
+    if (chainId.toLowerCase().startsWith("0x")) {
+      return `${Number.parseInt(chainId, 16)} (${chainId})`;
+    }
+
+    return `${Number(chainId)} (${chainId})`;
+  } catch {
+    return chainId;
+  }
 }
