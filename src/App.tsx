@@ -33,6 +33,7 @@ import MarketDetailPage from "./components/MarketDetailPage";
 import WalletHelpPanel from "./components/WalletHelpPanel";
 import { MarketProposalForm } from "./components/MarketProposalForm";
 import Portfolio from "./components/Portfolio";
+import AdminDashboard from "./components/AdminDashboard";
 import {
   listPublishedMarkets,
   requestWalletNonce,
