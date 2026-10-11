@@ -33,7 +33,9 @@ import {
   listPublishedMarkets,
   requestWalletNonce,
   getMyProposals,
+  getWalletRole,
   type StoredMarketProposal,
+  type WalletRoleResponse,
 } from "./markets/marketApi";
 import {
   categoryLabel,
@@ -144,6 +146,9 @@ export default function App() {
   const [myProposalsLoading, setMyProposalsLoading] = useState(false);
   const [myProposalsError, setMyProposalsError] = useState("");
   const [myProposalsLoaded, setMyProposalsLoaded] = useState(false);
+  const [walletRole, setWalletRole] = useState<WalletRoleResponse | null>(null);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [roleError, setRoleError] = useState("");
 
   const {
     address,
@@ -273,6 +278,9 @@ useEffect(() => {
     setMyProposals([]);
     setMyProposalsLoaded(false);
     setMyProposalsError("");
+    setWalletRole(null);
+    setRoleError("");
+    setRoleLoading(false);
   }, [address]);
 
   const selectedMarket = selectedMarketId
@@ -346,6 +354,45 @@ useEffect(() => {
         </div>
       </article>
     );
+  }
+
+  async function handleVerifyWalletRole() {
+    const requestedAddress = addressRef.current;
+
+    if (!requestedAddress) {
+      setRoleError("Connect your wallet first.");
+      return;
+    }
+
+    setRoleLoading(true);
+    setRoleError("");
+
+    try {
+      const { message } = await requestWalletNonce(requestedAddress);
+      const signature = await signMessageAsync({ message });
+      const result = await getWalletRole(requestedAddress, message, signature);
+
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
+        return;
+      }
+
+      setWalletRole(result);
+    } catch (error) {
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
+        return;
+      }
+
+      setRoleError(
+        error instanceof Error
+          ? error.message
+          : "Unable to verify this wallet's role.",
+      );
+      setWalletRole(null);
+    } finally {
+      if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
+        setRoleLoading(false);
+      }
+    }
   }
 
   async function handleLoadMyProposals() {
@@ -512,6 +559,10 @@ useEffect(() => {
           error={myProposalsError}
           onConnect={() => void handleConnect()}
           onLoad={() => void handleLoadMyProposals()}
+          walletRole={walletRole}
+          roleLoading={roleLoading}
+          roleError={roleError}
+          onVerifyRole={() => void handleVerifyWalletRole()}
         />
       );
     }
