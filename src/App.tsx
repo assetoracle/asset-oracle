@@ -847,7 +847,11 @@ function handleOpenNetworkSelector() {
   }
 
   function renderAccountPage() {
-    const pageInfo = {
+    if (page === "Admin") {
+  return null;
+}
+
+const info = pageInfo[page];
       Portfolio: {
         eyebrow: "YOUR ACTIVITY",
         title: "Your portfolio",
