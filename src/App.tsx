@@ -59,8 +59,7 @@ const categories: MarketCategory[] = [
  */
 function useIsAdmin(address: string | undefined): boolean {
   const configuredAdminAddress =
-    import.meta.env.VITE_ADMIN_WALLET_ADDRESS as string | undefined;
-
+    undefined;
   return Boolean(
     address &&
       configuredAdminAddress &&
