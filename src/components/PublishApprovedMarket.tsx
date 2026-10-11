@@ -73,7 +73,7 @@ export default function PublishApprovedMarket({ proposal }: Props) {
   const [error, setError] = useState("");
   const [marketId, setMarketId] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
-  const { writeContract, isPending, error: walletError } = useWriteContract();
+  const { writeContractAsync, isPending, error: walletError } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({
     hash: txHash,
     query: { enabled: Boolean(txHash) },
@@ -178,7 +178,7 @@ export default function PublishApprovedMarket({ proposal }: Props) {
     });
 
     try {
-      const hash = await writeContract({
+      const hash = await writeContractAsync({
         address: manager as Address,
         abi: marketPublisherAbi,
         functionName: "createMarket",
