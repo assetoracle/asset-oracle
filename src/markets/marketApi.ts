@@ -131,3 +131,27 @@ export async function getMyProposals(
     }),
   });
 }
+
+export type WalletRole = "OWNER" | "MARKET_CREATOR" | "USER";
+
+export type WalletRoleResponse = {
+  address: string;
+  role: WalletRole;
+  permissions: {
+    createMarketProposal: boolean;
+    viewOwnProposals: boolean;
+    reviewAllProposals: boolean;
+    approveOrRejectProposals: boolean;
+  };
+};
+
+export async function getWalletRole(
+  address: string,
+  message: string,
+  signature: string,
+) {
+  return request<WalletRoleResponse>("/api/markets/auth/role", {
+    method: "POST",
+    body: JSON.stringify({ address, message, signature }),
+  });
+}

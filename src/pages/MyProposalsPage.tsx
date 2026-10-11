@@ -1,4 +1,4 @@
-import type { StoredMarketProposal } from "../markets/marketApi";
+import type { StoredMarketProposal, WalletRoleResponse } from "../markets/marketApi";
 import { categoryLabel } from "../utils/format";
 
 type MyProposalsPageProps = {
@@ -9,6 +9,10 @@ type MyProposalsPageProps = {
   error: string;
   onConnect: () => void;
   onLoad: () => void;
+  walletRole: WalletRoleResponse | null;
+  roleLoading: boolean;
+  roleError: string;
+  onVerifyRole: () => void;
 };
 
 export default function MyProposalsPage({
@@ -19,6 +23,10 @@ export default function MyProposalsPage({
   error,
   onConnect,
   onLoad,
+  walletRole,
+  roleLoading,
+  roleError,
+  onVerifyRole,
 }: MyProposalsPageProps) {
   return (
     <section className="page-section account-page">
@@ -46,14 +54,56 @@ export default function MyProposalsPage({
         </div>
       ) : (
         <>
-          <button
-            className="primary-button"
-            type="button"
-            onClick={onLoad}
-            disabled={loading}
-          >
-            {loading ? "Verifying wallet..." : "Load my proposals"}
-          </button>
+          <div className="account-summary-grid">
+            <article className="account-summary-card">
+              <span>Wallet role</span>
+              <strong>{walletRole ? walletRole.role.replace(/_/g, " ") : "Not verified"}</strong>
+            </article>
+            <article className="account-summary-card">
+              <span>Proposal review</span>
+              <strong>
+                {walletRole?.permissions.approveOrRejectProposals
+                  ? "Can approve or reject"
+                  : "Owner approval required"}
+              </strong>
+            </article>
+          </div>
+
+          <div className="proposal-actions">
+            <button
+              className="primary-button"
+              type="button"
+              onClick={onVerifyRole}
+              disabled={roleLoading}
+            >
+              {roleLoading ? "Verifying role..." : walletRole ? "Refresh wallet role" : "Verify wallet role"}
+            </button>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={onLoad}
+              disabled={loading}
+            >
+              {loading ? "Verifying wallet..." : "Load my proposals"}
+            </button>
+          </div>
+
+          {walletRole && (
+            <p className="wallet-message" role="status">
+              {walletRole.role === "OWNER"
+                ? "Owner permissions: review, approve, and reject proposals."
+                : walletRole.role === "MARKET_CREATOR"
+                  ? "Market creator permissions: submit proposals and track your own submissions. Approval and rejection remain owner-only."
+                  : "Standard wallet: submit proposals and track your own submissions. Approval and rejection remain owner-only."}
+            </p>
+          )}
+
+          {roleError && (
+            <div className="empty-state" role="alert">
+              <h3>Unable to verify wallet role</h3>
+              <p>{roleError}</p>
+            </div>
+          )}
 
           {error && (
             <div className="empty-state" role="alert">
