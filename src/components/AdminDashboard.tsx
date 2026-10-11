@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
+import ReferralReviewPanel from "./ReferralReviewPanel";
 import {
   requestWalletNonce,
   type StoredMarketProposal,
@@ -223,6 +224,7 @@ export default function AdminDashboard({
           </article>
         ))}
       </div>
+      <ReferralReviewPanel address={address} signMessage={signMessage} />
     </section>
   );
 }
