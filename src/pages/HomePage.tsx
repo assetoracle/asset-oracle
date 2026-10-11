@@ -36,7 +36,6 @@ type DashboardStats = {
   tradingVolume24h: string | number | null;
   totalMarkets: number | null;
   totalSettled: number | null;
-  totalTradingVolume: string | number | null;
 };
 
 type HomePageProps = {
@@ -85,7 +84,6 @@ function DashboardOverview() {
           tradingVolume24h: data.tradingVolume24h ?? null,
           totalMarkets: data.totalMarkets !== null && data.totalMarkets !== undefined && Number.isFinite(Number(data.totalMarkets)) ? Number(data.totalMarkets) : null,
           totalSettled: data.totalSettled !== null && data.totalSettled !== undefined && Number.isFinite(Number(data.totalSettled)) ? Number(data.totalSettled) : null,
-          totalTradingVolume: data.totalTradingVolume ?? null,
         });
       } catch (error) {
         if (!controller.signal.aborted) setUnavailable(true);
@@ -103,7 +101,6 @@ function DashboardOverview() {
     { label: "24hrs Trading Volume", value: stats ? formatVolume(stats.tradingVolume24h) : "—", icon: ChartNoAxesCombined },
     { label: "Total Market", value: stats ? formatCount(stats.totalMarkets) : "—", icon: ShieldCheck },
     { label: "Total Settled", value: stats ? formatCount(stats.totalSettled) : "—", icon: ShieldCheck },
-    { label: "Total Trading Volume", value: stats ? formatVolume(stats.totalTradingVolume) : "—", icon: ChartNoAxesCombined, description: "Cumulative value of all prediction stakes placed" },
   ];
 
   return (
