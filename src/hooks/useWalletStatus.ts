@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import {
   useAccount,
   useDisconnect,
-  useSwitchChain,
   useConfig,
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import {
-  ASSET_CHAIN_ID,
   displayChainId,
   isTestnet,
   normalizeChainId,
@@ -123,7 +121,14 @@ async function handleSwitchNetwork() {
       throw new Error("No active wallet connector found.");
     }
 
-    const provider = await connector.getProvider();
+    if (
+  !provider ||
+  typeof provider !== "object" ||
+  !("request" in provider) ||
+  typeof provider.request !== "function"
+) {
+  throw new Error("Wallet provider does not support network switching.");
+}
 
     await provider.request({
       method: "wallet_switchEthereumChain",
