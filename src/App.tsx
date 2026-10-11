@@ -179,50 +179,6 @@ export default function App() {
     return items;
   }, [isAdmin]);
 
-  const loadMarkets = useCallback(async () => {
-    let active = true;
-
-    setMarketsLoading(true);
-    setMarketsError("");
-
-    try {
-      const result = await listPublishedMarkets();
-
-      if (!active) return;
-
-      const markets: DisplayMarket[] = result.markets
-        .filter((market) => market.status === "APPROVED")
-        .map((market) => ({
-          id: market.id,
-          question: market.question,
-          description: market.description,
-          category: market.category,
-          closesAt: market.closesAt,
-          resolvesAt: market.resolvesAt,
-          status: market.status,
-          symbol: categorySymbol(market.category),
-          label: categoryLabel(market.category),
-          endDate: formatDate(market.resolvesAt),
-        }));
-
-      setPublishedMarkets(markets);
-    } catch (error) {
-      if (!active) return;
-
-      setMarketsError(
-        error instanceof Error
-          ? error.message
-          : "Unable to load published markets.",
-      );
-    } finally {
-      if (active) setMarketsLoading(false);
-    }
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
   const isMountedRef = useRef(false);
 
 useEffect(() => {
