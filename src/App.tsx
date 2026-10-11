@@ -852,43 +852,7 @@ function handleOpenNetworkSelector() {
 }
 
 const info = pageInfo[page];
-      Portfolio: {
-        eyebrow: "YOUR ACTIVITY",
-        title: "Your portfolio",
-        description:
-          "Your positions, stakes, and outcomes will appear here when contract data is connected.",
-        icon: BriefcaseBusiness,
-        cards: [
-          ["Open positions", "Awaiting contract data"],
-          ["Total staked", "Awaiting contract data"],
-          ["Realised outcomes", "Awaiting market history"],
-        ],
-      },
-      Claims: {
-        eyebrow: "YOUR REWARDS",
-        title: "Claims",
-        description:
-          "Track eligible winnings and refunds after verified market settlement.",
-        icon: WalletCards,
-        cards: [
-          ["Claimable rewards", "Awaiting settlement data"],
-          ["Completed claims", "Awaiting transaction history"],
-          ["Refunds", "Awaiting contract data"],
-        ],
-      },
-      History: {
-        eyebrow: "YOUR RECORDS",
-        title: "History",
-        description:
-          "Review predictions, outcomes, settlement events, and refunds.",
-        icon: History,
-        cards: [
-          ["Predictions", "No records loaded"],
-          ["Settlements", "No records loaded"],
-          ["Transactions", "No records loaded"],
-        ],
-      },
-    } as const;
+      const PageIcon = info.icon;
 
     if (page === "My Proposals") {
       return renderMyProposals();
