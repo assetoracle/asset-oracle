@@ -72,7 +72,7 @@ export function useWalletStatus() {
         )}. Switch to Asset Chain Testnet to continue.`,
       );
     }
-  }, [address, chainId, networkState, wallet]);
+  }, [address, chainId]);
 
   async function handleConnect() {
     setWalletBusy(true);
