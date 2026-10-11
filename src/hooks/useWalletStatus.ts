@@ -103,7 +103,6 @@ export function useWalletStatus() {
     }
   }
 
-  
 async function handleSwitchNetwork() {
   if (!wallet || wallet.chainId === null) {
     setWalletMessage("Detecting network...");
@@ -168,7 +167,6 @@ async function handleSwitchNetwork() {
     setWalletBusy(false);
   }
 }
-
 
   async function handleDisconnectWallet() {
     setWalletBusy(true);
