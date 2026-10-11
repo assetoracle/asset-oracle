@@ -22,6 +22,10 @@ export type StoredMarketProposal = MarketProposalInput & {
   id: string;
   status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
   submittedAt: string;
+  onchainMarketId?: string | null;
+  onchainTxHash?: string | null;
+  onchainManagerAddress?: string | null;
+  onchainChainId?: number | null;
 };
 
 async function request<T>(
@@ -194,5 +198,35 @@ export async function attributeReferral(
   }>("/api/referrals/attribute", {
     method: "POST",
     body: JSON.stringify({ address, message, signature, referralCode }),
+  });
+}
+
+
+export async function recordMarketPublication(
+  proposalId: string,
+  txHash: string,
+  marketId: string,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const { message } = await requestWalletNonce(address);
+  const signature = await signMessage(message);
+  return request<{
+    message: string;
+    proposal: StoredMarketProposal;
+    publication: {
+      marketId: string;
+      txHash: string;
+      managerAddress: string;
+      chainId: number;
+      explorerUrl: string;
+    };
+  }>(`/api/markets/admin/proposals/${encodeURIComponent(proposalId)}/publish`, {
+    method: "POST",
+    body: JSON.stringify({
+      txHash,
+      marketId,
+      walletAuth: { address, message, signature },
+    }),
   });
 }

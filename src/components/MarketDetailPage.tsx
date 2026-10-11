@@ -14,6 +14,8 @@ import {
   LockKeyhole,
 } from "lucide-react";
 
+import OnchainMarketStatus from "./OnchainMarketStatus";
+
 type ResolutionRule = {
   sourceId: string;
   metric: string;
@@ -64,6 +66,8 @@ function MarketDetailPage({
 
       <h1>{question}</h1>
       <p className="market-detail-description">{description}</p>
+
+      <OnchainMarketStatus />
 
       <div className="market-detail-status">
         <LockKeyhole size={20} />

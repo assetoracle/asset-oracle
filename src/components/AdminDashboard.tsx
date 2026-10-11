@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
+import PublishApprovedMarket from "./PublishApprovedMarket";
 import {
   requestWalletNonce,
   type StoredMarketProposal,
@@ -186,6 +187,10 @@ export default function AdminDashboard({
 
             <h3>{proposal.question}</h3>
             <p className="market-description">{proposal.description}</p>
+
+            {proposal.status === "APPROVED" && (
+              <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />
+            )}
 
             <div className="market-meta">
               <span>Submitted</span>
