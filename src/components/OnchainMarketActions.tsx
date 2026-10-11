@@ -38,7 +38,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
 
   const managerCode = useMemo(() => manager, [manager]);
   useEffect(() => {
-    let cancelled = false;
+    
     setCodeCheckDone(false);
     setCodeVerified(false);
     if (!client || !managerCode || chainId !== ASSET_CHAIN_TESTNET_ID || !isAddress(TESTNET_USDC_ADDRESS)) {
@@ -57,7 +57,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
       setCodeVerified(false);
       setCodeCheckDone(true);
     });
-    return () => { cancelled = true; };
+    
   }, [client, managerCode, chainId]);
 
   const market = useReadContract({
@@ -208,12 +208,12 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   }, [receipt.isSuccess, txHash, manager, lastAction, allowance.data, parsedAmount]);
 
   useEffect(() => {
-    if (!receipt.isSuccess || receipt.receipt?.status !== "success" || !txHash ||
+    if (!receipt.isSuccess || receipt.data?.status !== "success" || !txHash ||
         lastAction !== "stake" || !address || referralQualificationAttempted === txHash) return;
     const referralCode = new URLSearchParams(window.location.search).get("ref");
     if (!referralCode) return;
     setReferralQualificationAttempted(txHash);
-    let cancelled = false;
+    
     void (async () => {
       try {
         const base = "https://asset-oracle-backend.onrender.com";
@@ -237,13 +237,13 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
         });
         const qualificationData = await qualificationResponse.json();
         if (!qualificationResponse.ok) throw new Error(qualificationData.error || "Referral qualification could not be verified.");
-        if (!cancelled) setMessage("Stake confirmed on-chain. " + (qualificationData.message || "Referral qualification checked."));
+        setMessage("Stake confirmed on-chain. " + (qualificationData.message || "Referral qualification checked."));
       } catch (error) {
-        if (!cancelled) setMessage("Stake confirmed on-chain. Referral verification is pending: " + (error instanceof Error ? error.message : "try again from Referrals."));
+        setMessage("Stake confirmed on-chain. Referral verification is pending: " + (error instanceof Error ? error.message : "try again from Referrals."));
       }
     })();
-    return () => { cancelled = true; };
-  }, [receipt.isSuccess, receipt.receipt?.status, txHash, manager, lastAction, address, referralQualificationAttempted, signMessageAsync]);
+    
+  }, [receipt.isSuccess, receipt.data?.status, txHash, manager, lastAction, address, referralQualificationAttempted, signMessageAsync]);
 
   return (
     <section className="resolution-preview onchain-status" aria-live="polite">
