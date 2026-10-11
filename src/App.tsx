@@ -225,10 +225,59 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    let active = true;
+  const isMountedRef = useRef(false);
 
-    async function run() {
+useEffect(() => {
+  isMountedRef.current = true;
+
+  return () => {
+    isMountedRef.current = false;
+  };
+}, []);
+
+const loadMarkets = useCallback(async () => {
+  setMarketsLoading(true);
+  setMarketsError("");
+
+  try {
+    const result = await listPublishedMarkets();
+
+    if (!isMountedRef.current) return;
+
+    const markets: DisplayMarket[] = result.markets
+      .filter((market) => market.status === "APPROVED")
+      .map((market) => ({
+        id: market.id,
+        question: market.question,
+        description: market.description,
+        category: market.category,
+        closesAt: market.closesAt,
+        resolvesAt: market.resolvesAt,
+        status: market.status,
+        symbol: categorySymbol(market.category),
+        label: categoryLabel(market.category),
+        endDate: formatDate(market.resolvesAt),
+      }));
+
+    setPublishedMarkets(markets);
+  } catch (error) {
+    if (!isMountedRef.current) return;
+
+    setMarketsError(
+      error instanceof Error
+        ? error.message
+        : "Unable to load published markets.",
+    );
+  } finally {
+    if (isMountedRef.current) {
+      setMarketsLoading(false);
+    }
+  }
+}, []);
+
+useEffect(() => {
+  void loadMarkets();
+}, [loadMarkets]);
       setMarketsLoading(true);
       setMarketsError("");
 
