@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   useAccount,
@@ -99,7 +98,35 @@ const navigation = [
 
 const moreNavigation = [
   { label: "Referrals" as const, icon: Trophy },
+  { label: "Admin" as const, icon: ShieldCheck },
 ];
+
+const accountPageInfo = {
+  Claims: {
+    eyebrow: "YOUR REWARDS",
+    title: "Claims",
+    description:
+      "Track eligible winnings and refunds after verified market settlement.",
+    icon: WalletCards,
+    cards: [
+      ["Claimable rewards", "Awaiting settlement data"],
+      ["Completed claims", "Awaiting transaction history"],
+      ["Refunds", "Awaiting contract data"],
+    ],
+  },
+  History: {
+    eyebrow: "YOUR RECORDS",
+    title: "History",
+    description:
+      "Review predictions, outcomes, settlement events, and refunds.",
+    icon: History,
+    cards: [
+      ["Predictions", "No records loaded"],
+      ["Settlements", "No records loaded"],
+      ["Transactions", "No records loaded"],
+    ],
+  },
+} as const;
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -209,7 +236,6 @@ function App() {
   const [myProposalsLoaded, setMyProposalsLoaded] =
     useState(false);
 
-  // Keep the existing Reown AppKit wallet connection.
   const { open } = useAppKit();
 
   const { address, chainId, isConnected } = useAccount();
@@ -225,7 +251,6 @@ function App() {
         }
       : null;
 
-  // Clear account-specific data when the connected wallet changes.
   useEffect(() => {
     setReferralMessage("");
     setMyProposals([]);
@@ -233,7 +258,6 @@ function App() {
     setMyProposalsError("");
   }, [address]);
 
-  // Load only markets approved for publication.
   useEffect(() => {
     let active = true;
 
@@ -282,7 +306,6 @@ function App() {
     };
   }, []);
 
-  // Keep the wallet status aligned with the active account and network.
   useEffect(() => {
     if (!wallet) {
       setWalletMessage("");
@@ -303,8 +326,8 @@ function App() {
   }, [wallet?.address, wallet?.chainId]);
 
   function handleOpenWalletHelp() {
-  setWalletMessage("");
-  void handleConnectWallet();
+    setWalletMessage("");
+    void handleConnectWallet();
   }
 
   async function handleConnectWallet() {
@@ -325,45 +348,45 @@ function App() {
     }
   }
 
-  
-async function handleSwitchNetwork() {
-  setWalletBusy(true);
-  setWalletMessage("");
+  async function handleSwitchNetwork() {
+    setWalletBusy(true);
+    setWalletMessage("");
 
-  try {
-    await switchChainAsync({
-      chainId: ASSET_CHAIN_ID,
-    });
+    try {
+      await switchChainAsync({
+        chainId: ASSET_CHAIN_ID,
+      });
 
-    setWalletMessage(
-      "Successfully switched to Asset Chain Testnet (42421).",
-    );
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "";
-
-    console.error("Asset Chain network switch failed:", error);
-
-    if (
-      /user rejected|user denied|user cancelled/i.test(errorMessage)
-    ) {
       setWalletMessage(
-        "Network switch was cancelled. Try again, or switch to Asset Chain Testnet in your wallet.",
+        "Successfully switched to Asset Chain Testnet (42421).",
       );
-    } else {
-      setWalletMessage(
-        "Unable to switch networks from this browser. Open Asset Oracle in your wallet's built-in browser, or switch to Asset Chain Testnet manually. Chain ID: 42421.",
-      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "";
+
+      console.error("Asset Chain network switch failed:", error);
+
+      if (
+        /user rejected|user denied|user cancelled/i.test(
+          errorMessage,
+        )
+      ) {
+        setWalletMessage(
+          "Network switch was cancelled. Try again, or switch to Asset Chain Testnet in your wallet.",
+        );
+      } else {
+        setWalletMessage(
+          "Unable to switch networks from this browser. Switch to Asset Chain Testnet manually. Chain ID: 42421.",
+        );
+      }
+    } finally {
+      setWalletBusy(false);
     }
-  } finally {
-    setWalletBusy(false);
   }
-}
 
-
-function handleOpenNetworkSelector() {
-  void open({ view: "Networks" });
-}
+  function handleOpenNetworkSelector() {
+    void open({ view: "Networks" });
+  }
 
   async function handleDisconnectWallet() {
     setWalletBusy(true);
@@ -433,7 +456,9 @@ function handleOpenNetworkSelector() {
         </div>
 
         <div className="market-card-bottom">
-          <span className="market-status-note">Published market</span>
+          <span className="market-status-note">
+            Published market
+          </span>
           <button
             className="text-action"
             type="button"
@@ -561,10 +586,12 @@ function handleOpenNetworkSelector() {
               : publishedMarkets.length === 0
                 ? renderMarketEmptyState()
                 : (
-                  <div className="market-grid">
-                    {publishedMarkets.slice(0, 3).map(renderMarketCard)}
-                  </div>
-                )}
+                    <div className="market-grid">
+                      {publishedMarkets
+                        .slice(0, 3)
+                        .map(renderMarketCard)}
+                    </div>
+                  )}
         </section>
 
         <section className="verification-banner">
@@ -652,7 +679,6 @@ function handleOpenNetworkSelector() {
     setProposalMessage(
       `Proposal submitted successfully. Status: ${proposal.status}. Reference: ${proposal.id}`,
     );
-
     setMyProposalsLoaded(false);
   }
 
@@ -734,10 +760,10 @@ function handleOpenNetworkSelector() {
             : filteredMarkets.length === 0
               ? renderMarketEmptyState()
               : (
-                <div className="market-grid">
-                  {filteredMarkets.map(renderMarketCard)}
-                </div>
-              )}
+                  <div className="market-grid">
+                    {filteredMarkets.map(renderMarketCard)}
+                  </div>
+                )}
 
         <p className="market-disclaimer">
           Only markets returned by the approved public-market API are
@@ -795,9 +821,7 @@ function handleOpenNetworkSelector() {
             {myProposalsLoaded && myProposals.length === 0 && (
               <div className="empty-state">
                 <h3>No proposals found</h3>
-                <p>
-                  No submissions were found for this wallet.
-                </p>
+                <p>No submissions were found for this wallet.</p>
               </div>
             )}
 
@@ -846,94 +870,7 @@ function handleOpenNetworkSelector() {
     );
   }
 
-  function renderAccountPage() {
-    if (page === "Admin") {
-  return null;
-}
-
-    if (page === "My Proposals") {
-      return renderMyProposals();
-    }
-
-    if (page === "Referrals") {
-      return renderReferralLeaderboard();
-    }
-
-    if (page === "Home" || page === "Markets") {
-  return null;
-    }
-
-    if (page === "Portfolio") {
-  return (
-    <Portfolio
-      address={address}
-      onConnect={handleOpenWalletHelp}
-    />
-  );
-}
-
-    const info = pageInfo[page];
-    const PageIcon = info.icon;
-
-    return (
-      <section className="page-section account-page">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">{info.eyebrow}</span>
-            <h1>{info.title}</h1>
-            <p>{info.description}</p>
-          </div>
-          <div className="account-page-icon">
-            <PageIcon size={25} />
-          </div>
-        </div>
-
-        <div className="account-summary-grid">
-          {info.cards.map(([label, value]: readonly [string, string]) => (
-            <article className="account-summary-card" key={label}>
-              <span>{label}</span>
-              <strong>{value}</strong>
-            </article>
-          ))}
-        </div>
-
-        <div className="account-empty-state">
-          <div className="account-empty-icon">
-            <CircleHelp size={25} />
-          </div>
-          <h2>
-            {wallet ? "No records available yet" : "Connect your wallet"}
-          </h2>
-          <p>
-            {wallet
-              ? "Your wallet is connected, but verified account records are not yet available. This page will populate when the market contracts and account data services are integrated."
-              : "Connect your wallet to prepare for account features. Positions, balances, claims, and history will appear only when verified data is available."}
-          </p>
-
-          {!wallet && (
-            <button
-              className="primary-button"
-              type="button"
-              onClick={handleOpenWalletHelp}
-              disabled={walletBusy}
-            >
-              Connect wallet
-            </button>
-          )}
-
-          <button
-            className="text-action"
-            type="button"
-            onClick={() => navigateTo("Markets")}
-          >
-            Explore markets <ArrowUpRight size={15} />
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  async function handleCopyReferralLink() {
+  function handleCopyReferralLink() {
     if (!wallet) {
       setReferralMessage(
         "Connect your wallet before generating a referral link.",
@@ -1137,6 +1074,102 @@ function handleOpenNetworkSelector() {
     );
   }
 
+  function renderAccountPage() {
+    if (page === "Admin") {
+      return (
+        <AdminDashboard
+          address={address}
+          signMessage={(message) => signMessageAsync({ message })}
+        />
+      );
+    }
+
+    if (page === "My Proposals") {
+      return renderMyProposals();
+    }
+
+    if (page === "Referrals") {
+      return renderReferralLeaderboard();
+    }
+
+    if (page === "Portfolio") {
+      return (
+        <Portfolio
+          address={address}
+          onConnect={handleOpenWalletHelp}
+        />
+      );
+    }
+
+    if (page === "Home" || page === "Markets") {
+      return null;
+    }
+
+    if (page !== "Claims" && page !== "History") {
+      return null;
+    }
+
+    const info = accountPageInfo[page];
+    const PageIcon = info.icon;
+
+    return (
+      <section className="page-section account-page">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">{info.eyebrow}</span>
+            <h1>{info.title}</h1>
+            <p>{info.description}</p>
+          </div>
+          <div className="account-page-icon">
+            <PageIcon size={25} />
+          </div>
+        </div>
+
+        <div className="account-summary-grid">
+          {info.cards.map(([label, value]) => (
+            <article className="account-summary-card" key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </article>
+          ))}
+        </div>
+
+        <div className="account-empty-state">
+          <div className="account-empty-icon">
+            <CircleHelp size={25} />
+          </div>
+          <h2>
+            {wallet ? "No records available yet" : "Connect your wallet"}
+          </h2>
+          <p>
+            {wallet
+              ? "Your wallet is connected, but verified account records are not yet available. This page will populate when the market contracts and account data services are integrated."
+              : "Connect your wallet to prepare for account features. Positions, balances, claims, and history will appear only when verified data is available."}
+          </p>
+
+          {!wallet && (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleOpenWalletHelp}
+              disabled={walletBusy}
+            >
+              Connect wallet
+            </button>
+          )}
+
+          <button
+            className="text-action"
+            type="button"
+            onClick={() => navigateTo("Markets")}
+          >
+            Explore markets <ArrowUpRight size={15} />
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   function renderPageContent() {
     if (selectedMarket) {
       return (
@@ -1155,15 +1188,6 @@ function handleOpenNetworkSelector() {
 
     if (page === "Home") return renderHome();
     if (page === "Markets") return renderMarkets();
-
-    if (page === "Admin") {
-  return (
-    <AdminDashboard
-      address={address}
-      signMessage={(message) => signMessageAsync({ message })}
-    />
-  );
-    }
 
     return renderAccountPage();
   }
@@ -1215,14 +1239,16 @@ function handleOpenNetworkSelector() {
             <Trophy size={17} />
             Referrals
           </button>
+
           <button
-  className={page === "Admin" ? "nav-link active" : "nav-link"}
-  type="button"
-  onClick={() => navigateTo("Admin")}
->
-  <ShieldCheck size={17} />
-  Admin
-</button>
+            className={page === "Admin" ? "nav-link active" : "nav-link"}
+            type="button"
+            onClick={() => navigateTo("Admin")}
+            aria-current={page === "Admin" ? "page" : undefined}
+          >
+            <ShieldCheck size={17} />
+            Admin
+          </button>
         </nav>
 
         <div className="header-actions">
@@ -1280,7 +1306,9 @@ function handleOpenNetworkSelector() {
               aria-current={page === label ? "page" : undefined}
             >
               <Icon size={19} />
-              {label === "Referrals" ? "Referral leaderboard" : label}
+              {label === "Referrals"
+                ? "Referral leaderboard"
+                : label}
             </button>
           ))}
         </nav>
@@ -1304,29 +1332,28 @@ function handleOpenNetworkSelector() {
             </p>
           </div>
 
-         
-{!isTestnet(wallet.chainId) && (
-  <div>
-    <button
-      className="primary-button"
-      type="button"
-      onClick={handleSwitchNetwork}
-      disabled={walletBusy}
-    >
-      {walletBusy ? "Switching..." : "Switch network"}
-    </button>
+          {!isTestnet(wallet.chainId) && (
+            <div>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={handleSwitchNetwork}
+                disabled={walletBusy}
+              >
+                {walletBusy ? "Switching..." : "Switch network"}
+              </button>
 
-    <button
-      className="text-action"
-      type="button"
-      onClick={handleOpenNetworkSelector}
-      disabled={walletBusy}
-    >
-      Choose network in Reown
-    </button>
-  </div>
-)}
- </section>
+              <button
+                className="text-action"
+                type="button"
+                onClick={handleOpenNetworkSelector}
+                disabled={walletBusy}
+              >
+                Choose network in Reown
+              </button>
+            </div>
+          )}
+        </section>
       )}
 
       {walletMessage && (
