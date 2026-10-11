@@ -17,6 +17,7 @@ const STATUS_LABELS = [
   "Settled",
   "Refundable",
   "Cancelled",
+  "Arbitration",
 ] as const;
 
 const OUTCOME_LABELS = ["Unresolved", "YES", "NO", "Invalid"] as const;
