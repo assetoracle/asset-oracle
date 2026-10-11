@@ -1191,6 +1191,15 @@ function handleOpenNetworkSelector() {
     if (page === "Home") return renderHome();
     if (page === "Markets") return renderMarkets();
 
+    if (page === "Admin") {
+  return (
+    <AdminDashboard
+      address={address}
+      signMessage={(message) => signMessageAsync({ message })}
+    />
+  );
+    }
+
     return renderAccountPage();
   }
 
