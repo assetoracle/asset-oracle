@@ -206,6 +206,7 @@ const loadMarkets = useCallback(async () => {
         symbol: categorySymbol(market.category),
         label: categoryLabel(market.category),
         endDate: formatDate(market.resolvesAt),
+        resolutionRule: market.resolutionRule,
       }));
 
     setPublishedMarkets(markets);
@@ -430,7 +431,9 @@ useEffect(() => {
           question={selectedMarket.question}
           category={selectedMarket.label}
           description={selectedMarket.description}
-          endDate={selectedMarket.endDate}
+          closesAt={formatDate(selectedMarket.closesAt)}
+          endDate={formatDate(selectedMarket.resolvesAt)}
+          resolutionRule={selectedMarket.resolutionRule}
           onBack={goBackToMarkets}
         />
       );
