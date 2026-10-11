@@ -859,7 +859,9 @@ function handleOpenNetworkSelector() {
       return renderReferralLeaderboard();
     }
 
-    if (page === "Home" || page === "Markets" || page === "Admin") {
+    if (page === "Home" || page === "Markets") {
+  return null;
+    }
       return null;
     }
 
