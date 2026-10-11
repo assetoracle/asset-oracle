@@ -2917,3 +2917,24 @@ input:focus-visible {
     display: none;
   }
 }
+
+.proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.proposal-actions .primary-button {
+  min-width: 180px;
+}
+
+@media (max-width: 520px) {
+  .proposal-actions {
+    flex-direction: column;
+  }
+
+  .proposal-actions .primary-button {
+    width: 100%;
+  }
+}
