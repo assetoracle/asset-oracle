@@ -1241,6 +1241,14 @@ function handleOpenNetworkSelector() {
             <Trophy size={17} />
             Referrals
           </button>
+          <button
+  className={page === "Admin" ? "nav-link active" : "nav-link"}
+  type="button"
+  onClick={() => navigateTo("Admin")}
+>
+  <ShieldCheck size={17} />
+  Admin
+</button>
         </nav>
 
         <div className="header-actions">
