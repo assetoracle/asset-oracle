@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import type { DisplayMarket } from "./HomePage";
 import type { MarketCategory } from "../types";
+import OnchainMarkets from "../components/OnchainMarkets";
 
 type MarketsPageProps = {
   categories: MarketCategory[];
@@ -168,6 +169,8 @@ export default function MarketsPage({
           {markets.map(renderMarketCard)}
         </div>
       )}
+
+      <OnchainMarkets />
 
       <p className="market-disclaimer">
         Only markets returned by the approved public-market API are

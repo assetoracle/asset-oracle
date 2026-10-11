@@ -19,7 +19,6 @@ export default function OnchainMarketStatus() {
     functionName: "marketCount",
     query: { enabled: configured && correctNetwork, refetchInterval: 30_000 },
   });
-
   const stablecoin = useReadContract({
     address: assetOracleMarketManagerAddress,
     abi: assetOracleMarketManagerAbi,
@@ -27,7 +26,6 @@ export default function OnchainMarketStatus() {
     args: [0],
     query: { enabled: configured && correctNetwork, refetchInterval: 30_000 },
   });
-
   const tokenDecimals = useReadContract({
     address: TESTNET_USDC_ADDRESS,
     abi: erc20TestnetAbi,
@@ -42,6 +40,14 @@ export default function OnchainMarketStatus() {
       Number(stablecoin.data[1]) === 6 &&
       tokenDecimals.data === 6,
   );
+  const verificationPending =
+    configured &&
+    correctNetwork &&
+    (marketCount.isPending || stablecoin.isPending || tokenDecimals.isPending);
+  const verificationFailed =
+    configured &&
+    correctNetwork &&
+    (marketCount.isError || stablecoin.isError || tokenDecimals.isError);
 
   return (
     <section className="resolution-preview onchain-status" aria-live="polite">
@@ -51,10 +57,10 @@ export default function OnchainMarketStatus() {
         <p>Contract reads are not enabled yet. The market manager address will be added only after deployment and independent explorer verification.</p>
       ) : !correctNetwork ? (
         <p>Switch your wallet or app network to Asset Chain Testnet (Chain ID 42421) to read the configured contract.</p>
-      ) : marketCount.isPending ? (
-        <p>Checking the deployed market manager and USDC configuration…</p>
-      ) : marketCount.isError || stablecoin.isError ? (
-        <p role="status">The contract could not be verified through the configured RPC. No transaction actions are enabled.</p>
+      ) : verificationPending ? (
+        <p>Checking the deployed market manager, contract code, and USDC configuration…</p>
+      ) : verificationFailed ? (
+        <p role="status">Contract or token verification failed through the configured RPC. No transaction actions are enabled.</p>
       ) : (
         <>
           <div className="market-detail-grid">
@@ -65,7 +71,7 @@ export default function OnchainMarketStatus() {
           {assetOracleMarketManagerAddress && <p><a href={ASSET_CHAIN_TESTNET_EXPLORER + "/address/" + assetOracleMarketManagerAddress} target="_blank" rel="noreferrer">View market manager on testnet explorer</a></p>}
         </>
       )}
-      <p className="disabled-note">Read-only testnet integration. Staking, approvals, market creation, claims, and settlement remain disabled until contract verification and transaction-flow testing are complete.</p>
+      <p className="disabled-note">Read-only testnet integration. Transaction actions remain disabled until the deployed contract is verified and transaction-flow testing is complete.</p>
     </section>
   );
 }
