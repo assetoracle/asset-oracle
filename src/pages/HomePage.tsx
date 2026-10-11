@@ -32,10 +32,10 @@ export type DisplayMarket = {
 };
 
 type DashboardStats = {
-  totalUsers: number;
-  tradingVolume24h: string | number;
-  totalMarkets: number;
-  totalSettled: number;
+  totalUsers: number | null;
+  tradingVolume24h: string | number | null;
+  totalMarkets: number | null;
+  totalSettled: number | null;
 };
 
 type HomePageProps = {
@@ -51,8 +51,8 @@ type HomePageProps = {
 
 const API_BASE_URL = "https://asset-oracle-backend.onrender.com";
 
-function formatCount(value: number | undefined) {
-  return value === undefined ? "—" : value.toLocaleString();
+function formatCount(value: number | null | undefined) {
+  return value === undefined || value === null ? "—" : value.toLocaleString();
 }
 
 function formatVolume(value: string | number | null | undefined) {
@@ -80,10 +80,10 @@ function DashboardOverview() {
         if (!response.ok) throw new Error("Dashboard statistics are unavailable.");
         const data = await response.json();
         setStats({
-          totalUsers: Number.isFinite(Number(data.totalUsers)) ? Number(data.totalUsers) : 0,
-          tradingVolume24h: data.tradingVolume24h ?? "—",
-          totalMarkets: Number.isFinite(Number(data.totalMarkets)) ? Number(data.totalMarkets) : 0,
-          totalSettled: Number.isFinite(Number(data.totalSettled)) ? Number(data.totalSettled) : 0,
+          totalUsers: data.totalUsers !== null && data.totalUsers !== undefined && Number.isFinite(Number(data.totalUsers)) ? Number(data.totalUsers) : null,
+          tradingVolume24h: data.tradingVolume24h ?? null,
+          totalMarkets: data.totalMarkets !== null && data.totalMarkets !== undefined && Number.isFinite(Number(data.totalMarkets)) ? Number(data.totalMarkets) : null,
+          totalSettled: data.totalSettled !== null && data.totalSettled !== undefined && Number.isFinite(Number(data.totalSettled)) ? Number(data.totalSettled) : null,
         });
       } catch (error) {
         if (!controller.signal.aborted) setUnavailable(true);
