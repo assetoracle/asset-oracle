@@ -9,17 +9,42 @@ import {
   Users,
 } from "lucide-react";
 
+type ReferralLeaderboardEntry = {
+  rank: number;
+  wallet: string;
+  verifiedReferrals: number;
+};
+
 type ReferralsPageProps = {
   address?: string;
   message: string;
+  referralLink: string;
+  referralCode: string;
+  leaderboard: ReferralLeaderboardEntry[];
+  leaderboardLoading: boolean;
+  leaderboardError: string;
+  actionLoading: boolean;
   onGetReferralLink: () => void;
+  onAttributeReferral: () => void;
+  onRetryLeaderboard: () => void;
 };
 
 export default function ReferralsPage({
   address,
   message,
+  referralLink,
+  referralCode,
+  leaderboard,
+  leaderboardLoading,
+  leaderboardError,
+  actionLoading,
   onGetReferralLink,
+  onAttributeReferral,
+  onRetryLeaderboard,
 }: ReferralsPageProps) {
+  const walletEntry = leaderboard.find(
+    (entry) => entry.wallet.toLowerCase() === address?.toLowerCase(),
+  );
   return (
     <section className="page-section referral-page">
       <div className="section-heading">
@@ -35,14 +60,14 @@ export default function ReferralsPage({
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Users size={19} /></span>
           <span>Your verified referrals</span>
-          <strong>—</strong>
-          <small>Live referral records will appear here</small>
+          <strong>{walletEntry ? walletEntry.verifiedReferrals : "—"}</strong>
+          <small>{walletEntry ? "Verified qualifying referrals" : "Count unavailable outside the public top 100"}</small>
         </article>
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Medal size={19} /></span>
           <span>Your leaderboard rank</span>
-          <strong>—</strong>
-          <small>Based on qualifying referrals</small>
+          <strong>{walletEntry ? `#${walletEntry.rank}` : "—"}</strong>
+          <small>{walletEntry ? "Current all-time rank" : "Rank shown when present in the public top 100"}</small>
         </article>
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Gift size={19} /></span>
@@ -57,15 +82,29 @@ export default function ReferralsPage({
           <div className="referral-link-icon"><Link2 size={21} /></div>
           <div>
             <h2>Your referral link</h2>
-            <p>Connect your wallet to request your unique referral link.</p>
+            <p>Connect your wallet to request your unique referral link. New visitors can register attribution after connecting their wallet.</p>
           </div>
         </div>
         <div className="referral-link-field">
-          <span>{address ? `${address.slice(0, 8)}…${address.slice(-6)} · Referral link` : "Connect your wallet to get started"}</span>
-          <button className="referral-copy-button" type="button" onClick={onGetReferralLink} disabled={!address} aria-label="Get referral link">
-            <Copy size={16} /><span>Get link</span>
-          </button>
+          <span>{referralLink || (address ? `${address.slice(0, 8)}…${address.slice(-6)} · Generate your unique link` : "Connect your wallet to get started")}</span>
+          {referralLink ? (
+            <button className="referral-copy-button" type="button" onClick={() => { void navigator.clipboard.writeText(referralLink); }} aria-label="Copy referral link">
+              <Copy size={16} /><span>Copy link</span>
+            </button>
+          ) : (
+            <button className="referral-copy-button" type="button" onClick={onGetReferralLink} disabled={!address || actionLoading} aria-label="Get referral link">
+              <Copy size={16} /><span>{actionLoading ? "Working…" : "Get link"}</span>
+            </button>
+          )}
         </div>
+        {referralCode && (
+          <div className="referral-link-field">
+            <span>Referral code detected: {referralCode}</span>
+            <button className="referral-copy-button" type="button" onClick={onAttributeReferral} disabled={!address || actionLoading}>
+              <Link2 size={16} /><span>{actionLoading ? "Working…" : "Register referral"}</span>
+            </button>
+          </div>
+        )}
         {message && <p className="referral-message" role="status">{message}</p>}
       </section>
 
@@ -74,11 +113,35 @@ export default function ReferralsPage({
           <div><span className="eyebrow">COMMUNITY RANKINGS</span><h2>Top referrers</h2></div>
           <span className="network-label">All time</span>
         </div>
-        <div className="referral-table-empty">
-          <Trophy size={30} />
-          <h3>Leaderboard data is being connected</h3>
-          <p>The leaderboard will rank wallets by verified qualifying referrals, not link clicks or self-reported totals.</p>
-        </div>
+        {leaderboardLoading ? (
+          <div className="referral-table-empty" role="status">
+            <Trophy size={30} /><h3>Loading leaderboard</h3><p>Retrieving verified referral records.</p>
+          </div>
+        ) : leaderboardError ? (
+          <div className="referral-table-empty" role="alert">
+            <Trophy size={30} /><h3>Leaderboard unavailable</h3><p>{leaderboardError}</p>
+            <button className="text-action" type="button" onClick={onRetryLeaderboard}>Retry</button>
+          </div>
+        ) : leaderboard.length === 0 ? (
+          <div className="referral-table-empty">
+            <Trophy size={30} /><h3>No qualifying referrals yet</h3><p>Rankings appear after verified referral records qualify.</p>
+          </div>
+        ) : (
+          <div className="referral-table-wrap">
+            <table className="referral-table">
+              <thead><tr><th>Rank</th><th>Wallet</th><th>Verified referrals</th></tr></thead>
+              <tbody>
+                {leaderboard.map((entry) => (
+                  <tr key={entry.wallet}>
+                    <td>#{entry.rank}</td>
+                    <td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td>
+                    <td>{entry.verifiedReferrals}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div className="referral-table-footer"><ShieldCheck size={16} />Only verified referral records count toward rankings.</div>
       </section>
 
@@ -99,7 +162,7 @@ export default function ReferralsPage({
       </section>
 
       <p className="market-disclaimer">
-        Referral counts, leaderboard positions, and rewards remain unreported until verified backend records are connected. No sample figures are shown.
+        Only backend-verified qualifying referrals appear above. Reward totals remain unavailable until reward rules and records are configured.
       </p>
     </section>
   );
