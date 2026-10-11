@@ -68,7 +68,7 @@ export default function OnchainMarkets() {
     return <section className="resolution-preview onchain-status"><span className="eyebrow">ON-CHAIN MARKETS</span><h2>No on-chain markets yet</h2><p>The configured market manager currently reports zero markets.</p><a href={ASSET_CHAIN_TESTNET_EXPLORER + "/address/" + assetOracleMarketManagerAddress} target="_blank" rel="noreferrer">Inspect market manager on explorer</a></section>;
   }
 
-  const rows = (markets.data ?? []).flatMap((result, index) => {
+  const rows = (markets.data ?? []).flatMap((result) => {
     if (result.status !== "success") return [];
     const market = result.result;
     return [{
