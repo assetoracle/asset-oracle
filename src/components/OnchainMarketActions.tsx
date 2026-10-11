@@ -19,9 +19,9 @@ import {
   TESTNET_USDC_DECIMALS,
 } from "../contracts/assetOracle";
 
-type Props = { marketId: bigint; closeTime: number; status: number; outcome: number };
+type Props = { marketId: bigint; closeTime: number };
 
-export default function OnchainMarketActions({ marketId, closeTime, status, outcome }: Props) {
+export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
   const client = usePublicClient();
