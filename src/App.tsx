@@ -232,46 +232,6 @@ const loadMarkets = useCallback(async () => {
 useEffect(() => {
   void loadMarkets();
 }, [loadMarkets]);
-      setMarketsLoading(true);
-      setMarketsError("");
-
-      try {
-        const result = await listPublishedMarkets();
-        if (!active) return;
-
-        setPublishedMarkets(
-          result.markets
-            .filter((market) => market.status === "APPROVED")
-            .map((market) => ({
-              id: market.id,
-              question: market.question,
-              description: market.description,
-              category: market.category,
-              closesAt: market.closesAt,
-              resolvesAt: market.resolvesAt,
-              status: market.status,
-              symbol: categorySymbol(market.category),
-              label: categoryLabel(market.category),
-              endDate: formatDate(market.resolvesAt),
-            })),
-        );
-      } catch (error) {
-        if (!active) return;
-        setMarketsError(
-          error instanceof Error
-            ? error.message
-            : "Unable to load published markets.",
-        );
-      } finally {
-        if (active) setMarketsLoading(false);
-      }
-    }
-
-    void run();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Resolve browser history and direct market-detail links after markets load.
   useEffect(() => {
