@@ -3024,6 +3024,19 @@ textarea:disabled {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
+.dashboard-stat-card-wide {
+  grid-column: 1 / -1;
+  padding: 1.35rem;
+  border-color: var(--accent);
+  background: radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.08), transparent 55%), var(--background);
+  box-shadow: 0 0 0 1px rgba(18, 217, 245, 0.08), 0 0 24px rgba(18, 217, 245, 0.04);
+}
+.dashboard-stat-description {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
 .dashboard-stat-card {
   min-width: 0;
   padding: 1.2rem;
