@@ -3,6 +3,7 @@ import {
   useAccount,
   useDisconnect,
   useSwitchChain,
+  useConfig,
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import {
@@ -22,6 +23,7 @@ export function useWalletStatus() {
   const { address, chainId, isConnected } = useAccount();
   const { disconnectAsync } = useDisconnect();
   const { switchChainAsync } = useSwitchChain();
+  const config = useConfig();
 
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
@@ -113,7 +115,20 @@ async function handleSwitchNetwork() {
   setWalletMessage("");
 
   try {
-    await switchChainAsync({ chainId: ASSET_CHAIN_ID });
+    const connector = config.connectors.find(
+      (item) => item.uid === config.state.current,
+    );
+
+    if (!connector) {
+      throw new Error("No active wallet connector found.");
+    }
+
+    const provider = await connector.getProvider();
+
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0xa595" }],
+    });
 
     setWalletMessage(
       "Successfully switched to Asset Chain Testnet (42421).",
