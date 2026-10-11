@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, isAddress, parseUnits, type Address } from "viem";
+import { useSignMessage } from "wagmi";
 import {
   useAccount,
   useChainId,
@@ -24,6 +25,7 @@ type Props = { marketId: bigint; closeTime: number };
 export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const client = usePublicClient();
   const [amount, setAmount] = useState("");
   const [yesSide, setYesSide] = useState(true);
@@ -31,6 +33,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const [codeCheckDone, setCodeCheckDone] = useState(false);
   const [message, setMessage] = useState("");
   const [lastAction, setLastAction] = useState<"approve" | "stake" | "claim" | "refund" | null>(null);
+  const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const manager = assetOracleMarketManagerAddress;
 
   const managerCode = useMemo(() => manager, [manager]);
@@ -203,6 +206,44 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
       setMessage("USDC approval confirmed. Press Stake again to submit the stake transaction.");
     }
   }, [receipt.isSuccess, txHash, manager, lastAction, allowance.data, parsedAmount]);
+
+  useEffect(() => {
+    if (!receipt.isSuccess || receipt.receipt?.status !== "success" || !txHash ||
+        lastAction !== "stake" || !address || referralQualificationAttempted === txHash) return;
+    const referralCode = new URLSearchParams(window.location.search).get("ref");
+    if (!referralCode) return;
+    setReferralQualificationAttempted(txHash);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const base = "https://asset-oracle-backend.onrender.com";
+        const nonceResponse = await fetch(`${base}/api/markets/auth/nonce`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ address }),
+        });
+        const nonceData = await nonceResponse.json();
+        if (!nonceResponse.ok || typeof nonceData.message !== "string") throw new Error("Could not obtain referral verification nonce.");
+        const signature = await signMessageAsync({ message: nonceData.message });
+        const qualificationResponse = await fetch(`${base}/api/referrals/qualify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            address,
+            message: nonceData.message,
+            signature,
+            transactionHash: txHash,
+          }),
+        });
+        const qualificationData = await qualificationResponse.json();
+        if (!qualificationResponse.ok) throw new Error(qualificationData.error || "Referral qualification could not be verified.");
+        if (!cancelled) setMessage("Stake confirmed on-chain. " + (qualificationData.message || "Referral qualification checked."));
+      } catch (error) {
+        if (!cancelled) setMessage("Stake confirmed on-chain. Referral verification is pending: " + (error instanceof Error ? error.message : "try again from Referrals."));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [receipt.isSuccess, receipt.receipt?.status, txHash, manager, lastAction, address, referralQualificationAttempted, signMessageAsync]);
 
   return (
     <section className="resolution-preview onchain-status" aria-live="polite">
