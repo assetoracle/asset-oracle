@@ -157,6 +157,13 @@ export const assetOracleMarketManagerAbi = [
   },
   {
     type: "function",
+    name: "refundTimedOutMarket",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "finalizeMarket",
     stateMutability: "nonpayable",
     inputs: [{ name: "marketId", type: "uint256" }],
@@ -222,6 +229,7 @@ export const MARKET_STATUS = {
   SETTLED: 3,
   REFUNDABLE: 4,
   CANCELLED: 5,
+  ARBITRATION: 6,
 } as const;
 
 export const MARKET_OUTCOME = {
