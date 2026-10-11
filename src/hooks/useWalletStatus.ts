@@ -1,16 +1,12 @@
 
+import { useAppKit, useAppKitNetwork } from "@reown/appkit/react";
+import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
-import {
-  useAccount,
-  useDisconnect,
-  useConfig,
-} from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
+import { assetChainTestnet } from "../config/assetChain";
 import {
   displayChainId,
   isTestnet,
   normalizeChainId,
-  ASSET_CHAIN_ID,
 } from "../utils/chain";
 
 export type WalletConnection = {
@@ -18,16 +14,25 @@ export type WalletConnection = {
   chainId: string | null;
 };
 
+type NetworkSwitch = (
+  network: typeof assetChainTestnet,
+) => Promise<unknown>;
+
 export function useWalletStatus() {
   const { open } = useAppKit();
+  const { switchNetwork } = useAppKitNetwork();
   const { address, chainId, isConnected } = useAccount();
   const { disconnectAsync } = useDisconnect();
-  const config = useConfig();
 
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletMessage, setWalletMessage] = useState("");
+  const [unknownChainTimedOut, setUnknownChainTimedOut] =
+    useState(false);
 
   const userInitiatedDisconnectRef = useRef(false);
+  const networkSwitchTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const wallet: WalletConnection | null =
     isConnected && address
@@ -40,6 +45,20 @@ export function useWalletStatus() {
         }
       : null;
 
+  const hasUnknownChain = Boolean(wallet && wallet.chainId === null);
+
+  useEffect(() => {
+    setUnknownChainTimedOut(false);
+
+    if (!hasUnknownChain) return;
+
+    const timer = setTimeout(() => {
+      setUnknownChainTimedOut(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [address, chainId, hasUnknownChain]);
+
   const networkState:
     | "disconnected"
     | "detecting"
@@ -47,10 +66,33 @@ export function useWalletStatus() {
     | "wrong" = !wallet
     ? "disconnected"
     : wallet.chainId === null
-      ? "detecting"
+      ? unknownChainTimedOut
+        ? "wrong"
+        : "detecting"
       : isTestnet(wallet.chainId)
         ? "correct"
         : "wrong";
+
+  useEffect(() => {
+    if (
+      networkState === "correct" ||
+      networkState === "disconnected"
+    ) {
+      if (networkSwitchTimerRef.current !== null) {
+        clearTimeout(networkSwitchTimerRef.current);
+        networkSwitchTimerRef.current = null;
+      }
+    }
+  }, [networkState]);
+
+  useEffect(() => {
+    return () => {
+      if (networkSwitchTimerRef.current !== null) {
+        clearTimeout(networkSwitchTimerRef.current);
+        networkSwitchTimerRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!wallet) {
@@ -74,9 +116,12 @@ export function useWalletStatus() {
         )}. Switch to Asset Chain Testnet to continue.`,
       );
     }
-  }, [address, chainId, isConnected]);
+    // Keep wallet status messages synchronized with account/network changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, chainId, isConnected, networkState]);
 
   async function handleConnect() {
+    userInitiatedDisconnectRef.current = false;
     setWalletBusy(true);
     setWalletMessage("");
 
@@ -106,53 +151,33 @@ export function useWalletStatus() {
   }
 
   async function handleSwitchNetwork() {
-    if (!wallet || wallet.chainId === null) {
+    if (!wallet || networkState === "detecting") {
       setWalletMessage("Detecting network...");
       return;
     }
 
+    if (networkSwitchTimerRef.current !== null) {
+      clearTimeout(networkSwitchTimerRef.current);
+      networkSwitchTimerRef.current = null;
+    }
+
     setWalletBusy(true);
-    setWalletMessage("");
+    setWalletMessage(
+      "Open your wallet app and approve the network switch.",
+    );
 
     try {
-      const connector = config.connectors.find(
-        (item) => item.uid === config.state.current,
-      );
+      await (switchNetwork as NetworkSwitch)(assetChainTestnet);
 
-      if (!connector) {
-        throw new Error("No active wallet connector found.");
-      }
-
-      const provider = await connector.getProvider();
-
-      if (
-        !provider ||
-        typeof provider !== "object" ||
-        !("request" in provider) ||
-        typeof provider.request !== "function"
-      ) {
-        throw new Error(
-          "Wallet provider does not support network switching.",
+      networkSwitchTimerRef.current = setTimeout(() => {
+        networkSwitchTimerRef.current = null;
+        setWalletMessage(
+          "The wallet did not switch networks. Open your wallet app, check for a pending request, or add Asset Chain Testnet manually (Chain ID: 42421).",
         );
-      }
-
-      await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [
-          {
-            chainId: `0x${ASSET_CHAIN_ID.toString(16)}`,
-          },
-        ],
-      });
-
-      setWalletMessage(
-        "Successfully switched to Asset Chain Testnet (42421).",
-      );
+      }, 45000);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "";
-
-      console.error("Asset Chain network switch failed:", error);
 
       if (/user rejected|user denied|user cancelled/i.test(errorMessage)) {
         setWalletMessage(
@@ -160,7 +185,7 @@ export function useWalletStatus() {
         );
       } else {
         setWalletMessage(
-          "Automatic network switching failed. Switch to Asset Chain Testnet manually. Chain ID: 42421.",
+          "The wallet did not switch networks. Open your wallet app, check for a pending request, or add Asset Chain Testnet manually (Chain ID: 42421).",
         );
       }
     } finally {
@@ -171,6 +196,11 @@ export function useWalletStatus() {
   async function handleDisconnectWallet() {
     setWalletBusy(true);
     setWalletMessage("");
+
+    if (networkSwitchTimerRef.current !== null) {
+      clearTimeout(networkSwitchTimerRef.current);
+      networkSwitchTimerRef.current = null;
+    }
 
     try {
       userInitiatedDisconnectRef.current = true;
