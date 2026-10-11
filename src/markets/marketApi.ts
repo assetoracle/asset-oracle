@@ -155,3 +155,45 @@ export async function getWalletRole(
     body: JSON.stringify({ address, message, signature }),
   });
 }
+
+
+export type ReferralLeaderboardEntry = {
+  rank: number;
+  wallet: string;
+  verifiedReferrals: number;
+};
+
+export async function getReferralCode(
+  address: string,
+  message: string,
+  signature: string,
+) {
+  return request<{ code: string }>("/api/referrals/code", {
+    method: "POST",
+    body: JSON.stringify({ address, message, signature }),
+  });
+}
+
+export async function attributeReferral(
+  address: string,
+  message: string,
+  signature: string,
+  referralCode: string,
+) {
+  return request<{
+    status: "PENDING_PREDICTION" | "QUALIFIED" | "FLAGGED";
+    message: string;
+    ipSignalRecorded?: boolean;
+    reviewFlagged?: boolean;
+  }>("/api/referrals/attribute", {
+    method: "POST",
+    body: JSON.stringify({ address, message, signature, referralCode }),
+  });
+}
+
+export async function getReferralLeaderboard() {
+  return request<{
+    period: "ALL_TIME";
+    leaderboard: ReferralLeaderboardEntry[];
+  }>("/api/referrals/leaderboard");
+}
