@@ -100,7 +100,7 @@ export default function OnchainMarkets() {
               <div className="market-meta"><span>Total staked</span><span>{(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} test USDC</span></div>
               <div className="market-meta"><span>Closes</span><span>{market.closeTime ? new Date(market.closeTime * 1000).toLocaleString() : "Not set"}</span></div>
               <div className="market-card-bottom"><span className="market-status-note">Read-only testnet data</span><a className="text-action" href={market.explorerUrl} target="_blank" rel="noreferrer">View contract</a></div>
-              <OnchainMarketActions marketId={BigInt(market.id)} closeTime={market.closeTime} status={Number((markets.data ?? []).find((item) => item.status === "success" && item.result.id.toString() === market.id)?.result.status ?? -1)} outcome={Number((markets.data ?? []).find((item) => item.status === "success" && item.result.id.toString() === market.id)?.result.outcome ?? -1)} />
+              <OnchainMarketActions marketId={BigInt(market.id)} closeTime={market.closeTime} />
             </article>
           ))}
         </div>
