@@ -143,8 +143,16 @@ export const assetOracleMarketManagerAbi = [
     stateMutability: "nonpayable",
     inputs: [
       { name: "marketId", type: "uint256" },
-      { name: "upheld", type: "bool" },
+      { name: "outcome", type: "uint8" },
+      { name: "evidenceHash", type: "bytes32" },
     ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "refundDisputedTimeout",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "marketId", type: "uint256" }],
     outputs: [],
   },
   {
@@ -221,6 +229,7 @@ export const MARKET_STATUS = {
   SETTLED: 3,
   REFUNDABLE: 4,
   CANCELLED: 5,
+  ARBITRATION: 6,
 } as const;
 
 export const MARKET_OUTCOME = {
