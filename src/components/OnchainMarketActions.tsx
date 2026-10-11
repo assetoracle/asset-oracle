@@ -116,14 +116,21 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     tokenDecimals.data === TESTNET_USDC_DECIMALS
   );
   const marketData = market.data;
+  const marketVerified = Boolean(
+    marketData &&
+    marketData.id === marketId &&
+    Number(marketData.stablecoin) === 0 &&
+    Number(marketData.closeTime) === closeTime
+  );
   const positionYes = position.data?.[0] ?? 0n;
   const positionNo = position.data?.[1] ?? 0n;
   const claimed = position.data?.[2] ?? true;
   const hasPosition = positionYes > 0n || positionNo > 0n;
   const safe = Boolean(
     manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
-    stablecoinVerified && marketData && !market.isError && !tokenConfig.isError &&
-    !tokenDecimals.isError && !position.isError
+    stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
+    !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError &&
+    balance.data !== undefined && allowance.data !== undefined
   );
   const canStake = safe && isConnected && Boolean(address) &&
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
@@ -207,6 +214,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
       : !codeVerified ? <p>Transactions blocked: market manager or USDC contract has no deployed bytecode at the configured address.</p>
       : tokenConfig.isPending || tokenDecimals.isPending || market.isPending || (address && position.isPending) ? <p>Verifying on-chain market, USDC configuration, and wallet position…</p>
       : !stablecoinVerified ? <p>Transactions blocked: the manager must explicitly enable the approved testnet USDC address with 6 decimals.</p>
+      : !marketVerified ? <p>Transactions blocked: on-chain market ID, USDC asset, or close time does not match the displayed market record.</p>
       : market.isError || tokenConfig.isError || tokenDecimals.isError || position.isError ? <p>Transactions blocked because one or more verification reads failed.</p>
       : !isConnected ? <p>Connect a wallet on Asset Chain Testnet to check your position and participate.</p>
       : <>
@@ -214,7 +222,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
             <article className="detail-info-card"><span>Your YES stake</span><strong>{formatUnits(positionYes, 6)} USDC</strong></article>
             <article className="detail-info-card"><span>Your NO stake</span><strong>{formatUnits(positionNo, 6)} USDC</strong></article>
             <article className="detail-info-card"><span>USDC balance</span><strong>{balance.data === undefined ? "Unavailable" : formatUnits(balance.data, 6)}</strong></article>
-            <article className="detail-info-card"><span>Position status</span><strong>{claimed ? "Claimed / no position" : hasPosition ? "Unclaimed" : "No position"}</strong></article>
+            <article className="detail-info-card"><span>Position status</span><strong>{claimed ? (hasPosition ? "Already claimed" : "No active position") : hasPosition ? "Unclaimed" : "No position"}</strong></article>
           </div>
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 < closeTime && <>
             <label htmlFor={`onchain-amount-${marketId}`}>Stake amount (test USDC)</label>
