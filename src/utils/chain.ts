@@ -32,7 +32,7 @@ export function isTestnet(chainId: string | null): boolean {
     return false;
   }
 
-  return normalizeChainId(chainId) === "0xa575";
+  return normalizeChainId(chainId) === "0xa5b5";
 }
 
 export function displayChainId(
