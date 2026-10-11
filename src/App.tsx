@@ -1342,6 +1342,8 @@ function handleOpenNetworkSelector() {
     </button>
   </div>
 )}
+ </section>
+      )}
 
       {walletMessage && (
         <p className="wallet-message" role="status">
