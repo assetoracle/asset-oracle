@@ -2938,3 +2938,72 @@ input:focus-visible {
     width: 100%;
   }
 }
+
+
+/* Asset Oracle palette consistency and readable contrast */
+:root {
+  color-scheme: dark;
+  --background: #071A24;
+  --secondary: #0B2A35;
+  --surface: #102F3A;
+  --accent: #12D9F5;
+  --teal: #00B8A9;
+  --highlight: #63F3FF;
+  --text: #F2FCFF;
+  --muted: #8DA9B3;
+  --border: #1D6675;
+}
+
+body,
+#root {
+  color: var(--text);
+  background-color: var(--background);
+}
+
+input,
+textarea,
+select {
+  color: var(--text);
+  background-color: var(--secondary);
+  border-color: var(--border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #A9C0C8;
+  opacity: 1;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 3px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.more-navigation-sheet {
+  background: var(--surface, #102F3A);
+  color: var(--text, #F2FCFF);
+  border: 1px solid var(--border);
+}
+
+.more-navigation-sheet .nav-link.active {
+  background: rgba(18, 217, 245, 0.12);
+  color: var(--highlight);
+}
+
+::selection {
+  color: #071A24;
+  background: #63F3FF;
+}
