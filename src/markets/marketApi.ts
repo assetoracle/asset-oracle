@@ -160,6 +160,48 @@ export async function getWalletRole(
   });
 }
 
+
+export type ReferralLeaderboardEntry = {
+  rank: number;
+  wallet: string;
+  verifiedReferrals: number;
+};
+
+export async function createReferralCode(
+  address: string,
+  message: string,
+  signature: string,
+) {
+  return request<{ code: string }>("/api/referrals/code", {
+    method: "POST",
+    body: JSON.stringify({ address, message, signature }),
+  });
+}
+
+export async function getReferralLeaderboard() {
+  return request<{
+    period: "ALL_TIME";
+    leaderboard: ReferralLeaderboardEntry[];
+  }>("/api/referrals/leaderboard");
+}
+
+export async function attributeReferral(
+  address: string,
+  message: string,
+  signature: string,
+  referralCode: string,
+) {
+  return request<{
+    status: string;
+    message: string;
+    reviewFlagged?: boolean;
+  }>("/api/referrals/attribute", {
+    method: "POST",
+    body: JSON.stringify({ address, message, signature, referralCode }),
+  });
+}
+
+
 export async function recordMarketPublication(
   proposalId: string,
   txHash: string,
