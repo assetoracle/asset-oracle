@@ -928,7 +928,7 @@ const info = pageInfo[page];
         </div>
 
         <div className="account-summary-grid">
-          {info.cards.map(([label, value]) => (
+          {info.cards.map(([label, value]: readonly [string, string]) => (
             <article className="account-summary-card" key={label}>
               <span>{label}</span>
               <strong>{value}</strong>
