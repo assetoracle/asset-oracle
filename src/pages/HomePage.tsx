@@ -5,6 +5,16 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+export type DisplayResolutionRule = {
+  sourceId: string;
+  metric: string;
+  comparison: "ABOVE" | "BELOW" | "EQUALS";
+  targetValue: number;
+  currency?: string;
+  observationTime: string;
+  description: string;
+};
+
 export type DisplayMarket = {
   id: string;
   question: string;
@@ -16,6 +26,7 @@ export type DisplayMarket = {
   symbol: string;
   label: string;
   endDate: string;
+  resolutionRule?: DisplayResolutionRule;
 };
 
 type HomePageProps = {
