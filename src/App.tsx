@@ -48,7 +48,8 @@ type Page =
   | "Portfolio"
   | "Claims"
   | "History"
-  | "Referrals";
+  | "Referrals"
+  | "Admin";
 
 type MarketCategory =
   | "All Markets"
