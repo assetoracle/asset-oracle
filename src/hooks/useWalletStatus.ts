@@ -119,48 +119,18 @@ async function handleSwitchNetwork() {
       "Successfully switched to Asset Chain Testnet (42421).",
     );
   } catch (error) {
-    console.error("Wagmi network switch failed:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "";
 
-    try {
-      // Try the wallet provider directly as a fallback.
-      const { getConnectorClient } = await import("wagmi/actions");
-      const { wagmiConfig } = await import("../walletConnect");
+    console.error("Asset Chain network switch failed:", error);
 
-      const client = await getConnectorClient(wagmiConfig);
-      const provider = client.transport;
-
-      // Wagmi's transport is not necessarily the raw EIP-1193 provider.
-      // If direct switching is unavailable, ask the user to switch manually.
-      if (
-        !provider ||
-        typeof provider !== "object" ||
-        !("request" in provider)
-      ) {
-        throw new Error("Direct wallet switching is unavailable.");
-      }
-
-      const request = (
-        provider as {
-          request: (args: {
-            method: string;
-            params?: readonly unknown[];
-          }) => Promise<unknown>;
-        }
-      ).request;
-
-      await request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0xa595" }],
-      });
-
+    if (/user rejected|user denied|user cancelled/i.test(errorMessage)) {
       setWalletMessage(
-        "Successfully switched to Asset Chain Testnet (42421).",
+        "Network switch was cancelled. Try again, or switch to Asset Chain Testnet in your wallet.",
       );
-    } catch (fallbackError) {
-      console.error("Direct network switch failed:", fallbackError);
-
+    } else {
       setWalletMessage(
-        "Automatic switching failed. In Rabby, add or select Asset Chain Testnet manually. Chain ID: 42421.",
+        "Automatic network switching failed. Switch to Asset Chain Testnet manually. Chain ID: 42421.",
       );
     }
   } finally {
