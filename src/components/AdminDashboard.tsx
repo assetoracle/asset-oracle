@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
+import PublishApprovedMarket from "./PublishApprovedMarket";
 import {
   requestWalletNonce,
   type StoredMarketProposal,
@@ -198,6 +199,10 @@ export default function AdminDashboard({
               <span>Resolves</span>
               <span>{new Date(proposal.resolvesAt).toLocaleDateString()}</span>
             </div>
+
+            {proposal.status === "APPROVED" && (
+              <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />
+            )}
 
             {proposal.status === "PENDING_APPROVAL" && (
               <div className="hero-actions">
