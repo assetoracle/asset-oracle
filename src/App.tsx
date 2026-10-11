@@ -862,8 +862,6 @@ function handleOpenNetworkSelector() {
     if (page === "Home" || page === "Markets") {
   return null;
     }
-      return null;
-    }
 
     if (page === "Portfolio") {
   return (
