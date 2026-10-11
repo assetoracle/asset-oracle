@@ -14,11 +14,23 @@ import {
   LockKeyhole,
 } from "lucide-react";
 
+type ResolutionRule = {
+  sourceId: string;
+  metric: string;
+  comparison: "ABOVE" | "BELOW" | "EQUALS";
+  targetValue: number;
+  currency?: string;
+  observationTime: string;
+  description: string;
+};
+
 type MarketDetailPageProps = {
   question: string;
   category: string;
   description: string;
+  closesAt: string;
   endDate: string;
+  resolutionRule?: ResolutionRule;
   onBack: () => void;
 };
 
@@ -26,7 +38,9 @@ function MarketDetailPage({
   question,
   category,
   description,
+  closesAt,
   endDate,
+  resolutionRule,
   onBack,
 }: MarketDetailPageProps) {
   return (
@@ -67,19 +81,19 @@ function MarketDetailPage({
         <article className="detail-info-card">
           <Clock3 size={22} />
           <span>Market deadline</span>
-          <strong>{endDate || "Not configured"}</strong>
+          <strong>{closesAt || "Not configured"}</strong>
         </article>
 
         <article className="detail-info-card">
           <Database size={22} />
           <span>Resolution data source</span>
-          <strong>Not configured</strong>
+          <strong>{resolutionRule?.sourceId || "Not configured"}</strong>
         </article>
 
         <article className="detail-info-card">
           <ShieldCheck size={22} />
           <span>Resolution rules</span>
-          <strong>Pending configuration</strong>
+          <strong>{resolutionRule ? "Configured in proposal" : "Pending configuration"}</strong>
         </article>
       </div>
 
@@ -87,9 +101,9 @@ function MarketDetailPage({
         <span className="eyebrow">01 / RESOLUTION FRAMEWORK</span>
         <h2>Rules must be clear before a market opens</h2>
         <p>
-          Every market needs a defined measurement, authoritative data
-          source, observation time, comparison rule, and deadline.
-          These conditions determine whether the result is YES or NO.
+          The conditions below come from the submitted market proposal.
+          They describe the intended resolution criteria, but do not by
+          themselves mean the market has been deployed or verified.
         </p>
 
         <div className="settlement-rule-list">
@@ -97,7 +111,7 @@ function MarketDetailPage({
             <Database size={18} />
             <div>
               <strong>Data provider</strong>
-              <span>The configured source used to verify the result</span>
+              <span>{resolutionRule?.sourceId || "Not specified in this proposal"}</span>
             </div>
             <CircleHelp size={16} />
           </div>
@@ -106,7 +120,11 @@ function MarketDetailPage({
             <FileCheck2 size={18} />
             <div>
               <strong>Measurement and threshold</strong>
-              <span>The metric, target value, and comparison rule</span>
+              <span>
+                {resolutionRule
+                  ? `${resolutionRule.metric}: ${resolutionRule.comparison.toLowerCase()} ${resolutionRule.targetValue.toLocaleString()}${resolutionRule.currency ? ` ${resolutionRule.currency}` : ""}`
+                  : "Not specified in this proposal"}
+              </span>
             </div>
             <CircleHelp size={16} />
           </div>
@@ -115,11 +133,25 @@ function MarketDetailPage({
             <Clock3 size={18} />
             <div>
               <strong>Observation time</strong>
-              <span>When the result must be measured</span>
+              <span>
+                {resolutionRule?.observationTime
+                  ? new Date(resolutionRule.observationTime).toLocaleString()
+                  : "Not specified in this proposal"}
+              </span>
             </div>
             <CircleHelp size={16} />
           </div>
         </div>
+
+        {resolutionRule?.description && (
+          <div className="settlement-rule">
+            <FileCheck2 size={18} />
+            <div>
+              <strong>Resolution instructions</strong>
+              <span>{resolutionRule.description}</span>
+            </div>
+          </div>
+        )}
 
         <div className="outcome-preview">
           <button type="button" disabled>
