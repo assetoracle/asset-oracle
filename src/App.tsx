@@ -1462,9 +1462,8 @@ function handleOpenNetworkSelector() {
       {proposalFormOpen && (
         <MarketProposalForm
           address={address ?? ""}
-          signMessage={(message: string) =>
-  signMessageAsync({ message })
-}
+          
+signMessage={(message: string) => signMessageAsync({ message })}
           onClose={() => setProposalFormOpen(false)}
           onCreated={handleProposalCreated}
         />
