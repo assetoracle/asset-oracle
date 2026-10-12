@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import OnchainMarketStatus from "./OnchainMarketStatus";
+import OnchainMarketActions from "./OnchainMarketActions";
 
 type ResolutionRule = {
   sourceId: string;
@@ -33,6 +34,8 @@ type MarketDetailPageProps = {
   closesAt: string;
   endDate: string;
   resolutionRule?: ResolutionRule;
+  onchainMarketId?: string | null;
+  onchainCloseTime?: number;
   onBack: () => void;
 };
 
@@ -43,6 +46,8 @@ function MarketDetailPage({
   closesAt,
   endDate,
   resolutionRule,
+  onchainMarketId,
+  onchainCloseTime,
   onBack,
 }: MarketDetailPageProps) {
   return (
@@ -60,7 +65,7 @@ function MarketDetailPage({
         <span className="eyebrow">{category}</span>
         <span className="market-status">
           <CircleAlert size={13} />
-          Not yet listed on-chain
+          {onchainMarketId ? `Live on testnet · Market #${onchainMarketId}` : "Not yet listed on-chain"}
         </span>
       </div>
 
@@ -68,8 +73,14 @@ function MarketDetailPage({
       <p className="market-detail-description">{description}</p>
 
       <OnchainMarketStatus />
+      {onchainMarketId && onchainCloseTime !== undefined && (
+        <OnchainMarketActions
+          marketId={BigInt(onchainMarketId)}
+          closeTime={onchainCloseTime}
+        />
+      )}
 
-      <div className="market-detail-status">
+      {!onchainMarketId && <div className="market-detail-status">
         <LockKeyhole size={20} />
         <div>
           <strong>Market setup required</strong>
@@ -79,7 +90,7 @@ function MarketDetailPage({
             are not available until the market is configured and verified.
           </p>
         </div>
-      </div>
+      </div>}
 
       <div className="market-detail-grid">
         <article className="detail-info-card">
@@ -163,19 +174,21 @@ function MarketDetailPage({
           </div>
         )}
 
-        <div className="outcome-preview">
-          <button type="button" disabled>
-            YES
-          </button>
-          <button type="button" disabled>
-            NO
-          </button>
-        </div>
+        {!onchainMarketId && <>
+          <div className="outcome-preview">
+            <button type="button" disabled>
+              YES
+            </button>
+            <button type="button" disabled>
+              NO
+            </button>
+          </div>
 
-        <p className="disabled-note">
-          Prediction selection becomes available only when a valid market
-          is deployed and its trading conditions are confirmed.
-        </p>
+          <p className="disabled-note">
+            Prediction selection becomes available only when a valid market
+            is deployed and its trading conditions are confirmed.
+          </p>
+        </>}
       </section>
 
       <section className="resolution-preview settlement-section">
