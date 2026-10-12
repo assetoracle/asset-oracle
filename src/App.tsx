@@ -143,6 +143,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
   const [proposalMessage, setProposalMessage] = useState("");
+  const [proposalAccessMessage, setProposalAccessMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
   const [referralLink, setReferralLink] = useState("");
   const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
@@ -408,12 +409,13 @@ useEffect(() => {
     );
   }
 
-  async function handleVerifyWalletRole() {
+  async function handleVerifyWalletRole(): Promise<WalletRoleResponse | null> {
     const requestedAddress = addressRef.current;
 
     if (!requestedAddress) {
       setRoleError("Connect your wallet first.");
-      return;
+      setWalletRole(null);
+      return null;
     }
 
     setRoleLoading(true);
@@ -429,6 +431,7 @@ useEffect(() => {
       }
 
       setWalletRole(result);
+      return result;
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
@@ -440,6 +443,7 @@ useEffect(() => {
           : "Unable to verify this wallet's role.",
       );
       setWalletRole(null);
+      return null;
     } finally {
       if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
         setRoleLoading(false);
@@ -638,13 +642,24 @@ useEffect(() => {
           marketsLoading={marketsLoading}
           marketsError={marketsError}
           proposalMessage={proposalMessage}
+          proposalAccessMessage={proposalAccessMessage}
           walletConnected={Boolean(wallet)}
           onConnect={() => void handleConnect()}
           onCategoryChange={setActiveCategory}
           onSearchChange={setSearch}
-          onPropose={() => {
+          onPropose={async () => {
             setProposalMessage("");
-            setProposalFormOpen(true);
+            setProposalAccessMessage("");
+            const role = await handleVerifyWalletRole();
+            if (role?.permissions.createMarketProposal) {
+              setProposalFormOpen(true);
+            } else {
+              setProposalAccessMessage(
+                role
+                  ? "This wallet is not authorized to submit market proposals. Connect a configured market-creator wallet or contact the administrator."
+                  : "Wallet role could not be verified. Connect your wallet and complete signature verification before submitting a proposal.",
+              );
+            }
           }}
           onTrackProposal={() => navigateTo("My Proposals")}
           onRetryMarkets={() => void loadMarkets()}
