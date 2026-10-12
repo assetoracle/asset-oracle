@@ -5,6 +5,7 @@ import {
 import type { DisplayMarket } from "./HomePage";
 import type { MarketCategory } from "../types";
 import OnchainMarkets from "../components/OnchainMarkets";
+import TestnetUsdcFaucet from "../components/TestnetUsdcFaucet";
 
 type MarketsPageProps = {
   categories: MarketCategory[];
@@ -15,6 +16,7 @@ type MarketsPageProps = {
   marketsError: string;
   proposalMessage: string;
   walletConnected: boolean;
+  onConnect: () => void;
   onCategoryChange: (category: MarketCategory) => void;
   onSearchChange: (value: string) => void;
   onPropose: () => void;
@@ -32,6 +34,7 @@ export default function MarketsPage({
   marketsError,
   proposalMessage,
   walletConnected,
+  onConnect,
   onCategoryChange,
   onSearchChange,
   onPropose,
@@ -89,6 +92,8 @@ export default function MarketsPage({
           Propose a Market
         </button>
       </div>
+
+      <TestnetUsdcFaucet onConnect={onConnect} />
 
       {proposalMessage && (
         <div className="empty-state" role="status">

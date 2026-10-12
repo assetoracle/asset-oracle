@@ -621,6 +621,7 @@ useEffect(() => {
           marketsError={marketsError}
           proposalMessage={proposalMessage}
           walletConnected={Boolean(wallet)}
+          onConnect={() => void handleConnect()}
           onCategoryChange={setActiveCategory}
           onSearchChange={setSearch}
           onPropose={() => {
