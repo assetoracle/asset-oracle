@@ -205,9 +205,9 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     args: [marketId, voteKey],
     query: { enabled: Boolean(manager && evidenceHash) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
-  const canResolve = safe && isConnected && isConfiguredValidator && !hasVoted.data && evidenceHash !== undefined &&
+  const canResolve = safe && isConnected && isConfiguredValidator && hasVoted.data === false && evidenceHash !== undefined &&
     Number(marketData?.status) === MARKET_STATUS.CLOSED;
-  const canResolveDispute = safe && isConnected && isConfiguredValidator && !hasVotedOnDispute.data &&
+  const canResolveDispute = safe && isConnected && isConfiguredValidator && hasVotedOnDispute.data === false &&
     evidenceHash !== undefined && Number(marketData?.status) === MARKET_STATUS.ARBITRATION;
   const canFinalize = safe && isConnected &&
     Number(marketData?.status) === MARKET_STATUS.DISPUTED &&
