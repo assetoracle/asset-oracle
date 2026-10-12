@@ -51,7 +51,7 @@ Question: Will WKC reach or exceed a USD market capitalization of $50,000,000 by
 Question: Will Shalom Token ($SHALOM) reach or exceed $1.00 USD per token by November 7, 2026, its stated first-anniversary deadline?
 
 - Deadline: 2026-11-07 23:59:59 UTC.
-- Network and token identity: Asset Chain mainnet, contract `0xf20f989CAf263C513f9183B4Fed88F14Fc04c8dB`.
+- Network and token identity: Asset Chain mainnet. **Publication blocker:** pin the exact SHALOM contract used by the live xRWA/SHALOM pool. Public documentation lists `0xf20f989CAf263C513f9183B4Fed88F14Fc04c8dB`, while a newer explorer result lists a different SHALOM token contract (`0xd90E8d3c74d9f804082C06BEaD0a0133C82E3d69`). Do not choose either address until the live pool's `token0`/`token1` and project identity are verified.
 - Preferred price source: Asset Chain Swap, using the SHALOM/USDT pool or a documented swap quote that converts SHALOM to USDT. The pool/route address and quote method must be pinned before publication so the source cannot silently switch.
 - USD conversion: use the approved USDT/USD reference and document the conversion. Do not assume USDT is exactly $1 without a defined tolerance/source.
 - YES: the calculated 5-minute TWAP for SHALOM/USD, derived from the pinned SHALOM/xRWA and xRWA/USDT pools and a timestamped USDT/USD reference, reaches or exceeds $1.00 in a valid, non-stale observation at any time from publication through the deadline.
@@ -63,6 +63,7 @@ Question: Will Shalom Token ($SHALOM) reach or exceed $1.00 USD per token by Nov
 ## Shared pre-publication checklist
 
 - Confirm the exact WKC token/project, contract address, provider asset ID, and circulating-supply methodology.
+- Resolve the conflicting SHALOM contract references by verifying the exact token address inside the live Asset Chain Swap pool before enabling monitoring or publishing.
 - Confirm the selected providers' historical/intraday coverage is suitable for threshold-touch questions. For SHALOM, the DEX monitoring/evidence archive must be operational before the observation window starts.
 - Finalize source-failure, stale-data, liquidity, manipulation, and conflicting-source handling; do not silently treat missing data as NO.
 - Confirm the contract's deadline semantics and align the UI countdown with UTC.
