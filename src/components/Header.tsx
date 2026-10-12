@@ -78,14 +78,25 @@ export default function Header({
               </button>
             </div>
           ) : (
-            <button
-              className="connect-button"
-              type="button"
-              onClick={onConnect}
-              disabled={walletBusy}
-            >
-              Connect wallet
-            </button>
+            <div className="wallet-connect-actions">
+              <button
+                className="connect-button"
+                type="button"
+                onClick={onConnect}
+                disabled={walletBusy}
+              >
+                {walletBusy ? "Opening wallets..." : "Connect wallet"}
+              </button>
+              <button
+                className="wallet-app-fallback"
+                type="button"
+                onClick={onConnect}
+                disabled={walletBusy}
+                aria-label="Choose a wallet app if browser connection is unavailable"
+              >
+                Can't connect in this browser? Choose a wallet app
+              </button>
+            </div>
           )}
 
           <button
