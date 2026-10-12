@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   isAddress,
+  keccak256,
   parseEventLogs,
+  toBytes,
   type Address,
 } from "viem";
 import {
@@ -35,6 +37,23 @@ const marketPublisherAbi = [
       { name: "challengePeriod", type: "uint64" },
     ],
     outputs: [{ name: "marketId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "validatorRosterConfigured",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "hasRole",
+    stateMutability: "view",
+    inputs: [
+      { name: "role", type: "bytes32" },
+      { name: "account", type: "address" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
   },
   {
     type: "function",
@@ -90,6 +109,24 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     functionName: "stablecoins",
     args: [0],
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+
+  const validatorRoster = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "validatorRosterConfigured",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+
+  const marketCreatorRole = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "hasRole",
+    args: [
+      keccak256(toBytes("MARKET_CREATOR_ROLE")),
+      (address ?? "0x0000000000000000000000000000000000000000") as Address,
+    ],
+    query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
 
   useEffect(() => {
@@ -188,8 +225,9 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("Switch your wallet to Asset Chain Enugu testnet (Chain ID 42421).");
       return;
     }
-    if (!manager || !contractVerified || !stablecoinReady) {
-      setError("Publishing is disabled until the configured manager contract and testnet stablecoin are verified and enabled.");
+    if (!manager || !contractVerified || !stablecoinReady ||
+        validatorRoster.data !== true || marketCreatorRole.data !== true) {
+      setError("Publishing is blocked until the current manager interface, configured validator roster, USDC token, and this wallet's on-chain market-creator permission are verified.");
       return;
     }
     if (!Number.isFinite(closeTimestamp) || closeTimestamp <= Math.floor(Date.now() / 1000)) {
@@ -242,6 +280,8 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
               chainId !== ASSET_CHAIN_TESTNET_ID ? "Switch to Asset Chain Enugu testnet to publish." :
               !contractVerified ? "Blocked: contract bytecode has not been verified." :
               !stablecoinReady ? "Blocked: testnet stablecoin is not enabled on the manager." :
+              validatorRoster.data !== true ? "Blocked: this manager does not expose a configured validator roster; it may be an outdated deployment." :
+              marketCreatorRole.data !== true ? "Blocked: connected wallet lacks the on-chain market-creator role." :
               "This submits a separate on-chain transaction. Approval alone does not publish a market."}
           </p>
           {receipt.isLoading && <p role="status">Waiting for blockchain confirmation…</p>}
@@ -249,7 +289,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
           <button
             className="primary-button"
             type="button"
-            disabled={!address || !isConnected || chainId !== ASSET_CHAIN_TESTNET_ID || !manager || !contractVerified || !stablecoinReady || checkingContract || isPending || receipt.isLoading || Boolean(txHash)}
+            disabled={!address || !isConnected || chainId !== ASSET_CHAIN_TESTNET_ID || !manager || !contractVerified || !stablecoinReady || validatorRoster.data !== true || marketCreatorRole.data !== true || checkingContract || isPending || receipt.isLoading || Boolean(txHash)}
             onClick={() => void publish()}
           >
             {isPending ? "Confirm in wallet…" : receipt.isLoading ? "Confirming on-chain…" : "Publish on testnet"}
