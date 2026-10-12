@@ -11,8 +11,9 @@ All deadlines are UTC. A YES outcome requires reliable evidence that the stated 
 Question: Will Bitcoin (BTC) reach or exceed $100,000 USD by November 1, 2026?
 
 - Deadline: 2026-11-01 23:59:59 UTC.
-- YES: the approved BTC/USD reference source records a price of at least $100,000 at any time from publication through the deadline.
-- NO: no qualifying observation reaches $100,000 during that window.
+- YES: the Asset Oracle CoinGecko monitor captures a fresh, timestamped BTC/USD observation of at least $100,000 from publication through the deadline.
+- NO: the monitor has sufficient continuous coverage for the full window and no valid captured observation reaches $100,000. Missing/stale data or monitoring gaps require unresolved/invalid review, not NO.
+- Sampling rule: the market measures recorded provider observations, not every instantaneous price tick. The monitor polls once per minute; the published rule must disclose that sampling limitation.
 - Proposed source: CoinGecko market data, with the exact BTC asset ID and source methodology recorded before publication.
 - Evidence: retain source URL/API identifier, timestamp, value, and a retrievable snapshot or response record.
 
@@ -21,8 +22,9 @@ Question: Will Bitcoin (BTC) reach or exceed $100,000 USD by November 1, 2026?
 Question: Will Ethereum (ETH) reach or exceed $4,000 USD by November 1, 2026?
 
 - Deadline: 2026-11-01 23:59:59 UTC.
-- YES: the approved ETH/USD reference source records a price of at least $4,000 at any time from publication through the deadline.
-- NO: no qualifying observation reaches $4,000 during that window.
+- YES: the Asset Oracle CoinGecko monitor captures a fresh, timestamped ETH/USD observation of at least $4,000 from publication through the deadline.
+- NO: the monitor has sufficient continuous coverage for the full window and no valid captured observation reaches $4,000. Missing/stale data or monitoring gaps require unresolved/invalid review, not NO.
+- Sampling rule: the market measures recorded provider observations, not every instantaneous price tick. The monitor polls once per minute; the published rule must disclose that sampling limitation.
 - Proposed source: CoinGecko market data, with the exact ETH asset ID and source methodology recorded before publication.
 - Evidence: retain source URL/API identifier, timestamp, value, and a retrievable snapshot or response record.
 
@@ -31,8 +33,9 @@ Question: Will Ethereum (ETH) reach or exceed $4,000 USD by November 1, 2026?
 Question: Will BNB reach or exceed $1,000 USD by November 1, 2026?
 
 - Deadline: 2026-11-01 23:59:59 UTC.
-- YES: the approved BNB/USD reference source records a price of at least $1,000 at any time from publication through the deadline.
-- NO: no qualifying observation reaches $1,000 during that window.
+- YES: the Asset Oracle CoinGecko monitor captures a fresh, timestamped BNB/USD observation of at least $1,000 from publication through the deadline.
+- NO: the monitor has sufficient continuous coverage for the full window and no valid captured observation reaches $1,000. Missing/stale data or monitoring gaps require unresolved/invalid review, not NO.
+- Sampling rule: the market measures recorded provider observations, not every instantaneous price tick. The monitor polls once per minute; the published rule must disclose that sampling limitation.
 - Proposed source: CoinGecko market data, with the exact BNB asset ID and source methodology recorded before publication.
 - Evidence: retain source URL/API identifier, timestamp, value, and a retrievable snapshot or response record.
 
