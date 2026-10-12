@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 export type DisplayResolutionRule = {
   sourceId: string;
   metric: string;
-  comparison: "ABOVE" | "BELOW" | "EQUALS";
+  comparison: "ABOVE" | "AT_LEAST" | "BELOW" | "EQUALS";
   targetValue: number;
   currency?: string;
   observationTime: string;
