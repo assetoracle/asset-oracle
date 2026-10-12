@@ -25,6 +25,20 @@ export const isAssetOracleContractConfigured =
 export const assetOracleMarketManagerAbi = [
   {
     type: "function",
+    name: "owner",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "hasRole",
+    stateMutability: "view",
+    inputs: [{ name: "role", type: "bytes32" }, { name: "account", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "marketCount",
     stateMutability: "view",
     inputs: [],

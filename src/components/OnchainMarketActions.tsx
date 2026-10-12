@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatUnits, isAddress, parseUnits, type Address } from "viem";
+import { formatUnits, isAddress, keccak256, parseUnits, toBytes, type Address } from "viem";
 import { useSignMessage } from "wagmi";
 import {
   useAccount,
@@ -22,17 +22,21 @@ import {
 
 type Props = { marketId: bigint; closeTime: number };
 
+const RESOLVER_ROLE = keccak256(toBytes("ORACLE_RESOLVER_ROLE"));
+
 export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const client = usePublicClient();
   const [amount, setAmount] = useState("");
+  const [evidenceText, setEvidenceText] = useState("");
+  const [resolutionOutcome, setResolutionOutcome] = useState<1 | 2 | 3>(1);
   const [yesSide, setYesSide] = useState(true);
   const [codeVerified, setCodeVerified] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
   const [message, setMessage] = useState("");
-  const [lastAction, setLastAction] = useState<"approve" | "stake" | "close" | "claim" | "refund" | "timeout" | "disputeTimeout" | null>(null);
+  const [lastAction, setLastAction] = useState<"approve" | "stake" | "close" | "resolve" | "resolveDispute" | "finalize" | "dispute" | "claim" | "refund" | "timeout" | "disputeTimeout" | null>(null);
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
@@ -75,6 +79,19 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     functionName: "stablecoins",
     args: [0],
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
+  });
+  const contractOwner = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "owner",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
+  });
+  const resolverRole = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "hasRole",
+    args: [RESOLVER_ROLE, address!],
+    query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
   });
   const tokenDecimals = useReadContract({
     address: TESTNET_USDC_ADDRESS,
@@ -134,7 +151,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const safe = Boolean(
     manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
     stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
-    !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError &&
+    !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError && !resolverRole.isError && !contractOwner.isError &&
     balance.data !== undefined && allowance.data !== undefined
   );
   const canStake = safe && isConnected && Boolean(address) &&
@@ -154,6 +171,20 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const canStartDisputeTimeoutRefund = safe && isConnected && hasPosition && !claimed &&
     Number(marketData?.status) === MARKET_STATUS.ARBITRATION &&
     Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + 7 * 24 * 60 * 60;
+
+  const hasResolverRole = resolverRole.data === true;
+  const evidenceHash = evidenceText.trim() ? keccak256(toBytes(evidenceText.trim())) : undefined;
+  const canResolve = safe && isConnected && hasResolverRole && evidenceHash !== undefined &&
+    Number(marketData?.status) === MARKET_STATUS.CLOSED;
+  const canResolveDispute = safe && isConnected && Boolean(address) &&
+    contractOwner.data?.toLowerCase() === address?.toLowerCase() && evidenceHash !== undefined &&
+    Number(marketData?.status) === MARKET_STATUS.ARBITRATION;
+  const canFinalize = safe && isConnected &&
+    Number(marketData?.status) === MARKET_STATUS.DISPUTED &&
+    Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + Number(marketData?.challengePeriod ?? 0n);
+  const canDispute = safe && isConnected && hasPosition && evidenceHash !== undefined &&
+    Number(marketData?.status) === MARKET_STATUS.DISPUTED &&
+    Date.now() / 1000 < Number(marketData?.resolvedAt ?? 0n) + Number(marketData?.challengePeriod ?? 0n);
 
   useEffect(() => {
     if (receipt.isSuccess) {
@@ -250,6 +281,46 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     });
   }
 
+  function submitResolution(action: "resolve" | "resolveDispute" | "finalize" | "dispute") {
+    if (!manager) return;
+    if (action === "resolve" && (!canResolve || !evidenceHash)) return;
+    if (action === "resolveDispute" && (!canResolveDispute || !evidenceHash)) return;
+    if (action === "finalize" && !canFinalize) return;
+    if (action === "dispute" && (!canDispute || !evidenceHash)) return;
+    setMessage("");
+    reset();
+    setLastAction(action);
+    if (action === "resolve") {
+      writeContract({
+        address: manager,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "resolveMarket",
+        args: [marketId, resolutionOutcome, evidenceHash!],
+      });
+    } else if (action === "resolveDispute") {
+      writeContract({
+        address: manager,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "resolveDispute",
+        args: [marketId, resolutionOutcome, evidenceHash!],
+      });
+    } else if (action === "dispute") {
+      writeContract({
+        address: manager,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "disputeResolution",
+        args: [marketId, evidenceHash!],
+      });
+    } else {
+      writeContract({
+        address: manager,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "finalizeMarket",
+        args: [marketId],
+      });
+    }
+  }
+
   useEffect(() => {
     if (!receipt.isSuccess || !txHash || !manager || !lastAction) return;
     if (lastAction === "approve" && (allowance.data ?? 0n) < parsedAmount) {
@@ -329,6 +400,32 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
+          {(Number(marketData?.status) === MARKET_STATUS.CLOSED || Number(marketData?.status) === MARKET_STATUS.DISPUTED) && <>
+            <label htmlFor={`onchain-evidence-${marketId}`}>Evidence reference or description</label>
+            <input id={`onchain-evidence-${marketId}`} value={evidenceText} onChange={(event) => setEvidenceText(event.target.value)} placeholder="Paste official source URL or evidence reference" autoComplete="off" />
+            <p className="disabled-note">The evidence text is hashed locally and only its hash is submitted on-chain. Keep the original source available for public verification.</p>
+          </>}
+          {Number(marketData?.status) === MARKET_STATUS.CLOSED && hasResolverRole && <>
+            <label htmlFor={`onchain-outcome-${marketId}`}>Resolution outcome</label>
+            <select id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2 | 3)}>
+              <option value={1}>YES</option><option value={2}>NO</option><option value={3}>INVALID</option>
+            </select>
+            <button className="primary-button" type="button" disabled={!canResolve || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolve")}>Submit resolution evidence</button>
+          </>}
+          {Number(marketData?.status) === MARKET_STATUS.CLOSED && isConnected && !hasResolverRole && <p>Only a configured oracle resolver can submit the initial outcome.</p>}
+          {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && contractOwner.data?.toLowerCase() === address?.toLowerCase() && <>
+            <label htmlFor={`onchain-arbitration-outcome-${marketId}`}>Arbitration outcome</label>
+            <select id={`onchain-arbitration-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2 | 3)}>
+              <option value={1}>YES</option><option value={2}>NO</option><option value={3}>INVALID</option>
+            </select>
+            <button className="primary-button" type="button" disabled={!canResolveDispute || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolveDispute")}>Resolve dispute and restart challenge window</button>
+          </>}
+          {Number(marketData?.status) === MARKET_STATUS.DISPUTED && <>
+            <p>Outcome recorded. Eligible participants may challenge it before the challenge window closes.</p>
+            <button className="primary-button" type="button" disabled={!canDispute || isWalletPending || receipt.isLoading} onClick={() => submitResolution("dispute")}>Dispute outcome with evidence</button>
+            <button className="primary-button" type="button" disabled={!canFinalize || isWalletPending || receipt.isLoading} onClick={() => submitResolution("finalize")}>Finalize after challenge window</button>
+          </>}
+
           {Number(marketData?.status) === MARKET_STATUS.SETTLED && <button className="primary-button" type="button" disabled={!canClaim || isWalletPending || receipt.isLoading} onClick={() => submitAction("claim")}>Claim settlement</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p>This market has closed but has not been resolved. After the contract timeout, an eligible participant can enable refunds.</p>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <button className="primary-button" type="button" disabled={!canStartTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("timeout")}>Enable timeout refunds</button>}
