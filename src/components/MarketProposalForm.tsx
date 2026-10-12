@@ -357,6 +357,7 @@ export function MarketProposalForm({
                 style={fieldStyle}
               >
                 <option value="ABOVE">Above</option>
+                <option value="AT_LEAST">At or above (inclusive)</option>
                 <option value="BELOW">Below</option>
                 <option value="EQUALS">Equals</option>
               </select>
