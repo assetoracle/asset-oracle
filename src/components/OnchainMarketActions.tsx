@@ -400,7 +400,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
-          {(Number(marketData?.status) === MARKET_STATUS.CLOSED || Number(marketData?.status) === MARKET_STATUS.DISPUTED) && <>
+          {(Number(marketData?.status) === MARKET_STATUS.CLOSED || Number(marketData?.status) === MARKET_STATUS.DISPUTED || Number(marketData?.status) === MARKET_STATUS.ARBITRATION) && <>
             <label htmlFor={`onchain-evidence-${marketId}`}>Evidence reference or description</label>
             <input id={`onchain-evidence-${marketId}`} value={evidenceText} onChange={(event) => setEvidenceText(event.target.value)} placeholder="Paste official source URL or evidence reference" autoComplete="off" />
             <p className="disabled-note">The evidence text is hashed locally and only its hash is submitted on-chain. Keep the original source available for public verification.</p>
