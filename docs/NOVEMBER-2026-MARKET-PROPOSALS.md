@@ -13,7 +13,7 @@ Question: Will Bitcoin (BTC) reach or exceed $100,000 USD by November 1, 2026?
 - Deadline: 2026-11-01 23:59:59 UTC.
 - YES: the approved BTC/USD reference source records a price of at least $100,000 at any time from publication through the deadline.
 - NO: no qualifying observation reaches $100,000 during that window.
-- Proposed source: CoinGecko historical market data, with the exact BTC asset ID and source methodology recorded before publication.
+- Proposed source: CoinGecko market data, with the exact BTC asset ID and source methodology recorded before publication.
 - Evidence: retain source URL/API identifier, timestamp, value, and a retrievable snapshot or response record.
 
 ## 2. Ethereum — $4,000
@@ -23,7 +23,7 @@ Question: Will Ethereum (ETH) reach or exceed $4,000 USD by November 1, 2026?
 - Deadline: 2026-11-01 23:59:59 UTC.
 - YES: the approved ETH/USD reference source records a price of at least $4,000 at any time from publication through the deadline.
 - NO: no qualifying observation reaches $4,000 during that window.
-- Proposed source: CoinGecko historical market data, with the exact ETH asset ID and source methodology recorded before publication.
+- Proposed source: CoinGecko market data, with the exact ETH asset ID and source methodology recorded before publication.
 - Evidence: retain source URL/API identifier, timestamp, value, and a retrievable snapshot or response record.
 
 ## 3. BNB — $1,000
@@ -33,7 +33,7 @@ Question: Will BNB reach or exceed $1,000 USD by November 1, 2026?
 - Deadline: 2026-11-01 23:59:59 UTC.
 - YES: the approved BNB/USD reference source records a price of at least $1,000 at any time from publication through the deadline.
 - NO: no qualifying observation reaches $1,000 during that window.
-- Proposed source: CoinGecko historical market data, with the exact BNB asset ID and source methodology recorded before publication.
+- Proposed source: CoinGecko market data, with the exact BNB asset ID and source methodology recorded before publication.
 - Evidence: retain source URL/API identifier, timestamp, value, and a retrievable snapshot or response record.
 
 ## 4. WKC — $50 million market capitalization
@@ -51,16 +51,20 @@ Question: Will WKC reach or exceed a USD market capitalization of $50,000,000 by
 Question: Will Shalom Token ($SHALOM) reach or exceed $1.00 USD per token by November 7, 2026, its stated first-anniversary deadline?
 
 - Deadline: 2026-11-07 23:59:59 UTC.
-- YES: the pre-approved USD price source records at least $1.00 per token at any time from publication through the deadline.
-- NO: no qualifying observation reaches $1.00 during that window.
-- Publication blocker: confirm the exact SHALOM token contract/address and anniversary date, and select a source with sufficient coverage and a clearly defined price methodology. Do not publish until confirmed.
-- Evidence: retain provider, asset identifier, price, timestamp, and a retrievable snapshot.
+- Network and token identity: Asset Chain mainnet, contract `0xf20f989CAf263C513f9183B4Fed88F14Fc04c8dB`.
+- Preferred price source: Asset Chain Swap, using the SHALOM/USDT pool or a documented swap quote that converts SHALOM to USDT. The pool/route address and quote method must be pinned before publication so the source cannot silently switch.
+- USD conversion: use the approved USDT/USD reference and document the conversion. Do not assume USDT is exactly $1 without a defined tolerance/source.
+- YES: a valid, non-stale observation from the pinned pool/route shows at least $1.00 USD per SHALOM at any time from publication through the deadline.
+- NO: the monitored source has continuous, sufficient coverage for the full observation window and no valid observation reaches $1.00. Missing, stale, failed, or materially illiquid data must result in an unresolved/invalid review—not automatic NO.
+- Monitoring requirement: the DEX interface alone is not a historical evidence archive. Before publication, deploy or configure a monitor to record timestamped observations, pool/route identity, quoted price, liquidity/slippage context, source response, and immutable evidence hashes at a defined interval. Record a threshold crossing immediately. Set a minimum liquidity/maximum-slippage policy and a manipulation rule before launch.
+- Cross-check: FireScreener may be used as a secondary verification source if its token mapping and API coverage for this exact contract are verified. It is not the primary settlement source under this proposal.
+- Evidence: retain the exact token address, pool/route address, quote path, timestamp, USDT/USD conversion, raw response or on-chain quote details, liquidity/slippage context, and retrievable evidence snapshot.
 
 ## Shared pre-publication checklist
 
-- Confirm the exact token identities and source asset IDs for WKC and SHALOM.
-- Confirm the selected provider's historical/intraday coverage is suitable for threshold-touch questions.
-- Finalize source-failure, stale-data, and conflicting-source handling; do not silently treat missing data as NO.
+- Confirm the exact WKC token/project, contract address, provider asset ID, and circulating-supply methodology.
+- Confirm the selected providers' historical/intraday coverage is suitable for threshold-touch questions. For SHALOM, the DEX monitoring/evidence archive must be operational before the observation window starts.
+- Finalize source-failure, stale-data, liquidity, manipulation, and conflicting-source handling; do not silently treat missing data as NO.
 - Confirm the contract's deadline semantics and align the UI countdown with UTC.
 - Verify that the five questions and rules fit the deployed contract's question/metadata model.
 - Publish only after explicit owner approval and a confirmed on-chain transaction. Never describe these proposals as live before confirmation.
