@@ -10,6 +10,11 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useSignMessage } from "wagmi";
+import { isAddress } from "viem";
+import {
+  ASSET_CHAIN_TESTNET_ID,
+  assetOracleMarketManagerAddress,
+} from "./contracts/assetOracle";
 
 import Header from "./components/Header";
 import {
@@ -215,8 +220,21 @@ const loadMarkets = useCallback(async () => {
 
     if (!isMountedRef.current) return;
 
+    // Only expose markets whose publication metadata is complete and matches
+    // the configured Enugu manager. Approval alone is not on-chain publication.
     const markets: DisplayMarket[] = result.markets
-      .filter((market) => market.status === "APPROVED")
+      .filter((market) =>
+        market.status === "APPROVED" &&
+        typeof market.onchainMarketId === "string" &&
+        /^[1-9][0-9]*$/.test(market.onchainMarketId) &&
+        typeof market.onchainTxHash === "string" &&
+        /^0x[0-9a-fA-F]{64}$/.test(market.onchainTxHash) &&
+        typeof market.onchainManagerAddress === "string" &&
+        isAddress(market.onchainManagerAddress) &&
+        Boolean(assetOracleMarketManagerAddress) &&
+        market.onchainManagerAddress.toLowerCase() === assetOracleMarketManagerAddress!.toLowerCase() &&
+        market.onchainChainId === ASSET_CHAIN_TESTNET_ID
+      )
       .map((market) => ({
         id: market.id,
         question: market.question,
