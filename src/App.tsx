@@ -229,6 +229,10 @@ const loadMarkets = useCallback(async () => {
         label: categoryLabel(market.category),
         endDate: formatDate(market.resolvesAt),
         resolutionRule: market.resolutionRule,
+        onchainMarketId: market.onchainMarketId ?? null,
+        onchainTxHash: market.onchainTxHash ?? null,
+        onchainManagerAddress: market.onchainManagerAddress ?? null,
+        onchainChainId: market.onchainChainId ?? null,
       }));
 
     setPublishedMarkets(markets);
@@ -568,6 +572,8 @@ useEffect(() => {
           closesAt={formatDate(selectedMarket.closesAt)}
           endDate={formatDate(selectedMarket.resolvesAt)}
           resolutionRule={selectedMarket.resolutionRule}
+          onchainMarketId={selectedMarket.onchainMarketId}
+          onchainCloseTime={Math.floor(new Date(selectedMarket.closesAt).getTime() / 1000)}
           onBack={goBackToMarkets}
         />
       );
