@@ -15,7 +15,6 @@ type MarketsPageProps = {
   marketsError: string;
   proposalMessage: string;
   walletConnected: boolean;
-  onConnect: () => void;
   onCategoryChange: (category: MarketCategory) => void;
   onSearchChange: (value: string) => void;
   onPropose: () => void;
@@ -33,7 +32,6 @@ export default function MarketsPage({
   marketsError,
   proposalMessage,
   walletConnected,
-  onConnect,
   onCategoryChange,
   onSearchChange,
   onPropose,
