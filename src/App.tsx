@@ -427,14 +427,14 @@ useEffect(() => {
       const result = await getWalletRole(requestedAddress, message, signature);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
-        return;
+        return null;
       }
 
       setWalletRole(result);
       return result;
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
-        return;
+        return null;
       }
 
       setRoleError(
