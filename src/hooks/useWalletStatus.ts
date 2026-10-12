@@ -8,6 +8,25 @@ import {
   normalizeChainId,
 } from "../utils/chain";
 
+// Wallet providers can leave switch requests pending forever on mobile.
+// Bound the wait so the UI always returns control to the user.
+async function withSwitchTimeout<T>(promise: Promise<T>, timeoutMs = 12000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("Network switch request timed out")),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export type WalletConnection = {
   address: string;
   chainId: string | null;
@@ -122,7 +141,7 @@ export function useWalletStatus() {
       "Connected on another network. Requesting a switch to Asset Chain Testnet (Chain ID: 42421). Approve it in your wallet.",
     );
 
-    void (switchNetwork as NetworkSwitch)(assetChainTestnet)
+    void withSwitchTimeout((switchNetwork as NetworkSwitch)(assetChainTestnet))
       .then(() => {
         if (!active) return;
         if (networkSwitchTimerRef.current !== null) {
@@ -145,7 +164,7 @@ export function useWalletStatus() {
           );
         } else {
           setWalletMessage(
-            "Automatic network switching was unavailable. Tap Switch network, or add Asset Chain Testnet manually (Chain ID: 42421).",
+            "No wallet approval prompt was received. Reopen your wallet and switch to Asset Chain Testnet (Chain ID: 42421), then return here and reconnect. You can also tap Switch network to retry.",
           );
         }
       })
@@ -231,12 +250,12 @@ export function useWalletStatus() {
     );
 
     try {
-      await (switchNetwork as NetworkSwitch)(assetChainTestnet);
+      await withSwitchTimeout((switchNetwork as NetworkSwitch)(assetChainTestnet));
 
       networkSwitchTimerRef.current = setTimeout(() => {
         networkSwitchTimerRef.current = null;
         setWalletMessage(
-          "The wallet did not switch networks. Open your wallet app, check for a pending request, or add Asset Chain Testnet manually (Chain ID: 42421).",
+          "No wallet approval prompt was received. Reopen your wallet and switch to Asset Chain Testnet (Chain ID: 42421), then return here and reconnect. You can also tap Switch network to retry.",
         );
       }, 45000);
     } catch (error) {
