@@ -18,7 +18,7 @@ type NetworkSwitch = (
 ) => Promise<unknown>;
 
 export function useWalletStatus() {
-  const { open } = useAppKit();
+  const { open, close } = useAppKit();
   const { switchNetwork } = useAppKitNetwork();
   const { address, chainId, isConnected } = useAccount();
   const { disconnectAsync } = useDisconnect();
@@ -72,6 +72,15 @@ export function useWalletStatus() {
       : isTestnet(wallet.chainId)
         ? "correct"
         : "wrong";
+
+  // When the wallet app returns after switching successfully, close any stale
+  // AppKit network modal. Mobile deep-link handoff can leave that modal open
+  // even though wagmi already reports Enugu (42421).
+  useEffect(() => {
+    if (networkState === "correct") {
+      close();
+    }
+  }, [networkState, close]);
 
   useEffect(() => {
     if (
