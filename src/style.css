@@ -3091,3 +3091,40 @@ textarea:disabled {
     font-size: 0.8rem;
   }
 }
+
+
+/* Explicit mobile wallet fallback: opens the full AppKit wallet picker. */
+.wallet-connect-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.wallet-app-fallback {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--highlight);
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: right;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.wallet-app-fallback:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 760px) {
+  .wallet-connect-actions {
+    max-width: 190px;
+  }
+
+  .wallet-app-fallback {
+    max-width: 190px;
+    font-size: 10px;
+  }
+}
