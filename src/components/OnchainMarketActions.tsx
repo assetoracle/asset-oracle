@@ -32,7 +32,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const [codeVerified, setCodeVerified] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
   const [message, setMessage] = useState("");
-  const [lastAction, setLastAction] = useState<"approve" | "stake" | "claim" | "refund" | "timeout" | "disputeTimeout" | null>(null);
+  const [lastAction, setLastAction] = useState<"approve" | "stake" | "close" | "claim" | "refund" | "timeout" | "disputeTimeout" | null>(null);
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
@@ -141,6 +141,8 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount > 0n &&
     balance.data !== undefined && parsedAmount <= balance.data;
+  const canClose = safe && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
+    Date.now() / 1000 >= closeTime;
   const canClaim = safe && isConnected && hasPosition && !claimed &&
     Number(marketData?.status) === MARKET_STATUS.SETTLED;
   const canRefund = safe && isConnected && hasPosition && !claimed &&
@@ -222,8 +224,9 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     });
   }
 
-  function submitAction(action: "claim" | "refund" | "timeout" | "disputeTimeout") {
+  function submitAction(action: "close" | "claim" | "refund" | "timeout" | "disputeTimeout") {
     if (!manager) return;
+    if (action === "close" && !canClose) return;
     if (action === "claim" && !canClaim) return;
     if (action === "refund" && !canRefund) return;
     if (action === "timeout" && !canStartTimeoutRefund) return;
@@ -234,8 +237,10 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     writeContract({
       address: manager,
       abi: assetOracleMarketManagerAbi,
-      functionName: action === "claim"
-        ? "claim"
+      functionName: action === "close"
+        ? "closeMarket"
+        : action === "claim"
+          ? "claim"
         : action === "timeout"
           ? "refundTimedOutMarket"
           : action === "disputeTimeout"
@@ -323,6 +328,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
             </button>
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
+          {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
           {Number(marketData?.status) === MARKET_STATUS.SETTLED && <button className="primary-button" type="button" disabled={!canClaim || isWalletPending || receipt.isLoading} onClick={() => submitAction("claim")}>Claim settlement</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p>This market has closed but has not been resolved. After the contract timeout, an eligible participant can enable refunds.</p>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <button className="primary-button" type="button" disabled={!canStartTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("timeout")}>Enable timeout refunds</button>}
