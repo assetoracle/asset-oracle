@@ -31,7 +31,7 @@ export const appKit = createAppKit({
     analytics: false,
     email: false,
     socials: false,
-    allWallets: "SHOW",
+    allWallets: true,
   },
   themeMode: "dark",
   themeVariables: {
