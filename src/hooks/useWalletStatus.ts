@@ -1,4 +1,4 @@
-import { useAppKit, useAppKitNetwork } from "@reown/appkit/react";
+import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { assetChainTestnet } from "../config/assetChain";
@@ -8,19 +8,71 @@ import {
   normalizeChainId,
 } from "../utils/chain";
 
+// Wallet providers can leave switch requests pending forever on mobile.
+// Bound the wait so the UI always returns control to the user.
+async function withSwitchTimeout<T>(promise: Promise<T>, timeoutMs = 12000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("Network switch request timed out")),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export type WalletConnection = {
   address: string;
   chainId: string | null;
 };
 
-type NetworkSwitch = (
-  network: typeof assetChainTestnet,
-) => Promise<unknown>;
+type Eip1193Provider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+};
+
+async function requestAssetChainSwitch(
+  connector: { getProvider: () => Promise<unknown> } | undefined,
+): Promise<void> {
+  if (!connector) throw new Error("No active wallet connector");
+  const provider = await connector.getProvider() as Eip1193Provider;
+  const chainId = `0x${assetChainTestnet.id.toString(16)}`;
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId }],
+    });
+  } catch (error) {
+    const code =
+      typeof error === "object" && error !== null && "code" in error
+        ? (error as { code?: number }).code
+        : undefined;
+    if (code !== 4902) throw error;
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [{
+        chainId,
+        chainName: assetChainTestnet.name,
+        nativeCurrency: assetChainTestnet.nativeCurrency,
+        rpcUrls: [...assetChainTestnet.rpcUrls.default.http],
+        blockExplorerUrls: [assetChainTestnet.blockExplorers.default.url],
+      }],
+    });
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId }],
+    });
+  }
+}
 
 export function useWalletStatus() {
   const { open, close } = useAppKit();
-  const { switchNetwork } = useAppKitNetwork();
-  const { address, chainId, isConnected } = useAccount();
+  const { address, chainId, isConnected, connector } = useAccount();
   const { disconnectAsync } = useDisconnect();
 
   const [walletBusy, setWalletBusy] = useState(false);
@@ -122,7 +174,7 @@ export function useWalletStatus() {
       "Connected on another network. Requesting a switch to Asset Chain Testnet (Chain ID: 42421). Approve it in your wallet.",
     );
 
-    void (switchNetwork as NetworkSwitch)(assetChainTestnet)
+    void withSwitchTimeout(requestAssetChainSwitch(connector))
       .then(() => {
         if (!active) return;
         if (networkSwitchTimerRef.current !== null) {
@@ -145,7 +197,7 @@ export function useWalletStatus() {
           );
         } else {
           setWalletMessage(
-            "Automatic network switching was unavailable. Tap Switch network, or add Asset Chain Testnet manually (Chain ID: 42421).",
+            "No wallet approval prompt was received. Reopen your wallet and switch to Asset Chain Testnet (Chain ID: 42421), then return here and reconnect. You can also tap Switch network to retry.",
           );
         }
       })
@@ -156,7 +208,7 @@ export function useWalletStatus() {
     return () => {
       active = false;
     };
-  }, [wallet?.address, wallet?.chainId, networkState, switchNetwork]);
+  }, [wallet?.address, wallet?.chainId, networkState, connector]);
 
   useEffect(() => {
     if (!wallet) {
@@ -231,12 +283,12 @@ export function useWalletStatus() {
     );
 
     try {
-      await (switchNetwork as NetworkSwitch)(assetChainTestnet);
+      await withSwitchTimeout(requestAssetChainSwitch(connector));
 
       networkSwitchTimerRef.current = setTimeout(() => {
         networkSwitchTimerRef.current = null;
         setWalletMessage(
-          "The wallet did not switch networks. Open your wallet app, check for a pending request, or add Asset Chain Testnet manually (Chain ID: 42421).",
+          "No wallet approval prompt was received. Reopen your wallet and switch to Asset Chain Testnet (Chain ID: 42421), then return here and reconnect. You can also tap Switch network to retry.",
         );
       }, 45000);
     } catch (error) {
