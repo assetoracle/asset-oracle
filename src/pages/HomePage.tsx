@@ -29,6 +29,10 @@ export type DisplayMarket = {
   label: string;
   endDate: string;
   resolutionRule?: DisplayResolutionRule;
+  onchainMarketId?: string | null;
+  onchainTxHash?: string | null;
+  onchainManagerAddress?: string | null;
+  onchainChainId?: number | null;
 };
 
 type DashboardStats = {
