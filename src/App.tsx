@@ -650,6 +650,14 @@ useEffect(() => {
           onPropose={async () => {
             setProposalMessage("");
             setProposalAccessMessage("");
+            if (!address || !wallet) {
+              await handleConnect();
+              setProposalAccessMessage(
+                "Connect your wallet first. After connecting, select Propose a Market again to verify your creator permissions.",
+              );
+              return;
+            }
+
             const role = await handleVerifyWalletRole();
             if (role?.permissions.createMarketProposal) {
               setProposalFormOpen(true);
@@ -657,7 +665,7 @@ useEffect(() => {
               setProposalAccessMessage(
                 role
                   ? "This wallet is not authorized to submit market proposals. Connect a configured market-creator wallet or contact the administrator."
-                  : "Wallet role could not be verified. Connect your wallet and complete signature verification before submitting a proposal.",
+                  : "Wallet role could not be verified. Complete wallet signature verification before submitting a proposal.",
               );
             }
           }}
