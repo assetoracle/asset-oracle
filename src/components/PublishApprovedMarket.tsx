@@ -16,6 +16,8 @@ import {
   ASSET_CHAIN_TESTNET_EXPLORER,
   ASSET_CHAIN_TESTNET_ID,
   assetOracleMarketManagerAddress,
+  TESTNET_USDC_ADDRESS,
+  TESTNET_USDC_DECIMALS,
 } from "../contracts/assetOracle";
 import { recordMarketPublication, type StoredMarketProposal } from "../markets/marketApi";
 
@@ -161,7 +163,8 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     tokenConfig.data &&
     tokenConfig.data[2] &&
     isAddress(tokenConfig.data[0]) &&
-    Number(tokenConfig.data[1]) > 0
+    tokenConfig.data[0].toLowerCase() === TESTNET_USDC_ADDRESS.toLowerCase() &&
+    Number(tokenConfig.data[1]) === TESTNET_USDC_DECIMALS
   );
 
   const closeTimestamp = useMemo(
