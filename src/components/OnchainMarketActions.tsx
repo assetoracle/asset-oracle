@@ -79,12 +79,6 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     args: [0],
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
   });
-  const contractOwner = useReadContract({
-    address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "owner",
-    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
-  });
   const validatorRoster = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
