@@ -1,4 +1,3 @@
-
 import { useAppKit, useAppKitNetwork } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
@@ -19,7 +18,7 @@ type NetworkSwitch = (
 ) => Promise<unknown>;
 
 export function useWalletStatus() {
-  const { open } = useAppKit();
+  const { open, close } = useAppKit();
   const { switchNetwork } = useAppKitNetwork();
   const { address, chainId, isConnected } = useAccount();
   const { disconnectAsync } = useDisconnect();
@@ -30,6 +29,7 @@ export function useWalletStatus() {
     useState(false);
 
   const userInitiatedDisconnectRef = useRef(false);
+  const autoSwitchAttemptRef = useRef<string | null>(null);
   const networkSwitchTimerRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -73,6 +73,15 @@ export function useWalletStatus() {
         ? "correct"
         : "wrong";
 
+  // When the wallet app returns after switching successfully, close any stale
+  // AppKit network modal. Mobile deep-link handoff can leave that modal open
+  // even though wagmi already reports Enugu (42421).
+  useEffect(() => {
+    if (networkState === "correct") {
+      close();
+    }
+  }, [networkState, close]);
+
   useEffect(() => {
     if (
       networkState === "correct" ||
@@ -94,6 +103,61 @@ export function useWalletStatus() {
     };
   }, []);
 
+  // Ask the wallet to switch to Enugu testnet once after connecting on a
+  // different network. Remember the attempt so a rejection cannot cause a
+  // repeated prompt loop; the user can still retry from the manual control.
+  useEffect(() => {
+    if (!wallet || networkState !== "wrong") {
+      if (!wallet) autoSwitchAttemptRef.current = null;
+      return;
+    }
+
+    const attemptKey = `${wallet.address.toLowerCase()}:${wallet.chainId ?? "unknown"}`;
+    if (autoSwitchAttemptRef.current === attemptKey) return;
+    autoSwitchAttemptRef.current = attemptKey;
+
+    let active = true;
+    setWalletBusy(true);
+    setWalletMessage(
+      "Connected on another network. Requesting a switch to Asset Chain Testnet (Chain ID: 42421). Approve it in your wallet.",
+    );
+
+    void (switchNetwork as NetworkSwitch)(assetChainTestnet)
+      .then(() => {
+        if (!active) return;
+        if (networkSwitchTimerRef.current !== null) {
+          clearTimeout(networkSwitchTimerRef.current);
+        }
+        networkSwitchTimerRef.current = setTimeout(() => {
+          networkSwitchTimerRef.current = null;
+          setWalletMessage(
+            "Network switch is not confirmed yet. Open your wallet app and approve the request, or use Switch network to retry. Asset Chain Testnet ID: 42421.",
+          );
+        }, 45000);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        const errorMessage =
+          error instanceof Error ? error.message : "";
+        if (/user rejected|user denied|user cancelled/i.test(errorMessage)) {
+          setWalletMessage(
+            "Network switch was cancelled. Tap Switch network to try again, or switch to Asset Chain Testnet in your wallet (Chain ID: 42421).",
+          );
+        } else {
+          setWalletMessage(
+            "Automatic network switching was unavailable. Tap Switch network, or add Asset Chain Testnet manually (Chain ID: 42421).",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setWalletBusy(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [wallet?.address, wallet?.chainId, networkState, switchNetwork]);
+
   useEffect(() => {
     if (!wallet) {
       if (userInitiatedDisconnectRef.current) {
@@ -109,7 +173,7 @@ export function useWalletStatus() {
       setWalletMessage("Detecting network...");
     } else if (networkState === "correct") {
       setWalletMessage("Wallet connected to Asset Chain Testnet.");
-    } else if (wallet.chainId !== null) {
+    } else if (wallet.chainId !== null && autoSwitchAttemptRef.current !== `${wallet.address.toLowerCase()}:${wallet.chainId}`) {
       setWalletMessage(
         `Wallet connected on chain ID ${displayChainId(
           wallet.chainId,
