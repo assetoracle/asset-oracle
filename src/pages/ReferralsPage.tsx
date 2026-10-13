@@ -15,12 +15,18 @@ type ReferralLeaderboardEntry = {
   verifiedReferrals: number;
 };
 
+type PointsLeaderboardEntry = { rank: number; wallet: string; points: number };
+
 type ReferralsPageProps = {
   address?: string;
   message: string;
   referralLink: string;
   referralCode: string;
   leaderboard: ReferralLeaderboardEntry[];
+  pointsLeaderboard: PointsLeaderboardEntry[];
+  pointsLeaderboardLoading: boolean;
+  pointsLeaderboardError: string;
+  onRetryPointsLeaderboard: () => void;
   leaderboardLoading: boolean;
   leaderboardError: string;
   actionLoading: boolean;
@@ -35,6 +41,10 @@ export default function ReferralsPage({
   referralLink,
   referralCode,
   leaderboard,
+  pointsLeaderboard,
+  pointsLeaderboardLoading,
+  pointsLeaderboardError,
+  onRetryPointsLeaderboard,
   leaderboardLoading,
   leaderboardError,
   actionLoading,
@@ -163,6 +173,13 @@ export default function ReferralsPage({
             <tbody>{pointsLeaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.points}</td></tr>)}</tbody>
           </table></div>
         )}
+        <div className="referral-table-footer"><ShieldCheck size={16} />Only eligible, idempotently recorded points count.</div>
+      </section>
+
+      <section className="referral-leaderboard-card">
+        <div className="referral-table-heading"><div><span className="eyebrow">POINTS RANKINGS</span><h2>Community points leaderboard</h2></div><span className="network-label">All time</span></div>
+        <p className="market-disclaimer">Points are non-monetary. 10 points for first qualifying participation per wallet/market and 5 points for each qualified referral. Paid-submission points are not active yet.</p>
+        {pointsLeaderboardLoading ? <div className="referral-table-empty" role="status"><Trophy size={30} /><h3>Loading points</h3><p>Retrieving eligible points events.</p></div> : pointsLeaderboardError ? <div className="referral-table-empty" role="alert"><Trophy size={30} /><h3>Points leaderboard unavailable</h3><p>{pointsLeaderboardError}</p><button className="text-action" type="button" onClick={onRetryPointsLeaderboard}>Retry</button></div> : pointsLeaderboard.length === 0 ? <div className="referral-table-empty"><Trophy size={30} /><h3>No points recorded yet</h3><p>Rankings appear after qualifying activity is recorded.</p></div> : <div className="referral-table-wrap"><table className="referral-table"><thead><tr><th>Rank</th><th>Wallet</th><th>Points</th></tr></thead><tbody>{pointsLeaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.points}</td></tr>)}</tbody></table></div>}
         <div className="referral-table-footer"><ShieldCheck size={16} />Only eligible, idempotently recorded points count.</div>
       </section>
 
