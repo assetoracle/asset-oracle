@@ -230,3 +230,103 @@ export async function recordMarketPublication(
     }),
   });
 }
+
+
+export type PaidSubmissionToken = "USDC" | "USDT" | "cNGN";
+
+export type PaidSubmissionQuote = {
+  quoteId: string;
+  network: "MAINNET";
+  token: PaidSubmissionToken;
+  tokenAddress: `0x${string}`;
+  tokenDecimals: number;
+  amountAtomic: string;
+  usdValue: "10.00";
+  issuedAtMs: number;
+  expiresAtMs: number;
+  rateSource: string;
+};
+
+export type PaidSubmissionIntent = {
+  message: string;
+  submissionId: string;
+  proposal: {
+    id: string;
+    question: string;
+    status: "PENDING_APPROVAL";
+    submittedAt: string;
+  };
+  payment: {
+    network: "MAINNET";
+    token: PaidSubmissionToken;
+    tokenAddress: `0x${string}`;
+    tokenDecimals: number;
+    amountAtomic: string;
+    treasuryAddress: `0x${string}`;
+    expiresAtMs: number;
+  };
+};
+
+async function createSignedWalletAuth(
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const { message } = await requestWalletNonce(address);
+  const signature = await signMessage(message);
+  return { address, message, signature };
+}
+
+/**
+ * Requests a server-generated $10-equivalent quote. This only reads/configures
+ * a quote; it never sends a wallet transaction. The backend currently keeps
+ * this endpoint disabled until its mainnet configuration is explicitly enabled.
+ */
+export async function requestPaidSubmissionQuote(
+  token: PaidSubmissionToken,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const walletAuth = await createSignedWalletAuth(address, signMessage);
+  return request<PaidSubmissionQuote>("/api/markets/paid-submissions/quote", {
+    method: "POST",
+    body: JSON.stringify({ token, walletAuth }),
+  });
+}
+
+/**
+ * Creates a payment intent after quote creation. This reserves the quote and
+ * creates a pending proposal; it does not transfer tokens or publish a market.
+ */
+export async function createPaidSubmissionIntent(
+  proposal: MarketProposalInput,
+  quoteId: string,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const walletAuth = await createSignedWalletAuth(address, signMessage);
+  return request<PaidSubmissionIntent>("/api/markets/paid-submissions/intent", {
+    method: "POST",
+    body: JSON.stringify({ proposal, quoteId, walletAuth }),
+  });
+}
+
+/**
+ * Asks the backend to verify an already-submitted payment transaction.
+ * Call only after a wallet transaction has been deliberately initiated by the
+ * user and its hash is available; this helper itself sends no transaction.
+ */
+export async function verifyPaidSubmissionPayment(
+  submissionId: string,
+  transactionHash: string,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const walletAuth = await createSignedWalletAuth(address, signMessage);
+  return request<{
+    status: "PAID_PENDING_REVIEW" | string;
+    message: string;
+  }>("/api/markets/paid-submissions/verify-payment", {
+    method: "POST",
+    body: JSON.stringify({ submissionId, transactionHash, walletAuth }),
+  });
+}
