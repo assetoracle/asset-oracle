@@ -383,31 +383,19 @@ useEffect(() => {
 
   function renderMarketCard(market: DisplayMarket) {
     return (
-      <article className="market-card" key={market.id}>
+      <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
           <span className="market-symbol">{market.symbol}</span>
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
-            <span className="market-status">Approved</span>
+            <span className="market-status">{market.status || "Published"}</span>
           </div>
         </div>
-
         <h3>{market.question}</h3>
-        <p className="market-description">{market.description}</p>
-
-        <div className="market-meta">
-          <span>Resolution date</span>
-          <span>{market.endDate}</span>
-        </div>
-
         <div className="market-card-bottom">
-          <span className="market-status-note">Published market</span>
-          <button
-            className="text-action"
-            type="button"
-            onClick={() => openMarket(market)}
-          >
-            View details
+          <span className="market-status-note">Closes {market.closesAt ? formatDate(market.closesAt) : "date unavailable"}</span>
+          <button className="primary-button open-market-button" type="button" onClick={() => openMarket(market)}>
+            Open Market <ArrowUpRight size={15} />
           </button>
         </div>
       </article>
