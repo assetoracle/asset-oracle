@@ -190,18 +190,69 @@ export default function HomePage({
   return (
     <>
       <section className="hero">
-        <span className="eyebrow">PREDICT <span>·</span> VERIFY <span>·</span> BUILD</span>
-        <h1>Real-world truth.<br /><span>On-chain.</span></h1>
-        <p className="hero-description">Explore real-world questions, understand how outcomes are verified, and follow transparent settlement.</p>
-        <div className="hero-motion-line" aria-live="polite" aria-atomic="true">
-          <span className="hero-motion-label">THE ORACLE IS BUILT TO</span>
-          <span className="hero-motion-phrase" key={motionPhrase}>{motionPhrase}</span>
+        <div className="hero-layout">
+          <div className="hero-copy">
+          <span className="eyebrow">PREDICT <span>·</span> VERIFY <span>·</span> BUILD</span>
+          <h1>Real-world truth.<br /><span>On-chain.</span></h1>
+          <p className="hero-description">Explore real-world questions, understand how outcomes are verified, and follow transparent settlement.</p>
+          <div className="hero-motion-line" aria-live="polite" aria-atomic="true">
+            <span className="hero-motion-label">THE ORACLE IS BUILT TO</span>
+            <span className="hero-motion-phrase" key={motionPhrase}>{motionPhrase}</span>
+          </div>
+          <div className="hero-actions">
+            <button className="primary-button" type="button" onClick={onExploreMarkets}>Explore markets <ArrowUpRight size={16} /></button>
+            <span className="network-label"><span className="network-dot" />Asset Chain · Testnet development</span>
+          </div>
+          <div className="hero-footnote">Verification-first prediction infrastructure</div>
+          </div>
+
+          <aside className="hero-globe" aria-label="Asset Oracle market categories">
+            <div className="globe-stage" aria-hidden="true">
+              <div className="globe-halo"></div>
+              <svg className="oracle-globe-svg" viewBox="0 0 360 360" role="presentation">
+                <defs>
+                  <radialGradient id="oracle-globe-fill" cx="34%" cy="27%" r="78%">
+                    <stop offset="0%" stopColor="#1D6675" />
+                    <stop offset="54%" stopColor="#0B2A35" />
+                    <stop offset="100%" stopColor="#071A24" />
+                  </radialGradient>
+                  <clipPath id="oracle-globe-clip"><circle cx="180" cy="180" r="128" /></clipPath>
+                </defs>
+                <circle cx="180" cy="180" r="137" fill="none" stroke="var(--accent)" strokeOpacity=".28" strokeWidth="1" />
+                <circle cx="180" cy="180" r="128" fill="url(#oracle-globe-fill)" stroke="var(--highlight)" strokeOpacity=".7" strokeWidth="1.4" />
+                <g clipPath="url(#oracle-globe-clip)" fill="none" stroke="var(--accent)" strokeOpacity=".55" strokeWidth="1.15">
+                  <ellipse cx="180" cy="180" rx="58" ry="128" />
+                  <ellipse cx="180" cy="180" rx="105" ry="128" />
+                  <ellipse cx="180" cy="180" rx="128" ry="43" />
+                  <ellipse cx="180" cy="180" rx="128" ry="86" />
+                  <path d="M52 180H308M65 132H295M65 228H295" strokeOpacity=".36" />
+                  <path d="M100 100C122 116 132 139 124 158S109 202 133 222 157 253 151 278" stroke="var(--teal)" strokeOpacity=".8" />
+                  <path d="M207 58C194 92 214 115 231 137S249 180 227 204 211 250 236 278" stroke="var(--teal)" strokeOpacity=".8" />
+                </g>
+                <circle cx="180" cy="180" r="128" fill="none" stroke="var(--highlight)" strokeOpacity=".24" />
+                <circle cx="180" cy="180" r="145" fill="none" stroke="var(--teal)" strokeOpacity=".45" strokeDasharray="2 8" />
+              </svg>
+              <span className="globe-node globe-node-one"></span>
+              <span className="globe-node globe-node-two"></span>
+              <span className="globe-node globe-node-three"></span>
+            </div>
+            <div className="globe-category-list">
+              {[
+                "Digital Assets",
+                "Stablecoins",
+                "RWA",
+                "Economic Data",
+                "Regional Events",
+                "Sports",
+              ].map((category, index) => (
+                <span className="globe-category" style={{ "--category-index": index } as React.CSSProperties} key={category}>
+                  <span className="globe-category-dot"></span>{category}
+                </span>
+              ))}
+            </div>
+            <span className="globe-caption">SIX MARKETS · ONE ORACLE</span>
+          </aside>
         </div>
-        <div className="hero-actions">
-          <button className="primary-button" type="button" onClick={onExploreMarkets}>Explore markets <ArrowUpRight size={16} /></button>
-          <span className="network-label"><span className="network-dot" />Asset Chain · Testnet development</span>
-        </div>
-        <div className="hero-footnote">Verification-first prediction infrastructure</div>
       </section>
 
       <DashboardOverview />

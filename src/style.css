@@ -3811,3 +3811,142 @@ button:disabled {
     transition: none !important;
   }
 }
+
+
+/* Homepage globe: use the existing Asset Oracle palette only. */
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+}
+.hero-copy { min-width: 0; }
+.hero-globe {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 390px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+.globe-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 360px);
+  aspect-ratio: 1;
+}
+.globe-halo {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,184,169,.12), rgba(18,217,245,.035) 48%, transparent 72%);
+  filter: blur(9px);
+}
+.oracle-globe-svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 22px rgba(18,217,245,.12));
+  animation: oracle-globe-rotate 32s linear infinite;
+}
+.globe-node {
+  position: absolute;
+  z-index: 2;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--highlight);
+  box-shadow: 0 0 14px rgba(99,243,255,.55);
+}
+.globe-node-one { top: 23%; left: 23%; }
+.globe-node-two { right: 15%; top: 45%; background: var(--teal); }
+.globe-node-three { bottom: 20%; left: 48%; }
+.globe-category-list {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.globe-category {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 155px;
+  padding: 10px 13px;
+  border: 1px solid rgba(99,243,255,.18);
+  border-radius: 999px;
+  background: rgba(7,26,36,.92);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  animation: globe-category-cycle 15s ease-in-out infinite;
+  animation-delay: calc(var(--category-index) * 2.5s);
+}
+.globe-category:nth-child(1) { top: 8%; left: 0; }
+.globe-category:nth-child(2) { top: 21%; right: -1%; }
+.globe-category:nth-child(3) { top: 46%; left: -3%; }
+.globe-category:nth-child(4) { right: -4%; bottom: 25%; }
+.globe-category:nth-child(5) { bottom: 9%; left: 5%; }
+.globe-category:nth-child(6) { right: 10%; bottom: 2%; }
+.globe-category-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 10px rgba(0,184,169,.5);
+}
+.globe-caption {
+  margin-top: -5px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+}
+@keyframes oracle-globe-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes globe-category-cycle {
+  0%, 4% { opacity: 0; transform: translateY(7px) scale(.97); }
+  9%, 22% { opacity: 1; transform: translateY(0) scale(1); border-color: rgba(18,217,245,.38); }
+  28%, 100% { opacity: 0; transform: translateY(-5px) scale(.98); }
+}
+@media (max-width: 860px) {
+  .hero-layout { grid-template-columns: minmax(0, 1fr); }
+  .hero-globe { min-height: 350px; margin-top: 12px; }
+  .globe-stage { width: min(78vw, 330px); }
+  .globe-category:nth-child(1) { left: 5%; }
+  .globe-category:nth-child(2) { right: 3%; }
+  .globe-category:nth-child(3) { left: 0; }
+  .globe-category:nth-child(4) { right: 0; }
+  .globe-category:nth-child(5) { left: 6%; }
+  .globe-category:nth-child(6) { right: 7%; }
+}
+@media (max-width: 420px) {
+  .hero-globe { min-height: 300px; }
+  .globe-stage { width: min(76vw, 280px); }
+  .globe-category { max-width: 130px; padding: 8px 10px; font-size: 10px; }
+  .globe-category:nth-child(1) { top: 3%; left: 0; }
+  .globe-category:nth-child(2) { top: 19%; right: -2%; }
+  .globe-category:nth-child(3) { top: 45%; left: -3%; }
+  .globe-category:nth-child(4) { right: -4%; bottom: 24%; }
+  .globe-category:nth-child(5) { bottom: 7%; left: 0; }
+  .globe-category:nth-child(6) { right: 0; bottom: -1%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oracle-globe-svg { animation: none !important; }
+  .globe-category { animation: none !important; opacity: 1; }
+  .globe-category:nth-child(n+4) { display: none; }
+}
