@@ -144,6 +144,19 @@ export default function HomePage({
   onOpenReferrals,
   renderMarketCard,
 }: HomePageProps) {
+  const motionPhrases = ["make evidence traceable.", "bring clarity to outcomes.", "connect real-world data.", "put verification first."];
+  const [motionPhraseIndex, setMotionPhraseIndex] = useState(0);
+  const motionPhrase = motionPhrases[motionPhraseIndex];
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+    const timer = window.setInterval(() => {
+      setMotionPhraseIndex((current) => (current + 1) % motionPhrases.length);
+    }, 3600);
+    return () => window.clearInterval(timer);
+  }, []);
+
   function renderLoading() {
     return (
       <div className="empty-state" role="status">
@@ -180,6 +193,10 @@ export default function HomePage({
         <span className="eyebrow">PREDICT <span>·</span> VERIFY <span>·</span> BUILD</span>
         <h1>Real-world truth.<br /><span>On-chain.</span></h1>
         <p className="hero-description">Explore real-world questions, understand how outcomes are verified, and follow transparent settlement.</p>
+        <div className="hero-motion-line" aria-live="polite" aria-atomic="true">
+          <span className="hero-motion-label">THE ORACLE IS BUILT TO</span>
+          <span className="hero-motion-phrase" key={motionPhrase}>{motionPhrase}</span>
+        </div>
         <div className="hero-actions">
           <button className="primary-button" type="button" onClick={onExploreMarkets}>Explore markets <ArrowUpRight size={16} /></button>
           <span className="network-label"><span className="network-dot" />Asset Chain · Testnet development</span>
