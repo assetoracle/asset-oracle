@@ -230,3 +230,10 @@ export async function recordMarketPublication(
     }),
   });
 }
+
+
+export type PointsLeaderboardEntry = { rank: number; wallet: string; points: number };
+
+export async function getPointsLeaderboard() {
+  return request<{ period: "ALL_TIME"; leaderboard: PointsLeaderboardEntry[] }>("/api/referrals/points-leaderboard");
+}
