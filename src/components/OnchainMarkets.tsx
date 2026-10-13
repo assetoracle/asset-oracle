@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import OnchainMarketActions from "./OnchainMarketActions";
 import { useChainId, useReadContract, useReadContracts } from "wagmi";
+import type { MarketCategory } from "../types";
+import type { DisplayMarket } from "../pages/HomePage";
 import {
   ASSET_CHAIN_TESTNET_EXPLORER,
   ASSET_CHAIN_TESTNET_ID,
@@ -22,7 +24,12 @@ const STATUS_LABELS = [
 
 const OUTCOME_LABELS = ["Unresolved", "YES", "NO", "Invalid"] as const;
 
-export default function OnchainMarkets() {
+type Props = {
+  activeCategory: MarketCategory;
+  publishedMarkets: DisplayMarket[];
+};
+
+export default function OnchainMarkets({ activeCategory, publishedMarkets }: Props) {
   const chainId = useChainId();
   const enabled = Boolean(assetOracleMarketManagerAddress) && chainId === ASSET_CHAIN_TESTNET_ID;
   const count = useReadContract({
@@ -32,11 +39,13 @@ export default function OnchainMarkets() {
     query: { enabled, refetchInterval: 30_000 },
   });
 
+  // Query the earliest market IDs first so the visible list is ascending.
   const ids = useMemo(() => {
     const total = count.data === undefined ? 0 : Number(count.data);
     if (!Number.isSafeInteger(total) || total < 0) return [];
     const length = Math.min(total, MAX_MARKETS_TO_DISPLAY);
-    return Array.from({ length }, (_, index) => BigInt(total - index));
+    const firstId = Math.max(1, total - length + 1);
+    return Array.from({ length }, (_, index) => BigInt(firstId + index));
   }, [count.data]);
 
   const markets = useReadContracts({
@@ -72,6 +81,10 @@ export default function OnchainMarkets() {
   const rows = (markets.data ?? []).flatMap((result) => {
     if (result.status !== "success") return [];
     const market = result.result;
+    const published = publishedMarkets.find((item) =>
+      item.onchainMarketId === market.id.toString() &&
+      item.onchainManagerAddress?.toLowerCase() === assetOracleMarketManagerAddress!.toLowerCase()
+    );
     return [{
       id: market.id.toString(),
       question: market.question,
@@ -80,19 +93,24 @@ export default function OnchainMarkets() {
       totalStaked: market.totalStaked,
       status: STATUS_LABELS[Number(market.status)] ?? "Unknown",
       outcome: OUTCOME_LABELS[Number(market.outcome)] ?? "Unknown",
+      category: published?.category ?? null,
       explorerUrl: ASSET_CHAIN_TESTNET_EXPLORER + "/address/" + assetOracleMarketManagerAddress,
     }];
   });
+
+  const visibleRows = rows
+    .filter((market) => activeCategory === "All Markets" || market.category === activeCategory)
+    .sort((a, b) => Number(a.id) - Number(b.id));
 
   return (
     <section className="resolution-preview onchain-status">
       <span className="eyebrow">LIVE CONTRACT DATA · ENUGU TESTNET</span>
       <h2>On-chain markets</h2>
-      <p>These records are read directly from the configured market manager, separate from proposals published by the backend.</p>
-      {count.data !== undefined && count.data > BigInt(MAX_MARKETS_TO_DISPLAY) && <p>Showing the latest {MAX_MARKETS_TO_DISPLAY} of {count.data.toString()} on-chain markets.</p>}
-      {markets.isPending ? <p>Loading market records…</p> : rows.length === 0 ? <p>Market records could not be decoded. Verify the deployed contract ABI before relying on this display.</p> : (
+      <p>These records are read directly from the configured market manager. Category filters use verified publication metadata.</p>
+      {count.data !== undefined && count.data > BigInt(MAX_MARKETS_TO_DISPLAY) && <p>Showing up to {MAX_MARKETS_TO_DISPLAY} markets in ascending ID order.</p>}
+      {markets.isPending ? <p>Loading market records…</p> : visibleRows.length === 0 ? <p>{activeCategory === "All Markets" ? "Market records could not be decoded. Verify the deployed contract ABI before relying on this display." : "No on-chain markets in this category have verified publication metadata yet."}</p> : (
         <div className="market-grid">
-          {rows.map((market) => (
+          {visibleRows.map((market) => (
             <article className="market-card" key={market.id}>
               <div className="market-card-top"><span className="market-symbol">#{market.id}</span><div className="market-card-badges"><span className="market-category">{market.status}</span><span className="market-status">{market.outcome}</span></div></div>
               <h3>{market.question}</h3>
