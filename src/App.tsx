@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BriefcaseBusiness,
   ChartNoAxesCombined,
+  ArrowUpRight,
   FileText,
   History,
   House,
