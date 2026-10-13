@@ -3614,3 +3614,200 @@ button:disabled {
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* Refined motion layer: lively, restrained, and mobile-conscious. */
+.hero {
+  isolation: isolate;
+  overflow: hidden;
+  background-image:
+    radial-gradient(ellipse at 88% 8%, rgba(18, 217, 245, 0.12), transparent 38%),
+    linear-gradient(132deg, rgba(11, 42, 53, 0.98), rgba(7, 26, 36, 0.96));
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -45% auto -45% -28%;
+  width: 48%;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 217, 245, 0.12);
+  transform: rotate(-18deg);
+  pointer-events: none;
+  animation: oracle-orbit 18s ease-in-out infinite alternate;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 240px;
+  height: 240px;
+  right: -110px;
+  bottom: -155px;
+  border: 1px solid rgba(18, 217, 245, 0.17);
+  border-radius: 50%;
+  box-shadow: 0 0 0 24px rgba(18, 217, 245, 0.025), 0 0 0 48px rgba(18, 217, 245, 0.02);
+  pointer-events: none;
+  animation: oracle-breathe 7s ease-in-out infinite alternate;
+}
+
+.hero h1 {
+  animation: oracle-rise-in 650ms cubic-bezier(.2,.75,.25,1) both;
+}
+
+.hero-description {
+  animation: oracle-rise-in 750ms cubic-bezier(.2,.75,.25,1) 90ms both;
+}
+
+.hero-motion-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 21px;
+  color: var(--muted, #9ab3bf);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+.hero-motion-label {
+  opacity: 0.78;
+}
+
+.hero-motion-phrase {
+  display: inline-block;
+  color: var(--highlight, #12d9f5);
+  letter-spacing: 0.5px;
+  animation: oracle-phrase-in 420ms cubic-bezier(.2,.75,.25,1) both;
+}
+
+.hero-actions {
+  animation: oracle-rise-in 780ms cubic-bezier(.2,.75,.25,1) 160ms both;
+}
+
+.dashboard-stat-card,
+.principle,
+.market-card,
+.source-item,
+.detail-info-card {
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.dashboard-stat-card:hover,
+.principle:hover,
+.market-card:hover,
+.source-item:hover,
+.detail-info-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(18, 217, 245, 0.32);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16), 0 0 22px rgba(18, 217, 245, 0.045);
+}
+
+.primary-button,
+.connect-button,
+.text-action,
+.nav-link,
+.bottom-nav-link {
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.primary-button:hover,
+.connect-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(18, 217, 245, 0.14);
+}
+
+.dashboard-stat-icon {
+  transition: transform 220ms ease, background-color 220ms ease;
+}
+
+.dashboard-stat-card:hover .dashboard-stat-icon {
+  transform: translateY(-2px) scale(1.04);
+}
+
+@keyframes oracle-rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes oracle-phrase-in {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes oracle-orbit {
+  from { transform: translate3d(0, 0, 0) rotate(-18deg); }
+  to { transform: translate3d(18px, -8px, 0) rotate(-11deg); }
+}
+
+@keyframes oracle-breathe {
+  from { opacity: 0.55; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1.06); }
+}
+
+@media (max-width: 640px) {
+  .hero-motion-line {
+    gap: 5px 8px;
+    margin-top: 18px;
+    font-size: 10px;
+    letter-spacing: 0.7px;
+  }
+
+  .hero::before {
+    left: -48%;
+    width: 76%;
+  }
+
+  .hero::after {
+    width: 170px;
+    height: 170px;
+    right: -95px;
+    bottom: -120px;
+  }
+}
+
+@media (hover: none) {
+  .dashboard-stat-card:hover,
+  .principle:hover,
+  .market-card:hover,
+  .source-item:hover,
+  .detail-info-card:hover,
+  .primary-button:hover,
+  .connect-button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero::before,
+  .hero::after,
+  .hero h1,
+  .hero-description,
+  .hero-actions,
+  .hero-motion-phrase {
+    animation: none !important;
+  }
+
+  .dashboard-stat-card,
+  .principle,
+  .market-card,
+  .source-item,
+  .detail-info-card,
+  .primary-button,
+  .connect-button,
+  .text-action,
+  .nav-link,
+  .bottom-nav-link {
+    transition: none !important;
+  }
+}
