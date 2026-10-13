@@ -40,11 +40,11 @@ export default function MarketsPage({
   onRetryMarkets,
   onOpenMarket,
 }: MarketsPageProps) {
-  function renderMarketCard(market: DisplayMarket) {
+  function renderMarketCard(market: DisplayMarket, categoryIndex: number) {
     return (
       <article className="market-card" key={market.id}>
         <div className="market-card-top">
-          <span className="market-symbol">{market.symbol}</span>
+          <span className="market-symbol">#{categoryIndex + 1}</span>
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
             <span className="market-status">Approved</span>
@@ -114,7 +114,7 @@ export default function MarketsPage({
       ) : markets.length === 0 ? (
         <div className="empty-state"><h3>No published markets in this category</h3><p>Markets appear here after publication and are filtered by the selected category.</p></div>
       ) : (
-        <div className="market-grid">{markets.map(renderMarketCard)}</div>
+        <div className="market-grid">{markets.map((market, index) => renderMarketCard(market, index))}</div>
       )}
 
       <OnchainMarkets activeCategory={activeCategory} publishedMarkets={markets} />
