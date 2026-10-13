@@ -24,6 +24,7 @@ export default function AdminDashboard({
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [confirmation, setConfirmation] = useState<{ id: string; status: "APPROVED" | "REJECTED" } | null>(null);
 
   const authenticate = useCallback(async () => {
     if (!address) throw new Error("Connect your admin wallet first.");
@@ -71,15 +72,15 @@ export default function AdminDashboard({
     setError("");
   }, [address]);
 
-  async function decide(
-    id: string,
-    status: "APPROVED" | "REJECTED",
-  ) {
-    const action = status === "APPROVED" ? "approve" : "reject";
+  function decide(id: string, status: "APPROVED" | "REJECTED") {
+    setConfirmation({ id, status });
+  }
 
-    if (!window.confirm(`Are you sure you want to ${action} this proposal?`)) {
-      return;
-    }
+  async function confirmDecision() {
+    if (!confirmation) return;
+    const { id, status } = confirmation;
+    const action = status === "APPROVED" ? "approve" : "reject";
+    setConfirmation(null);
 
     setBusyId(id);
     setError("");
@@ -230,6 +231,63 @@ export default function AdminDashboard({
         ))}
       </div>
       <ReferralReviewPanel address={address} signMessage={signMessage} />
+
+      {confirmation && (() => {
+        const selectedProposal = proposals.find((proposal) => proposal.id === confirmation.id);
+        const approving = confirmation.status === "APPROVED";
+        return (
+          <div
+            className="approval-modal-backdrop"
+            onClick={() => setConfirmation(null)}
+          >
+            <section
+              className="approval-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="approval-modal-title"
+              aria-describedby="approval-modal-description"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="approval-modal-icon" aria-hidden="true">
+                {approving ? <ShieldCheck size={25} /> : <X size={25} />}
+              </div>
+              <span className="approval-modal-eyebrow">ADMIN REVIEW · ASSET ORACLE</span>
+              <h2 id="approval-modal-title">
+                {approving ? "Approve market proposal?" : "Reject market proposal?"}
+              </h2>
+              <p id="approval-modal-description">
+                {approving
+                  ? "This proposal will move to the approved stage and can then proceed to on-chain publication."
+                  : "This proposal will be marked as rejected and will not proceed to publication."}
+              </p>
+              {selectedProposal && (
+                <div className="approval-modal-proposal">
+                  <span>PROPOSAL</span>
+                  <strong>{selectedProposal.question}</strong>
+                  <small>{selectedProposal.category}</small>
+                </div>
+              )}
+              <div className="approval-modal-actions">
+                <button
+                  className="approval-modal-cancel"
+                  type="button"
+                  onClick={() => setConfirmation(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={approving ? "approval-modal-confirm" : "approval-modal-confirm approval-modal-confirm-danger"}
+                  type="button"
+                  onClick={() => void confirmDecision()}
+                >
+                  {approving ? <Check size={16} /> : <X size={16} />}
+                  {approving ? "Confirm approval" : "Confirm rejection"}
+                </button>
+              </div>
+            </section>
+          </div>
+        );
+      })()}
     </section>
   );
 }
