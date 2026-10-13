@@ -361,19 +361,25 @@ useEffect(() => {
 
   const query = search.trim().toLowerCase();
 
-  const filteredMarkets = publishedMarkets.filter((market) => {
-    const matchesCategory =
-      activeCategory === "All Markets" ||
-      market.category === activeCategory;
+  const filteredMarkets = publishedMarkets
+    .filter((market) => {
+      const matchesCategory =
+        activeCategory === "All Markets" ||
+        market.category === activeCategory;
 
-    const matchesSearch =
-      market.question.toLowerCase().includes(query) ||
-      market.category.toLowerCase().includes(query) ||
-      market.label.toLowerCase().includes(query) ||
-      market.description.toLowerCase().includes(query);
+      const matchesSearch =
+        market.question.toLowerCase().includes(query) ||
+        market.category.toLowerCase().includes(query) ||
+        market.label.toLowerCase().includes(query) ||
+        market.description.toLowerCase().includes(query);
 
-    return matchesCategory && matchesSearch;
-  });
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      const idA = a.onchainMarketId ? Number(a.onchainMarketId) : Number.MAX_SAFE_INTEGER;
+      const idB = b.onchainMarketId ? Number(b.onchainMarketId) : Number.MAX_SAFE_INTEGER;
+      return idA - idB;
+    });
 
   function renderMarketCard(market: DisplayMarket) {
     return (
