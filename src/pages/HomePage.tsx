@@ -139,7 +139,6 @@ export default function HomePage({
   marketsLoading,
   marketsError,
   onExploreMarkets,
-  onOpenMarket,
   onRetryMarkets,
   onOpenReferrals,
   renderMarketCard,
@@ -271,9 +270,8 @@ export default function HomePage({
         {marketsLoading ? renderLoading() : marketsError ? renderError() : markets.length === 0 ? renderEmptyState() : (
           <div className="market-grid">
             {markets.slice(0, 3).map((market) => (
-              <div key={market.id}>
+              <div key={market.id} className="home-market-card-wrap">
                 {renderMarketCard(market)}
-                <button className="text-action" type="button" onClick={() => onOpenMarket(market)}>View details <ArrowUpRight size={15} /></button>
               </div>
             ))}
           </div>

@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import OnchainMarketActions from "./OnchainMarketActions";
 import { useChainId, useReadContract, useReadContracts } from "wagmi";
 import type { MarketCategory } from "../types";
 import type { DisplayMarket } from "../pages/HomePage";
@@ -17,9 +16,10 @@ const OUTCOME_LABELS = ["Unresolved", "YES", "NO", "Invalid"] as const;
 type Props = {
   activeCategory: MarketCategory;
   publishedMarkets: DisplayMarket[];
+  onOpenMarket: (market: DisplayMarket) => void;
 };
 
-export default function OnchainMarkets({ activeCategory, publishedMarkets }: Props) {
+export default function OnchainMarkets({ activeCategory, publishedMarkets, onOpenMarket }: Props) {
   const chainId = useChainId();
   const enabled = Boolean(assetOracleMarketManagerAddress) && chainId === ASSET_CHAIN_TESTNET_ID;
   const count = useReadContract({
@@ -81,6 +81,7 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
       status: STATUS_LABELS[Number(market.status)] ?? "Unknown",
       outcome: OUTCOME_LABELS[Number(market.outcome)] ?? "Unknown",
       category: published.category,
+      publishedMarket: published,
       explorerUrl: ASSET_CHAIN_TESTNET_EXPLORER + "/address/" + assetOracleMarketManagerAddress,
     }];
   });
@@ -98,14 +99,21 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
       {markets.isPending ? <p>Loading market records…</p> : visibleRows.length === 0 ? <p>No markets available yet{activeCategory === "All Markets" ? "." : ` in ${activeCategory}.`}</p> : (
         <div className="market-grid">
           {visibleRows.map((market, index) => (
-            <article className="market-card" key={market.id}>
-              <div className="market-card-top"><span className="market-symbol">#{index + 1}</span><div className="market-card-badges"><span className="market-category">{market.status}</span><span className="market-status">{market.outcome}</span></div></div>
+            <article className="market-card market-card-compact" key={market.id}>
+              <div className="market-card-top">
+                <span className="market-symbol">#{index + 1}</span>
+                <div className="market-card-badges">
+                  <span className="market-category">{market.category}</span>
+                  <span className="market-status">{market.status}</span>
+                </div>
+              </div>
               <h3>{market.question}</h3>
-              <p className="market-description">Creator: {market.creator}</p>
-              <div className="market-meta"><span>Total staked</span><span>{(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} test USDC</span></div>
-              <div className="market-meta"><span>Closes</span><span>{market.closeTime ? new Date(market.closeTime * 1000).toLocaleString() : "Not set"}</span></div>
-              <div className="market-card-bottom"><span className="market-status-note">Read-only testnet data</span><a className="text-action" href={market.explorerUrl} target="_blank" rel="noreferrer">View contract</a></div>
-              <OnchainMarketActions marketId={BigInt(market.id)} closeTime={market.closeTime} />
+              <div className="market-card-bottom">
+                <span className="market-status-note">{market.outcome} · Closes {market.closeTime ? new Date(market.closeTime * 1000).toLocaleDateString() : "date unavailable"}</span>
+                <button className="primary-button open-market-button" type="button" onClick={() => onOpenMarket(market.publishedMarket)}>
+                  Open Market <span aria-hidden="true">↗</span>
+                </button>
+              </div>
             </article>
           ))}
         </div>
