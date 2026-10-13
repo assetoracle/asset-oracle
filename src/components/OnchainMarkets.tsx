@@ -11,17 +11,7 @@ import {
 } from "../contracts/assetOracle";
 
 const MAX_MARKETS_TO_DISPLAY = 50;
-
-const STATUS_LABELS = [
-  "Open",
-  "Closed",
-  "Disputed",
-  "Settled",
-  "Refundable",
-  "Cancelled",
-  "Arbitration",
-] as const;
-
+const STATUS_LABELS = ["Open", "Closed", "Disputed", "Settled", "Refundable", "Cancelled", "Arbitration"] as const;
 const OUTCOME_LABELS = ["Unresolved", "YES", "NO", "Invalid"] as const;
 
 type Props = {
@@ -39,7 +29,7 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
     query: { enabled, refetchInterval: 30_000 },
   });
 
-  // Query the earliest market IDs first so the visible list is ascending.
+  // Display the earliest market IDs first, in ascending order.
   const ids = useMemo(() => {
     const total = count.data === undefined ? 0 : Number(count.data);
     if (!Number.isSafeInteger(total) || total < 0) return [];
@@ -60,13 +50,7 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
 
   if (!assetOracleMarketManagerAddress) return null;
   if (chainId !== ASSET_CHAIN_TESTNET_ID) {
-    return (
-      <section className="resolution-preview onchain-status">
-        <span className="eyebrow">ON-CHAIN MARKETS</span>
-        <h2>Enugu testnet</h2>
-        <p>Switch to Asset Chain Testnet (Chain ID 42421) to load markets directly from the contract.</p>
-      </section>
-    );
+    return <section className="resolution-preview onchain-status"><span className="eyebrow">ON-CHAIN MARKETS</span><h2>Enugu testnet</h2><p>Switch to Asset Chain Testnet (Chain ID 42421) to load markets directly from the contract.</p></section>;
   }
   if (count.isPending) {
     return <section className="resolution-preview onchain-status"><h2>On-chain markets</h2><p>Loading market count from Enugu testnet…</p></section>;
@@ -75,7 +59,7 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
     return <section className="resolution-preview onchain-status" role="status"><h2>On-chain markets unavailable</h2><p>Contract reads failed. Check the configured contract address and testnet RPC. Backend-published markets remain separate.</p></section>;
   }
   if (count.data === 0n) {
-    return <section className="resolution-preview onchain-status"><span className="eyebrow">ON-CHAIN MARKETS</span><h2>No on-chain markets yet</h2><p>The configured market manager currently reports zero markets.</p><a href={ASSET_CHAIN_TESTNET_EXPLORER + "/address/" + assetOracleMarketManagerAddress} target="_blank" rel="noreferrer">Inspect market manager on explorer</a></section>;
+    return <section className="resolution-preview onchain-status"><span className="eyebrow">ON-CHAIN MARKETS</span><h2>No markets available yet</h2><p>Published markets will appear here after their publication records are verified.</p><a href={ASSET_CHAIN_TESTNET_EXPLORER + "/address/" + assetOracleMarketManagerAddress} target="_blank" rel="noreferrer">Inspect market manager on explorer</a></section>;
   }
 
   const rows = (markets.data ?? []).flatMap((result) => {
@@ -85,6 +69,9 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
       item.onchainMarketId === market.id.toString() &&
       item.onchainManagerAddress?.toLowerCase() === assetOracleMarketManagerAddress!.toLowerCase()
     );
+    // Do not display raw on-chain markets as published until their backend
+    // publication record has been verified and supplies a category.
+    if (!published) return [];
     return [{
       id: market.id.toString(),
       question: market.question,
@@ -93,7 +80,7 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
       totalStaked: market.totalStaked,
       status: STATUS_LABELS[Number(market.status)] ?? "Unknown",
       outcome: OUTCOME_LABELS[Number(market.outcome)] ?? "Unknown",
-      category: published?.category ?? null,
+      category: published.category,
       explorerUrl: ASSET_CHAIN_TESTNET_EXPLORER + "/address/" + assetOracleMarketManagerAddress,
     }];
   });
@@ -105,10 +92,10 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
   return (
     <section className="resolution-preview onchain-status">
       <span className="eyebrow">LIVE CONTRACT DATA · ENUGU TESTNET</span>
-      <h2>On-chain markets</h2>
-      <p>These records are read directly from the configured market manager. Category filters use verified publication metadata.</p>
+      <h2>Published on-chain markets</h2>
+      <p>Only markets with verified publication records are listed here.</p>
       {count.data !== undefined && count.data > BigInt(MAX_MARKETS_TO_DISPLAY) && <p>Showing up to {MAX_MARKETS_TO_DISPLAY} markets in ascending ID order.</p>}
-      {markets.isPending ? <p>Loading market records…</p> : visibleRows.length === 0 ? <p>{activeCategory === "All Markets" ? "Market records could not be decoded. Verify the deployed contract ABI before relying on this display." : "No on-chain markets in this category have verified publication metadata yet."}</p> : (
+      {markets.isPending ? <p>Loading market records…</p> : visibleRows.length === 0 ? <p>No markets available yet{activeCategory === "All Markets" ? "." : ` in ${activeCategory}.`}</p> : (
         <div className="market-grid">
           {visibleRows.map((market) => (
             <article className="market-card" key={market.id}>
