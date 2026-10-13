@@ -151,7 +151,7 @@ export default function App() {
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
   const [pointsLeaderboard, setPointsLeaderboard] = useState<PointsLeaderboardEntry[]>([]);
   const [pointsLeaderboardLoading, setPointsLeaderboardLoading] = useState(false);
-  const [pointsLeaderboardError, setPointsLeaderboardError] = useState("");\n  const [pointsLeaderboard, setPointsLeaderboard] = useState<PointsLeaderboardEntry[]>([]);\n  const [pointsLeaderboardLoading, setPointsLeaderboardLoading] = useState(false);\n  const [pointsLeaderboardError, setPointsLeaderboardError] = useState("");
+  const [pointsLeaderboardError, setPointsLeaderboardError] = useState("");
   const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
   const [referralActionLoading, setReferralActionLoading] = useState(false);
 
