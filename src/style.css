@@ -4092,3 +4092,142 @@ button:disabled {
     transition: none;
   }
 }
+
+
+/* Compact market discovery cards and consistent responsive alignment */
+.market-card-compact {
+  gap: 0;
+  min-width: 0;
+}
+
+.market-card-compact .market-card-top {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.market-card-compact .market-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.market-card-compact .market-category,
+.market-card-compact .market-status,
+.market-card-compact .market-status-note {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.market-card-compact h3 {
+  margin: 18px 0 22px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.market-card-compact .market-card-bottom {
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #1D667555;
+}
+
+.open-market-button {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  gap: 7px;
+  border-radius: 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.home-market-card-wrap {
+  display: flex;
+  min-width: 0;
+}
+
+.home-market-card-wrap > .market-card {
+  width: 100%;
+}
+
+.market-card-badges > * {
+  max-width: 100%;
+}
+
+.market-detail-heading {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.market-detail-heading > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.market-detail-grid,
+.settlement-info-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.detail-info-card,
+.settlement-info-item,
+.settlement-rule,
+.timeline-item {
+  min-width: 0;
+}
+
+.detail-info-card strong,
+.settlement-rule span,
+.timeline-item p {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+@media (max-width: 480px) {
+  .market-card-compact {
+    padding: 17px;
+  }
+
+  .market-card-compact .market-card-top {
+    gap: 9px;
+  }
+
+  .market-card-compact .market-symbol {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .market-card-compact .market-card-badges {
+    gap: 5px 8px;
+  }
+
+  .market-card-compact .market-card-bottom {
+    align-items: stretch;
+  }
+
+  .market-card-compact .market-status-note {
+    flex-basis: 100%;
+  }
+
+  .market-card-compact .open-market-button {
+    width: 100%;
+  }
+
+  .market-detail-heading {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .market-detail-page > h1 {
+    letter-spacing: -0.6px;
+  }
+}
