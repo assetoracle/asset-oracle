@@ -139,7 +139,6 @@ export default function HomePage({
   marketsLoading,
   marketsError,
   onExploreMarkets,
-  onOpenMarket,
   onRetryMarkets,
   onOpenReferrals,
   renderMarketCard,
