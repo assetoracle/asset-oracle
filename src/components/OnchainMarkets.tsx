@@ -97,9 +97,9 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets }: Pro
       {count.data !== undefined && count.data > BigInt(MAX_MARKETS_TO_DISPLAY) && <p>Showing up to {MAX_MARKETS_TO_DISPLAY} markets in ascending ID order.</p>}
       {markets.isPending ? <p>Loading market records…</p> : visibleRows.length === 0 ? <p>No markets available yet{activeCategory === "All Markets" ? "." : ` in ${activeCategory}.`}</p> : (
         <div className="market-grid">
-          {visibleRows.map((market) => (
+          {visibleRows.map((market, index) => (
             <article className="market-card" key={market.id}>
-              <div className="market-card-top"><span className="market-symbol">#{market.id}</span><div className="market-card-badges"><span className="market-category">{market.status}</span><span className="market-status">{market.outcome}</span></div></div>
+              <div className="market-card-top"><span className="market-symbol">#{index + 1}</span><div className="market-card-badges"><span className="market-category">{market.status}</span><span className="market-status">{market.outcome}</span></div></div>
               <h3>{market.question}</h3>
               <p className="market-description">Creator: {market.creator}</p>
               <div className="market-meta"><span>Total staked</span><span>{(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} test USDC</span></div>
