@@ -112,7 +112,7 @@ export default function MarketsPage({
         <div className="market-grid">{markets.map((market, index) => renderMarketCard(market, index))}</div>
       )}
 
-      <OnchainMarkets activeCategory={activeCategory} publishedMarkets={markets} />
+      <OnchainMarkets activeCategory={activeCategory} publishedMarkets={markets} onOpenMarket={onOpenMarket} />
 
       <p className="market-disclaimer">
         Published proposals come from the approved public-market API. On-chain markets and participation are shown separately when the verified Enugu testnet contract is configured.
