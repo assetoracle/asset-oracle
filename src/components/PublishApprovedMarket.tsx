@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ShieldCheck } from "lucide-react";
 import {
   isAddress,
   keccak256,
@@ -97,6 +98,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>(proposal.onchainTxHash as `0x${string}` | undefined);
   const [publicationSaved, setPublicationSaved] = useState(Boolean(proposal.onchainTxHash));
   const [savingPublication, setSavingPublication] = useState(false);
+  const [publishConfirmation, setPublishConfirmation] = useState(false);
   const { writeContractAsync, isPending, error: walletError } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({
     hash: txHash,
@@ -234,8 +236,12 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("The proposal closing time has passed. Edit or recreate the proposal before publishing.");
       return;
     }
-    if (!window.confirm("Publish this approved proposal on Asset Chain Enugu testnet? Your wallet will ask you to confirm a blockchain transaction.")) return;
+    setPublishConfirmation(true);
+  }
 
+  async function confirmPublish() {
+    setPublishConfirmation(false);
+    setError("");
     const rules = JSON.stringify({
       ...proposal.resolutionRule,
       resolvesAt: proposal.resolvesAt,
@@ -298,6 +304,53 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       )}
       {(error || walletError) && <p role="alert">{error || "Wallet transaction failed or was rejected."}</p>}
       <p className="disabled-note">Testnet only. The wallet must have the contract’s on-chain market-creator permission and the contract must be independently verified before use.</p>
+      {publishConfirmation && (
+        <div
+          className="approval-modal-backdrop"
+          onClick={() => setPublishConfirmation(false)}
+        >
+          <section
+            className="approval-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="publish-modal-title"
+            aria-describedby="publish-modal-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="approval-modal-icon" aria-hidden="true">
+              <ShieldCheck size={25} />
+            </div>
+            <span className="approval-modal-eyebrow">ON-CHAIN ACTION · ASSET ORACLE</span>
+            <h2 id="publish-modal-title">Publish this market?</h2>
+            <p id="publish-modal-description">
+              This will submit the approved proposal to Asset Chain Enugu testnet. Your connected wallet will open next so you can review and confirm the blockchain transaction.
+            </p>
+            <div className="approval-modal-proposal">
+              <span>APPROVED PROPOSAL</span>
+              <strong>{proposal.question}</strong>
+              <small>Asset Chain Enugu · Testnet only</small>
+            </div>
+            <div className="approval-modal-actions">
+              <button
+                className="approval-modal-cancel"
+                type="button"
+                onClick={() => setPublishConfirmation(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="approval-modal-confirm"
+                type="button"
+                onClick={() => void confirmPublish()}
+                disabled={isPending}
+              >
+                <ShieldCheck size={16} />
+                Continue to wallet
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
