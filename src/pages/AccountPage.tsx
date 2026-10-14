@@ -17,7 +17,7 @@ type AccountPageProps = {
   loading: boolean;
   error: string;
   onConnect: () => void;
-  onRetry: () => void;
+  onRetry: () => Promise<void>;
 };
 
 const statusLabels: Record<number, string> = {
