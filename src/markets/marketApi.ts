@@ -86,11 +86,11 @@ const WALLET_SESSION_KEY = "asset-oracle-wallet-session";
 
 function getStoredWalletSession(): WalletSession | null {
   try {
-    const raw = window.sessionStorage.getItem(WALLET_SESSION_KEY);
+    const raw = window.localStorage.getItem(WALLET_SESSION_KEY);
     if (!raw) return null;
     const session = JSON.parse(raw) as WalletSession;
     if (!session.token || !session.address || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) {
-      window.sessionStorage.removeItem(WALLET_SESSION_KEY);
+      window.localStorage.removeItem(WALLET_SESSION_KEY);
       return null;
     }
     return session;
@@ -122,7 +122,7 @@ export async function ensureWalletSession(
     expiresAt: new Date(created.expiresAt).getTime(),
     role: created.role,
   };
-  window.sessionStorage.setItem(WALLET_SESSION_KEY, JSON.stringify(session));
+  window.localStorage.setItem(WALLET_SESSION_KEY, JSON.stringify(session));
   return session;
 }
 
