@@ -73,9 +73,9 @@ export default function ReferralsPage({
         </article>
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Gift size={19} /></span>
-          <span>Rewards earned</span>
-          <strong>{personalStats?.rewardsAvailable && personalStats.rewardsEarned !== null ? personalStats.rewardsEarned : "Not active yet"}</strong>
-          <small>Verified referrals are tracked, but reward amounts and payouts are not enabled.</small>
+          <span>Referral points</span>
+          <strong>5 points per qualifying referral</strong>
+          <small>Points are awarded once per verified referral. Market proposal and trading points are shown in the points schedule below.</small>
         </article>
       </div>
 
@@ -148,6 +148,19 @@ export default function ReferralsPage({
       </section>
 
       <section className="referral-rules-card">
+        <div className="referral-rules-heading"><CheckCircle2 size={21} /><h2>Points schedule</h2></div>
+        <div className="referral-rule">
+          <span>50</span>
+          <div><strong>Propose a market</strong><p>Earn 50 points when a market proposal is successfully submitted and recorded.</p></div>
+        </div>
+        <div className="referral-rule">
+          <span>10</span>
+          <div><strong>Participate in a market</strong><p>Earn 10 points for qualifying market participation confirmed by an on-chain trade.</p></div>
+        </div>
+        <div className="referral-rule">
+          <span>05</span>
+          <div><strong>Refer a participant</strong><p>Earn 5 points when a referred wallet meets the referral qualification rules.</p></div>
+        </div>
         <div className="referral-rules-heading"><CheckCircle2 size={21} /><h2>When a referral counts</h2></div>
         <div className="referral-rule">
           <span>01</span>
@@ -164,7 +177,7 @@ export default function ReferralsPage({
       </section>
 
       <p className="market-disclaimer">
-        Only backend-verified qualifying referrals appear above. The leaderboard currently ranks verified referrals; reward amounts and payouts have not been enabled, so no reward total is being calculated.
+        Referral qualification is verified by the backend. Points are separate from token payouts; no cash or token payout is implied by a points balance.
       </p>
     </section>
   );
