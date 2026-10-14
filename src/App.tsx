@@ -324,6 +324,14 @@ useEffect(() => {
     return () => window.removeEventListener("hashchange", syncFromHash);
   }, []);
 
+  // Hash-based navigation can preserve the previous scroll position. Start
+  // the Terms page at its heading whenever it is opened, including via footer.
+  useEffect(() => {
+    if (page === "Terms of Service") {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [page]);
+
   useEffect(() => {
     if (marketsLoading) return;
 
