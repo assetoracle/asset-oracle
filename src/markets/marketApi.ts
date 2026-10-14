@@ -28,6 +28,22 @@ export type StoredMarketProposal = MarketProposalInput & {
   onchainChainId?: number | null;
 };
 
+function compactErrorMessage(value: unknown, fallback = "Request failed. Try again."): string {
+  if (typeof value !== "string" || !value.trim()) return fallback;
+  const message = value.trim();
+  const lower = message.toLowerCase();
+  if (lower.includes("user rejected") || lower.includes("user denied")) return "Request cancelled.";
+  if (lower.includes("insufficient funds")) return "Insufficient funds.";
+  if (lower.includes("wrong network") || lower.includes("chain id")) return "Switch to Asset Chain.";
+  if (lower.includes("failed to fetch") || lower.includes("networkerror")) return "Network error. Try again.";
+  if (lower.includes("nonce")) return "Wallet verification failed. Retry.";
+  if (lower.includes("unauthorized") || lower.includes("forbidden")) return "Not authorized.";
+  if (lower.includes("not found")) return "Record not found.";
+  const firstSentence = message.split(/[\\n.!?]/, 1)[0].replace(/^error:\\s*/i, "").trim();
+  if (!firstSentence) return fallback;
+  return firstSentence.length > 84 ? `${firstSentence.slice(0, 81).trimEnd()}…` : firstSentence;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -44,9 +60,10 @@ async function request<T>(
 
   if (!response.ok) {
     throw new Error(
-      data?.error ||
-        data?.message ||
-        `Request failed with status ${response.status}`,
+      compactErrorMessage(
+        data?.error || data?.message,
+        `Request failed (${response.status}).`,
+      ),
     );
   }
 
