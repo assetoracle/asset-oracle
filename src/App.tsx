@@ -820,6 +820,8 @@ useEffect(() => {
           referralLink={referralLink}
           referralCode={new URLSearchParams(window.location.search).get("ref") ?? ""}
           leaderboard={referralLeaderboard}
+          pointsLeaderboard={pointsLeaderboard}
+          totalLeaderboard={totalLeaderboard}
           leaderboardLoading={referralLeaderboardLoading}
           leaderboardError={referralLeaderboardError}
           actionLoading={referralActionLoading}
@@ -828,9 +830,13 @@ useEffect(() => {
           onRetryLeaderboard={() => {
             setReferralLeaderboardLoading(true);
             setReferralLeaderboardError("");
-            void getReferralLeaderboard()
-              .then((result) => setReferralLeaderboard(result.leaderboard))
-              .catch((error) => setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load referral leaderboard."))
+            void Promise.all([getReferralLeaderboard(), getPointsLeaderboard(), getTotalLeaderboard()])
+              .then(([referralsResult, pointsResult, totalResult]) => {
+                setReferralLeaderboard(referralsResult.leaderboard);
+                setPointsLeaderboard(pointsResult.leaderboard);
+                setTotalLeaderboard(totalResult.leaderboard);
+              })
+              .catch((error) => setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load leaderboard."))
               .finally(() => setReferralLeaderboardLoading(false));
           }}
         />
