@@ -50,7 +50,7 @@ import {
   attributeReferral,
   type ReferralLeaderboardEntry,
   type StoredMarketProposal,
-  type WalletRoleResponse,
+  type WalletRoleResponse,\n  type WalletAccountData,\n  type PersonalReferralStats,
 } from "./markets/marketApi";
 import {
   categoryLabel,
@@ -159,7 +159,7 @@ export default function App() {
   const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
   const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
-  const [referralActionLoading, setReferralActionLoading] = useState(false);
+  const [referralActionLoading, setReferralActionLoading] = useState(false);\n  const [personalReferralStats, setPersonalReferralStats] = useState<PersonalReferralStats | null>(null);\n  const [accountData, setAccountData] = useState<WalletAccountData | null>(null);\n  const [accountDataLoading, setAccountDataLoading] = useState(false);\n  const [accountDataError, setAccountDataError] = useState("");
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
