@@ -128,6 +128,43 @@ export function clearWalletSession(): void {
   try { window.sessionStorage.removeItem(WALLET_SESSION_KEY); } catch { /* ignore unavailable storage */ }
 }
 
+
+export type WalletPositionRecord = {
+  marketId: number;
+  question: string;
+  yesStake: string;
+  noStake: string;
+  status: number;
+  outcome: number;
+  claimed: boolean;
+  timestamp: string | null;
+  tokenDecimals: number;
+  claimableAmount: string;
+};
+
+export type WalletHistoryRecord = {
+  type: "Staked" | "MarketFinalized" | "Claimed" | "Refunded";
+  transactionHash: string;
+  blockNumber: string;
+  timestamp: string;
+  marketId: string;
+  amount: string | null;
+  outcome: number | null;
+};
+
+export type WalletAccountData = {
+  address: string;
+  chainId: number;
+  positions: WalletPositionRecord[];
+  claimable: WalletPositionRecord[];
+  history: WalletHistoryRecord[];
+  historyStatus: string;
+};
+
+export async function getWalletAccountData(address: string) {
+  return request<WalletAccountData>("/api/stats/wallet/" + encodeURIComponent(address));
+}
+
 export async function validateMarketProposal(
   proposal: MarketProposalInput,
 ) {
