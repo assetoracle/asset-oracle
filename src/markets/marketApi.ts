@@ -198,22 +198,13 @@ export async function createMarketProposal(
   address: string,
   signMessage: (message: string) => Promise<string>,
 ) {
-  const { message } = await requestWalletNonce(address);
-  const signature = await signMessage(message);
-
+  await ensureWalletSession(address, signMessage);
   return request<{
     message: string;
     proposal: StoredMarketProposal;
-  }>("/api/markets/proposals", {
+  }>("/api/markets/proposals/session", {
     method: "POST",
-    body: JSON.stringify({
-      proposal,
-      walletAuth: {
-        address,
-        message,
-        signature,
-      },
-    }),
+    body: JSON.stringify({ proposal, address }),
   });
 }
 
