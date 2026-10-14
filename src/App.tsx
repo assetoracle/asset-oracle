@@ -207,7 +207,6 @@ export default function App() {
   const [myProposalsError, setMyProposalsError] = useState("");
   const [myProposalsLoaded, setMyProposalsLoaded] = useState(false);
   const [walletRole, setWalletRole] = useState<WalletRoleResponse | null>(null);
-  const [roleLoading, setRoleLoading] = useState(false);
   const [roleError, setRoleError] = useState("");
 
   const {
@@ -379,7 +378,6 @@ useEffect(() => {
     setMyProposalsError("");
     setWalletRole(null);
     setRoleError("");
-    setRoleLoading(false);
   }, [address]);
 
   // Establish and cache the wallet session once after the wallet connects.
@@ -388,7 +386,6 @@ useEffect(() => {
   useEffect(() => {
     if (!address || networkState !== "correct") return;
     let active = true;
-    setRoleLoading(true);
     setRoleError("");
     void ensureWalletSession(address, (message) => signMessageAsync({ message }))
       .then(() => getWalletRole(address))
@@ -396,7 +393,7 @@ useEffect(() => {
       .catch((error) => {
         if (active) setRoleError(error instanceof Error ? error.message : "Unable to verify wallet role.");
       })
-      .finally(() => { if (active) setRoleLoading(false); });
+      .finally(() => { /* Session and role loading are reflected by the request lifecycle. */ });
     return () => { active = false; };
   }, [address, networkState, signMessageAsync]);
 
