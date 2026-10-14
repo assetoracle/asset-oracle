@@ -49,8 +49,12 @@ import {
   createReferralCode,
   getPersonalReferralStats,
   getReferralLeaderboard,
+  getPointsLeaderboard,
+  getTotalLeaderboard,
   attributeReferral,
   type ReferralLeaderboardEntry,
+  type PointsLeaderboardEntry,
+  type TotalLeaderboardEntry,
   type StoredMarketProposal,
   type WalletRoleResponse,
   type WalletAccountData,
@@ -161,6 +165,8 @@ export default function App() {
   const [referralMessage, setReferralMessage] = useState("");
   const [referralLink, setReferralLink] = useState("");
   const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
+  const [pointsLeaderboard, setPointsLeaderboard] = useState<PointsLeaderboardEntry[]>([]);
+  const [totalLeaderboard, setTotalLeaderboard] = useState<TotalLeaderboardEntry[]>([]);
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
   const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
   const [referralActionLoading, setReferralActionLoading] = useState(false);
@@ -399,14 +405,15 @@ useEffect(() => {
     let active = true;
     setReferralLeaderboardLoading(true);
     setReferralLeaderboardError("");
-    void getReferralLeaderboard()
-      .then((result) => {
-        if (active) setReferralLeaderboard(result.leaderboard);
+    void Promise.all([getReferralLeaderboard(), getPointsLeaderboard(), getTotalLeaderboard()])
+      .then(([referralsResult, pointsResult, totalResult]) => {
+        if (!active) return;
+        setReferralLeaderboard(referralsResult.leaderboard);
+        setPointsLeaderboard(pointsResult.leaderboard);
+        setTotalLeaderboard(totalResult.leaderboard);
       })
       .catch((error) => {
-        if (active) {
-          setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load referral leaderboard.");
-        }
+        if (active) setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load leaderboard.");
       })
       .finally(() => {
         if (active) setReferralLeaderboardLoading(false);
