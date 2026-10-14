@@ -20,10 +20,10 @@ import {
   TESTNET_USDC_DECIMALS,
 } from "../contracts/assetOracle";
 
-type Props = { marketId: bigint; closeTime: number };
+type Props = { marketId: bigint; managerAddress?: string | null; closeTime: number };
 
 
-export default function OnchainMarketActions({ marketId, closeTime }: Props) {
+export default function OnchainMarketActions({ marketId, managerAddress, closeTime }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -39,7 +39,16 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
-  const manager = assetOracleMarketManagerAddress;
+  const manager = managerAddress == null
+    ? assetOracleMarketManagerAddress
+    : isAddress(managerAddress)
+      ? (managerAddress as Address)
+      : undefined;
+  const isCurrentManager = Boolean(
+    manager && assetOracleMarketManagerAddress &&
+    manager.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase()
+  );
+  const isLegacyManager = Boolean(manager && !isCurrentManager);
 
   const managerCode = useMemo(() => manager, [manager]);
   useEffect(() => {
@@ -83,28 +92,28 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "validatorRosterConfigured",
-    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
+    query: { enabled: Boolean(manager && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
   });
   const validatorStatus = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "isValidator",
     args: [address!],
-    query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
+    query: { enabled: Boolean(manager && address && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
   });
   const hasVoted = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "hasVoted",
     args: [marketId, address!],
-    query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
+    query: { enabled: Boolean(manager && address && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
   });
   const hasVotedOnDispute = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "hasVotedOnDispute",
     args: [marketId, address!],
-    query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
+    query: { enabled: Boolean(manager && address && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
   });
   const tokenDecimals = useReadContract({
     address: TESTNET_USDC_ADDRESS,
@@ -162,7 +171,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const claimed = position.data?.[2] ?? true;
   const hasPosition = positionYes > 0n || positionNo > 0n;
   const safe = Boolean(
-    manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
+    isCurrentManager && manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
     stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
     !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError &&
     balance.data !== undefined && allowance.data !== undefined
@@ -171,7 +180,9 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount > 0n &&
     balance.data !== undefined && parsedAmount <= balance.data;
-  const stakeDisabledReason = !isConnected
+  const stakeDisabledReason = isLegacyManager
+    ? "This market uses an earlier manager deployment. Your on-chain position is read-only here; trading and settlement actions are disabled to avoid sending transactions to the wrong contract."
+    : !isConnected
     ? "Connect your wallet to stake."
     : chainId !== ASSET_CHAIN_TESTNET_ID
       ? "Switch your wallet to Asset Chain Testnet (Chain ID 42421)."
@@ -223,14 +234,14 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     abi: assetOracleMarketManagerAbi,
     functionName: "voteCountByKey",
     args: [marketId, voteKey],
-    query: { enabled: Boolean(manager && evidenceHash) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
+    query: { enabled: Boolean(manager && evidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
   const disputeVoteCount = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "disputeVoteCountByKey",
     args: [marketId, voteKey],
-    query: { enabled: Boolean(manager && evidenceHash) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
+    query: { enabled: Boolean(manager && evidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
   const canResolve = safe && isConnected && isConfiguredValidator && hasVoted.data === false && evidenceHash !== undefined &&
     Number(marketData?.status) === MARKET_STATUS.CLOSED;
@@ -431,6 +442,18 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
       : chainId !== ASSET_CHAIN_TESTNET_ID ? <p>Switch to Asset Chain Testnet (Chain ID 42421).</p>
       : !codeCheckDone ? <p>Verifying deployed contract bytecode…</p>
       : !codeVerified ? <p>Transactions blocked: market manager or USDC contract has no deployed bytecode at the configured address.</p>
+      : isLegacyManager ? market.isPending || (address && position.isPending) ? <p>Reading the original market contract and wallet position…</p>
+        : market.isError || !marketData || marketData.id !== marketId || (address && position.isError) ? <p>Unable to verify the market or read the wallet position from its original contract. No transaction has been submitted.</p>
+        : <>
+            <p className="disabled-note">Legacy market contract detected. This view reads your position from the original deployment. Trading, claims, refunds, and settlement actions are disabled; no funds or transactions have been moved.</p>
+            {!isConnected ? <p>Connect the wallet that made the original stake to inspect its position.</p> : <>
+              <div className="market-detail-grid">
+                <article className="detail-info-card"><span>Your YES stake</span><strong>{formatUnits(positionYes, 6)} USDC</strong></article>
+                <article className="detail-info-card"><span>Your NO stake</span><strong>{formatUnits(positionNo, 6)} USDC</strong></article>
+                <article className="detail-info-card"><span>Position status</span><strong>{claimed ? (hasPosition ? "Already claimed" : "No active position") : hasPosition ? "Unclaimed" : "No position recorded for this wallet"}</strong></article>
+              </div>
+            </>}
+          </>
       : tokenConfig.isPending || tokenDecimals.isPending || market.isPending || (address && position.isPending) ? <p>Verifying on-chain market, USDC configuration, and wallet position…</p>
       : !stablecoinVerified ? <p>Transactions blocked: the manager must explicitly enable the approved testnet USDC address with 6 decimals.</p>
       : !marketVerified ? <p>Transactions blocked: on-chain market ID, USDC asset, or close time does not match the displayed market record.</p>

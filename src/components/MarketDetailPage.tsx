@@ -35,6 +35,7 @@ type MarketDetailPageProps = {
   endDate: string;
   resolutionRule?: ResolutionRule;
   onchainMarketId?: string | null;
+  onchainManagerAddress?: string | null;
   onchainCloseTime?: number;
   onBack: () => void;
 };
@@ -47,6 +48,7 @@ function MarketDetailPage({
   endDate,
   resolutionRule,
   onchainMarketId,
+  onchainManagerAddress,
   onchainCloseTime,
   onBack,
 }: MarketDetailPageProps) {
@@ -76,6 +78,7 @@ function MarketDetailPage({
       {onchainMarketId && onchainCloseTime !== undefined && (
         <OnchainMarketActions
           marketId={BigInt(onchainMarketId)}
+          managerAddress={onchainManagerAddress}
           closeTime={onchainCloseTime}
         />
       )}
