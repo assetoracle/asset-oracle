@@ -42,6 +42,8 @@ import {
   listPublishedMarkets,
   requestWalletNonce,
   ensureWalletSession,
+  getWalletSession,
+  getWalletAccountData,
   getMyProposals,
   getWalletRole,
   createReferralCode,
@@ -50,7 +52,9 @@ import {
   attributeReferral,
   type ReferralLeaderboardEntry,
   type StoredMarketProposal,
-  type WalletRoleResponse,\n  type WalletAccountData,\n  type PersonalReferralStats,
+  type WalletRoleResponse,
+  type WalletAccountData,
+  type PersonalReferralStats,
 } from "./markets/marketApi";
 import {
   categoryLabel,
@@ -159,7 +163,11 @@ export default function App() {
   const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
   const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
-  const [referralActionLoading, setReferralActionLoading] = useState(false);\n  const [personalReferralStats, setPersonalReferralStats] = useState<PersonalReferralStats | null>(null);\n  const [accountData, setAccountData] = useState<WalletAccountData | null>(null);\n  const [accountDataLoading, setAccountDataLoading] = useState(false);\n  const [accountDataError, setAccountDataError] = useState("");
+  const [referralActionLoading, setReferralActionLoading] = useState(false);
+  const [personalReferralStats, setPersonalReferralStats] = useState<PersonalReferralStats | null>(null);
+  const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
+  const [accountDataLoading, setAccountDataLoading] = useState(false);
+  const [accountDataError, setAccountDataError] = useState("");
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
@@ -353,6 +361,9 @@ useEffect(() => {
   useEffect(() => {
     setReferralMessage("");
     setReferralLink("");
+    setPersonalReferralStats(null);
+    setAccountData(null);
+    setAccountDataError("");
     setMyProposals([]);
     setMyProposalsLoaded(false);
     setMyProposalsError("");
@@ -380,6 +391,55 @@ useEffect(() => {
       });
     return () => { active = false; };
   }, [page]);
+
+
+  const loadWalletAccountData = useCallback(async () => {
+    const requestedAddress = addressRef.current;
+    if (!requestedAddress) {
+      setAccountData(null);
+      setAccountDataError("");
+      return;
+    }
+    setAccountDataLoading(true);
+    setAccountDataError("");
+    try {
+      const result = await getWalletAccountData(requestedAddress);
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setAccountData(result);
+    } catch (error) {
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setAccountDataError(error instanceof Error ? error.message : "Unable to load wallet account data.");
+    } finally {
+      if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) setAccountDataLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (page !== "Claims" && page !== "History") return;
+    if (!address) {
+      setAccountData(null);
+      setAccountDataLoading(false);
+      setAccountDataError("");
+      return;
+    }
+    void loadWalletAccountData();
+  }, [page, address, loadWalletAccountData]);
+
+  useEffect(() => {
+    if (page !== "Referrals" || !address) return;
+    const session = getWalletSession(address);
+    if (!session) {
+      setPersonalReferralStats(null);
+      return;
+    }
+    let active = true;
+    void getPersonalReferralStats(address).then((stats) => {
+      if (active) setPersonalReferralStats(stats);
+    }).catch(() => {
+      if (active) setPersonalReferralStats(null);
+    });
+    return () => { active = false; };
+  }, [page, address]);
 
   const selectedMarket = selectedMarketId
     ? publishedMarkets.find((market) => market.id === selectedMarketId) ?? null
@@ -594,7 +654,9 @@ useEffect(() => {
     try {
       await ensureWalletSession(requestedAddress, signMessageAsync);
       const { code } = await createReferralCode(requestedAddress);
+      const stats = await getPersonalReferralStats(requestedAddress);
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setPersonalReferralStats(stats);
       const url = new URL(window.location.href);
       url.searchParams.set("ref", code);
       url.hash = "/referrals";
@@ -629,9 +691,10 @@ useEffect(() => {
     setReferralActionLoading(true);
     setReferralMessage("");
     try {
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-      const result = await attributeReferral(requestedAddress, message, signature, referralCode);
+      await ensureWalletSession(requestedAddress, signMessageAsync);
+      const result = await attributeReferral(requestedAddress, referralCode);
+      const stats = await getPersonalReferralStats(requestedAddress);
+      setPersonalReferralStats(stats);
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
       setReferralMessage(result.message);
       const url = new URL(window.location.href);
@@ -763,6 +826,7 @@ useEffect(() => {
       return (
         <ReferralsPage
           address={address}
+          personalStats={personalReferralStats}
           message={referralMessage}
           referralLink={referralLink}
           referralCode={new URLSearchParams(window.location.search).get("ref") ?? ""}
@@ -810,6 +874,11 @@ useEffect(() => {
       <AccountPage
         page={page}
         walletConnected={Boolean(wallet)}
+        address={address}
+        accountData={accountData}
+        loading={accountDataLoading}
+        error={accountDataError}
+        onRetry={() => void loadWalletAccountData()}
         onConnect={() => void handleConnect()}
         onExploreMarkets={() => navigateTo("Markets")}
       />
