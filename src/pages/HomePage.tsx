@@ -249,7 +249,7 @@ export default function HomePage({
                 </span>
               ))}
             </div>
-            <span className="globe-caption">SIX MARKETS · ONE ORACLE</span>
+            <span className="globe-caption">FIVE MARKETS · ONE ORACLE</span>
           </aside>
         </div>
       </section>
