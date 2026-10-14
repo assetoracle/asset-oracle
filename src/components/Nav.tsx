@@ -10,7 +10,8 @@ export type Page =
   | "Claims"
   | "History"
   | "Referrals"
-  | "Admin";
+  | "Admin"
+  | "Terms of Service";
 
 export type NavItem = {
   label: Page;
