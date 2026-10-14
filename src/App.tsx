@@ -341,6 +341,9 @@ useEffect(() => {
     : null;
 
   function navigateTo(nextPage: Page) {
+    if (nextPage === "Home" || nextPage === "Markets") {
+      void loadMarkets();
+    }
     setProposalMessage("");
     setMobileMenuOpen(false);
     setSearch("");
