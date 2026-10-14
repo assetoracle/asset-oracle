@@ -74,8 +74,8 @@ export default function ReferralsPage({
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Gift size={19} /></span>
           <span>Rewards earned</span>
-          <strong>{personalStats?.rewardsAvailable && personalStats.rewardsEarned !== null ? personalStats.rewardsEarned : "Not configured"}</strong>
-          <small>Reward rules and records are not configured</small>
+          <strong>{personalStats?.rewardsAvailable && personalStats.rewardsEarned !== null ? personalStats.rewardsEarned : "Not active yet"}</strong>
+          <small>Verified referrals are tracked, but reward amounts and payouts are not enabled.</small>
         </article>
       </div>
 
@@ -164,7 +164,7 @@ export default function ReferralsPage({
       </section>
 
       <p className="market-disclaimer">
-        Only backend-verified qualifying referrals appear above. Reward totals remain unavailable until reward rules and records are configured.
+        Only backend-verified qualifying referrals appear above. The leaderboard currently ranks verified referrals; reward amounts and payouts have not been enabled, so no reward total is being calculated.
       </p>
     </section>
   );
