@@ -127,7 +127,7 @@ export async function ensureWalletSession(
 }
 
 export function clearWalletSession(): void {
-  try { window.sessionStorage.removeItem(WALLET_SESSION_KEY); } catch { /* ignore unavailable storage */ }
+  try { window.localStorage.removeItem(WALLET_SESSION_KEY); } catch { /* ignore unavailable storage */ }
 }
 
 
