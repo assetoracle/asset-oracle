@@ -790,7 +790,6 @@ useEffect(() => {
           onConnect={() => void handleConnect()}
           onLoad={() => void handleLoadMyProposals()}
           walletRole={walletRole}
-          roleLoading={roleLoading}
           roleError={roleError}
         />
       );
