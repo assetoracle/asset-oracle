@@ -15,6 +15,7 @@ type MarketsPageProps = {
   marketsLoading: boolean;
   marketsError: string;
   proposalMessage: string;
+  proposalAccessMessage: string;
   walletConnected: boolean;
   onConnect: () => void;
   onCategoryChange: (category: MarketFilter) => void;
@@ -35,6 +36,7 @@ export default function MarketsPage({
   marketsLoading,
   marketsError,
   proposalMessage,
+  proposalAccessMessage,
   walletConnected,
   onCategoryChange,
   onSearchChange,
@@ -80,6 +82,13 @@ export default function MarketsPage({
         </div>
         <button className="primary-button" type="button" onClick={onPropose}>Propose a Market</button>
       </div>
+
+      {proposalAccessMessage && (
+        <div className="empty-state" role="alert">
+          <h3>Market proposal access</h3>
+          <p>{proposalAccessMessage}</p>
+        </div>
+      )}
 
       {proposalMessage && (
         <div className="empty-state" role="status">
