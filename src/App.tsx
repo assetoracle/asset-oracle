@@ -610,12 +610,14 @@ useEffect(() => {
 
     try {
       await ensureWalletSession(requestedAddress, signMessageAsync);
+      const role = await getWalletRole(requestedAddress);
       const result = await getMyProposals(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
       }
 
+      setWalletRole(role);
       setMyProposals(result.proposals);
       setMyProposalsLoaded(true);
     } catch (error) {
