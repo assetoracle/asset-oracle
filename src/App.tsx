@@ -570,7 +570,7 @@ useEffect(() => {
     setRoleError("");
 
     try {
-      await ensureWalletSession(requestedAddress, signMessageAsync);
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
       const result = await getWalletRole(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
@@ -608,7 +608,7 @@ useEffect(() => {
     setMyProposalsError("");
 
     try {
-      await ensureWalletSession(requestedAddress, signMessageAsync);
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
       const role = await getWalletRole(requestedAddress);
       const result = await getMyProposals(requestedAddress);
 
@@ -658,7 +658,7 @@ useEffect(() => {
     setReferralActionLoading(true);
     setReferralMessage("");
     try {
-      await ensureWalletSession(requestedAddress, signMessageAsync);
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
       const { code } = await createReferralCode(requestedAddress);
       const stats = await getPersonalReferralStats(requestedAddress);
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
@@ -697,7 +697,7 @@ useEffect(() => {
     setReferralActionLoading(true);
     setReferralMessage("");
     try {
-      await ensureWalletSession(requestedAddress, signMessageAsync);
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
       const result = await attributeReferral(requestedAddress, referralCode);
       const stats = await getPersonalReferralStats(requestedAddress);
       setPersonalReferralStats(stats);
@@ -886,7 +886,6 @@ useEffect(() => {
         error={accountDataError}
         onRetry={loadWalletAccountData}
         onConnect={() => void handleConnect()}
-        onExploreMarkets={() => navigateTo("Markets")}
       />
     );
   }
