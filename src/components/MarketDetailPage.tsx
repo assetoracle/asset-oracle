@@ -165,17 +165,17 @@ function MarketDetailPage({
             </div>
             <CircleHelp size={16} />
           </div>
-        </div>
 
-        {resolutionRule?.description && (
-          <div className="settlement-rule">
-            <FileCheck2 size={18} />
-            <div>
-              <strong>Resolution instructions</strong>
-              <span>{resolutionRule.description}</span>
+          {resolutionRule?.description && (
+            <div className="settlement-rule">
+              <FileCheck2 size={18} />
+              <div>
+                <strong>Resolution instructions</strong>
+                <span>{resolutionRule.description}</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {!onchainMarketId && <>
           <div className="outcome-preview">
