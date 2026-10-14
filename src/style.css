@@ -5312,3 +5312,510 @@ body::before {
 .referral-table-wrap { overflow-x:auto; }
 .referral-table { min-width:540px; width:100%; }
 @media (max-width:640px) { .referral-view-tabs { width:100%; } .referral-view-tabs button { flex:1; min-width:0; padding:10px 8px; } }
+
+
+/* Asset Oracle visual polish: richer depth, consistent surfaces, and a living globe. */
+:root {
+  --surface-glass: rgba(16, 47, 58, 0.78);
+  --surface-raised: #123945;
+  --accent-soft: rgba(18, 217, 245, 0.12);
+  --teal-soft: rgba(0, 184, 169, 0.12);
+  --glow-cyan: 0 12px 38px rgba(18, 217, 245, 0.09);
+  --glow-teal: 0 12px 38px rgba(0, 184, 169, 0.08);
+}
+
+html {
+  background: var(--background);
+  scrollbar-color: #1d6675 #071a24;
+}
+
+body {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 6% 13%, rgba(0, 184, 169, 0.12), transparent 32rem),
+    radial-gradient(ellipse at 92% 5%, rgba(18, 217, 245, 0.12), transparent 36rem),
+    radial-gradient(ellipse at 50% 78%, rgba(18, 217, 245, 0.045), transparent 42rem),
+    linear-gradient(155deg, #071a24 0%, #09232d 48%, #071a24 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(99, 243, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 243, 255, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.app {
+  position: relative;
+}
+
+.header {
+  border-bottom-color: rgba(29, 102, 117, 0.62);
+  backdrop-filter: blur(16px);
+}
+
+.brand-mark {
+  background: linear-gradient(145deg, rgba(18, 217, 245, 0.13), rgba(0, 184, 169, 0.06));
+  box-shadow: 0 0 0 5px rgba(18, 217, 245, 0.035), 0 0 28px rgba(18, 217, 245, 0.15);
+}
+
+.connect-button {
+  background: linear-gradient(135deg, rgba(18, 217, 245, 0.1), rgba(0, 184, 169, 0.06));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.04);
+}
+
+.connect-button:hover {
+  background: linear-gradient(135deg, rgba(18, 217, 245, 0.19), rgba(0, 184, 169, 0.13));
+  box-shadow: 0 8px 26px rgba(18, 217, 245, 0.09);
+}
+
+.hero {
+  border-color: rgba(99, 243, 255, 0.25);
+  background:
+    radial-gradient(ellipse at 82% 12%, rgba(18, 217, 245, 0.17), transparent 38%),
+    radial-gradient(ellipse at 12% 100%, rgba(0, 184, 169, 0.12), transparent 42%),
+    linear-gradient(128deg, rgba(16, 47, 58, 0.98) 0%, rgba(7, 26, 36, 0.98) 60%, rgba(8, 36, 45, 0.98) 100%);
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(242, 252, 255, 0.045);
+}
+
+.hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: 0.24;
+  background: repeating-linear-gradient(135deg, transparent 0 26px, rgba(99, 243, 255, 0.055) 27px, transparent 28px 54px);
+  mask-image: linear-gradient(110deg, transparent 5%, black 100%);
+}
+
+.hero h1 span {
+  color: transparent;
+  background: linear-gradient(100deg, var(--highlight) 8%, var(--accent) 55%, #00b8a9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.hero-motion-line {
+  border-left: 2px solid rgba(18, 217, 245, 0.45);
+  padding-left: 12px;
+}
+
+.hero-motion-phrase {
+  text-shadow: 0 0 24px rgba(18, 217, 245, 0.12);
+}
+
+.primary-button {
+  box-shadow: 0 8px 24px rgba(0, 184, 169, 0.12), inset 0 1px 0 rgba(242, 252, 255, 0.22);
+}
+
+.primary-button:hover {
+  box-shadow: 0 12px 32px rgba(18, 217, 245, 0.2), 0 5px 18px rgba(0, 184, 169, 0.12);
+}
+
+.principle,
+.market-card,
+.dashboard-stat-card,
+.source-panel,
+.bitcoin-price-card,
+.verification-banner,
+.empty-state,
+.referral-card,
+.account-card,
+.portfolio-card,
+.proposal-card,
+.admin-card,
+.market-detail-card,
+.terms-card,
+.page-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(99, 243, 255, 0.17);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.085), transparent 52%),
+    linear-gradient(145deg, rgba(16, 47, 58, 0.96), rgba(8, 32, 42, 0.96));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.035), 0 12px 34px rgba(0, 0, 0, 0.1);
+}
+
+.principle::before,
+.market-card::before,
+.dashboard-stat-card::before,
+.source-panel::before,
+.bitcoin-price-card::before,
+.verification-banner::before,
+.referral-card::before,
+.account-card::before,
+.portfolio-card::before,
+.proposal-card::before,
+.admin-card::before,
+.market-detail-card::before,
+.terms-card::before,
+.page-panel::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  width: 116px;
+  height: 116px;
+  border-top: 1px solid rgba(99, 243, 255, 0.24);
+  border-right: 1px solid rgba(99, 243, 255, 0.24);
+  border-top-right-radius: inherit;
+  background: radial-gradient(circle at 100% 0%, rgba(18, 217, 245, 0.11), transparent 72%);
+  content: "";
+  pointer-events: none;
+}
+
+.principle,
+.market-card,
+.dashboard-stat-card,
+.source-item,
+.bitcoin-price-card,
+.verification-banner,
+.empty-state,
+.referral-card,
+.account-card,
+.portfolio-card,
+.proposal-card,
+.admin-card,
+.market-detail-card,
+.terms-card,
+.page-panel {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.principle:hover,
+.market-card:hover,
+.dashboard-stat-card:hover,
+.source-item:hover,
+.referral-card:hover,
+.account-card:hover,
+.portfolio-card:hover,
+.proposal-card:hover,
+.admin-card:hover,
+.market-detail-card:hover,
+.page-panel:hover {
+  border-color: rgba(18, 217, 245, 0.38);
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.06), 0 18px 42px rgba(0, 0, 0, 0.16), var(--glow-cyan);
+  transform: translateY(-2px);
+}
+
+.dashboard-overview,
+.markets-section,
+.source-panel,
+.verification-banner {
+  position: relative;
+}
+
+.section-heading h2 {
+  letter-spacing: -0.035em;
+}
+
+.dashboard-stat-card {
+  min-height: 142px;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(0, 184, 169, 0.13), transparent 60%),
+    linear-gradient(145deg, #123945, #0a2631 80%);
+}
+
+.dashboard-stat-icon,
+.bitcoin-symbol {
+  border: 1px solid rgba(18, 217, 245, 0.17);
+  background: linear-gradient(140deg, rgba(18, 217, 245, 0.16), rgba(0, 184, 169, 0.12));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.06);
+}
+
+.category-button {
+  border-color: rgba(99, 243, 255, 0.17);
+  background: linear-gradient(135deg, rgba(16, 47, 58, 0.82), rgba(7, 26, 36, 0.82));
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.category-button:hover {
+  border-color: rgba(18, 217, 245, 0.4);
+  transform: translateY(-1px);
+}
+
+.category-button.active,
+.category-button[aria-pressed="true"] {
+  border-color: rgba(99, 243, 255, 0.55);
+  background: linear-gradient(115deg, rgba(18, 217, 245, 0.18), rgba(0, 184, 169, 0.17));
+  box-shadow: 0 5px 20px rgba(18, 217, 245, 0.07);
+}
+
+input,
+textarea,
+select {
+  border-color: rgba(99, 243, 255, 0.2);
+  background-color: rgba(7, 26, 36, 0.72);
+  color: var(--text);
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: rgba(18, 217, 245, 0.35);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(18, 217, 245, 0.09);
+}
+
+.source-panel {
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.1), transparent 54%),
+    linear-gradient(145deg, #102f3a, #09232d);
+}
+
+.source-item {
+  background: linear-gradient(115deg, rgba(18, 217, 245, 0.045), rgba(7, 26, 36, 0.55));
+}
+
+.bitcoin-price-card {
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(0, 184, 169, 0.13), transparent 55%),
+    linear-gradient(135deg, #0b2a35, #102f3a);
+}
+
+.verification-banner {
+  border-color: rgba(0, 184, 169, 0.26);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(0, 184, 169, 0.16), transparent 55%),
+    radial-gradient(ellipse at 0% 100%, rgba(18, 217, 245, 0.07), transparent 52%),
+    linear-gradient(125deg, #102f3a, #0a2631);
+}
+
+.globe-stage {
+  isolation: isolate;
+}
+
+.globe-halo {
+  animation: oracle-globe-halo 7s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.oracle-globe-svg {
+  transform-origin: 50% 50%;
+  animation: oracle-globe-rotate 32s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+@keyframes oracle-globe-halo {
+  0%, 100% { transform: scale(0.96); opacity: 0.48; }
+  50% { transform: scale(1.06); opacity: 0.82; }
+}
+
+@keyframes oracle-globe-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.globe-node {
+  animation: oracle-node-pulse 2.8s ease-in-out infinite;
+}
+
+.globe-node-two { animation-delay: -0.9s; }
+.globe-node-three { animation-delay: -1.8s; }
+
+@keyframes oracle-node-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.14); }
+}
+
+.footer {
+  border-top-color: rgba(29, 102, 117, 0.62);
+}
+
+@media (max-width: 760px) {
+  body { background-attachment: scroll; }
+  .dashboard-stat-card { min-height: 126px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the signature globe alive even when other motion is reduced. */
+  .oracle-globe-svg {
+    animation: oracle-globe-rotate 64s linear infinite !important;
+  }
+  .globe-halo,
+  .globe-node {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+
+/* Page-specific surface pass: account, referral, portfolio, help, terms, and market detail. */
+.page-content {
+  position: relative;
+  isolation: isolate;
+}
+
+.page-section,
+.simple-page,
+.market-detail-page,
+.referral-page,
+.account-page,
+.terms-page {
+  position: relative;
+}
+
+.page-section,
+.simple-page {
+  border-radius: 22px;
+}
+
+.page-hint {
+  border-color: rgba(18, 217, 245, 0.2);
+  background: linear-gradient(115deg, rgba(18, 217, 245, 0.07), rgba(0, 184, 169, 0.06));
+}
+
+.detail-info-card,
+.referral-stat-card,
+.account-summary-card,
+.referral-link-card,
+.referral-leaderboard-card,
+.referral-rules-card,
+.portfolio-wallet-card,
+.portfolio-token-card,
+.referral-promo,
+.referral-status-banner,
+.referral-rule,
+.terms-notice,
+.terms-section,
+.help-topic {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(99, 243, 255, 0.17);
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.075), transparent 55%),
+    linear-gradient(145deg, rgba(16, 47, 58, 0.96), rgba(8, 32, 42, 0.96));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.035), 0 10px 28px rgba(0, 0, 0, 0.1);
+}
+
+.referral-stat-card,
+.account-summary-card,
+.portfolio-token-card,
+.help-topic {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.referral-stat-card:hover,
+.account-summary-card:hover,
+.portfolio-token-card:hover,
+.help-topic:hover {
+  border-color: rgba(18, 217, 245, 0.36);
+  box-shadow: var(--glow-cyan);
+  transform: translateY(-2px);
+}
+
+.referral-promo {
+  border-color: rgba(0, 184, 169, 0.28);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(0, 184, 169, 0.17), transparent 58%),
+    linear-gradient(130deg, #123945, #0a2631);
+}
+
+.referral-stat-icon,
+.referral-promo-icon,
+.referral-heading-icon,
+.referral-link-icon,
+.account-page-icon,
+.simple-page-icon,
+.help-dialog-icon,
+.terms-hero-icon {
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.08), 0 6px 20px rgba(18, 217, 245, 0.07);
+}
+
+.referral-view-tabs,
+.referral-period-tabs {
+  border-color: rgba(99, 243, 255, 0.14);
+  background: rgba(7, 26, 36, 0.54);
+}
+
+.referral-table-wrap {
+  border: 1px solid rgba(99, 243, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(7, 26, 36, 0.42);
+  overflow-x: auto;
+}
+
+.referral-table th {
+  background: linear-gradient(100deg, rgba(18, 217, 245, 0.1), rgba(0, 184, 169, 0.07));
+}
+
+.referral-table tbody tr {
+  transition: background 150ms ease;
+}
+
+.referral-table tbody tr:hover {
+  background: rgba(18, 217, 245, 0.045);
+}
+
+.portfolio-network-banner {
+  border-color: rgba(0, 184, 169, 0.25);
+  background: linear-gradient(115deg, rgba(0, 184, 169, 0.1), rgba(18, 217, 245, 0.06));
+}
+
+.approval-modal,
+.help-dialog {
+  border: 1px solid rgba(99, 243, 255, 0.28);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.13), transparent 56%),
+    linear-gradient(145deg, #123945, #071a24);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(242, 252, 255, 0.06);
+}
+
+.approval-modal-backdrop,
+.help-overlay {
+  backdrop-filter: blur(12px);
+  background: rgba(2, 12, 18, 0.76);
+}
+
+.terms-hero {
+  border-color: rgba(99, 243, 255, 0.23);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.13), transparent 56%),
+    linear-gradient(135deg, #102f3a, #071a24);
+}
+
+.more-navigation-sheet {
+  border: 1px solid rgba(99, 243, 255, 0.22);
+  background: linear-gradient(145deg, #123945, #071a24);
+  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.38);
+}
+
+.nav-link,
+.bottom-nav-link {
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.nav-link:hover,
+.bottom-nav-link:hover {
+  background: linear-gradient(120deg, rgba(18, 217, 245, 0.08), rgba(0, 184, 169, 0.07));
+}
+
+@media (max-width: 600px) {
+  .referral-table-wrap {
+    border-radius: 12px;
+  }
+  .approval-modal,
+  .help-dialog {
+    max-height: min(88vh, 760px);
+    overflow-y: auto;
+  }
+}
