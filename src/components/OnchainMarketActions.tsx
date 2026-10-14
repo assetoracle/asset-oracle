@@ -171,6 +171,33 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount > 0n &&
     balance.data !== undefined && parsedAmount <= balance.data;
+  const stakeDisabledReason = !isConnected
+    ? "Connect your wallet to stake."
+    : chainId !== ASSET_CHAIN_TESTNET_ID
+      ? "Switch your wallet to Asset Chain Testnet (Chain ID 42421)."
+      : !codeCheckDone
+        ? "Verifying the market and USDC contracts…"
+        : !codeVerified
+          ? "Staking is blocked because the configured market manager or USDC contract could not be verified."
+          : market.isPending || tokenConfig.isPending || tokenDecimals.isPending
+            ? "Waiting for on-chain market and USDC verification…"
+            : !stablecoinVerified
+              ? "Staking is blocked because the approved USDC configuration is not verified."
+              : !marketVerified
+                ? "Staking is blocked because this market's on-chain details do not match the listing."
+                : market.isError || tokenConfig.isError || tokenDecimals.isError || position.isError || balance.isError || allowance.isError
+                  ? "A required on-chain read failed. Check your network connection and try again."
+                  : Number(marketData?.status) !== MARKET_STATUS.OPEN
+                    ? "This market is not currently open for staking."
+                    : Date.now() / 1000 >= closeTime
+                      ? "The staking window has closed."
+                      : !amount.trim()
+                        ? "Enter a USDC amount to enable staking."
+                        : parsedAmount <= 0n
+                          ? "Enter a valid amount greater than zero (up to 6 decimal places)."
+                          : balance.data !== undefined && parsedAmount > balance.data
+                            ? "Your USDC balance is too low for this stake."
+                            : "Staking is temporarily unavailable. Check your wallet and market status.";
   const canClose = safe && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 >= closeTime;
   const canClaim = safe && isConnected && hasPosition && !claimed &&
@@ -427,6 +454,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
             <button className="primary-button" type="button" disabled={!canStake || isWalletPending || receipt.isLoading || referralPreparing || !amount.trim()} onClick={submitStake}>
               {referralPreparing ? "Confirm referral in wallet…" : isWalletPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : (allowance.data ?? 0n) < parsedAmount ? "Approve exact USDC amount" : `Stake ${amount || "USDC"} on ${yesSide ? "YES" : "NO"}`}
             </button>
+            {!canStake && !isWalletPending && !receipt.isLoading && <p className="stake-disabled-note" role="status">{stakeDisabledReason}</p>}
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
