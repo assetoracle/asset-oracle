@@ -832,7 +832,6 @@ useEffect(() => {
           walletRole={walletRole}
           roleLoading={roleLoading}
           roleError={roleError}
-          onVerifyRole={() => void handleVerifyWalletRole()}
         />
       );
     }
