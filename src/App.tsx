@@ -200,7 +200,6 @@ export default function App() {
     networkState,
     walletBusy,
     walletMessage,
-    setWalletMessage,
     handleConnect,
     handleOpenAccount,
     handleSwitchNetwork,
