@@ -884,7 +884,7 @@ useEffect(() => {
         accountData={accountData}
         loading={accountDataLoading}
         error={accountDataError}
-        onRetry={() => void loadWalletAccountData()}
+        onRetry={loadWalletAccountData}
         onConnect={() => void handleConnect()}
         onExploreMarkets={() => navigateTo("Markets")}
       />
