@@ -56,16 +56,7 @@ export function MarketProposalForm({
     useState<MarketProposalInput["category"]>("Crypto");
   const [closesAt, setClosesAt] = useState("");
   const [resolvesAt, setResolvesAt] = useState("");
-  const [sourceId, setSourceId] = useState("");
-  const [metric, setMetric] = useState("");
-  const [comparison, setComparison] =
-    useState<MarketProposalInput["resolutionRule"]["comparison"]>(
-      "ABOVE"
-    );
-  const [targetValue, setTargetValue] = useState("");
-  const [currency, setCurrency] = useState("");
-  const [observationTime, setObservationTime] = useState("");
-  const [ruleDescription, setRuleDescription] = useState("");
+  const [resolutionCriteria, setResolutionCriteria] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -75,21 +66,20 @@ export function MarketProposalForm({
     setErrors([]);
     setMessage("");
 
-    const target = Number(targetValue);
+    const dates = [closesAt, resolvesAt];
 
-    if (targetValue.trim() === "" || !Number.isFinite(target)) {
-      setErrors(["Enter a valid numeric target value."]);
+    if (dates.some((value) => !value || Number.isNaN(new Date(value).getTime()))) {
+      setErrors(["Enter valid closing and resolution dates."]);
       return;
     }
 
-    const dates = [
-      closesAt,
-      resolvesAt,
-      observationTime,
-    ];
+    if (resolvesAt && closesAt && new Date(resolvesAt) <= new Date(closesAt)) {
+      setErrors(["The resolution deadline must be after the market closing time."]);
+      return;
+    }
 
-    if (dates.some((value) => !value || Number.isNaN(new Date(value).getTime()))) {
-      setErrors(["Enter valid closing, resolution, and observation dates."]);
+    if (resolutionCriteria.trim().length < 10) {
+      setErrors(["Explain clearly what must happen for YES or NO to win."]);
       return;
     }
 
@@ -100,15 +90,12 @@ export function MarketProposalForm({
       closesAt: toIsoDate(closesAt),
       resolvesAt: toIsoDate(resolvesAt),
       resolutionRule: {
-        sourceId: sourceId.trim(),
-        metric: metric.trim(),
-        comparison,
-        targetValue: target,
-        ...(currency.trim()
-          ? { currency: currency.trim() }
-          : {}),
-        observationTime: toIsoDate(observationTime),
-        description: ruleDescription.trim(),
+        sourceId: "human-validation",
+        metric: "market-outcome",
+        comparison: "EQUALS",
+        targetValue: 1,
+        observationTime: toIsoDate(resolvesAt),
+        description: resolutionCriteria.trim(),
       },
     };
 
@@ -202,8 +189,7 @@ export function MarketProposalForm({
               Propose a market
             </h2>
             <p style={{ color: "#8DA9B3", lineHeight: 1.7 }}>
-              Define the question, evidence source, and rules that
-              will determine the final outcome.
+              Create a clear market question and explain exactly what must happen for each outcome.
             </p>
           </div>
 
@@ -248,7 +234,7 @@ export function MarketProposalForm({
               maxLength={2000}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Explain the market and what a YES or NO outcome means."
+              placeholder="Add useful context so people understand what this market is about."
               rows={4}
               style={{ ...fieldStyle, resize: "vertical" }}
             />
@@ -297,119 +283,21 @@ export function MarketProposalForm({
             </label>
           </div>
 
-          <div
-            style={{
-              height: 1,
-              background: "#1D6675",
-              margin: "4px 0",
-            }}
-          />
-
-          <div>
-            <h3 style={{ margin: "0 0 7px", fontSize: 18 }}>
-              Resolution rules
-            </h3>
-            <p style={{ margin: 0, color: "#8DA9B3", fontSize: 13, lineHeight: 1.7 }}>
-              Specify the data source and measurable condition used
-              to establish the result.
-            </p>
-          </div>
-
           <label style={labelStyle}>
-            Data source ID
-            <input
-              required
-              value={sourceId}
-              onChange={(event) => setSourceId(event.target.value)}
-              placeholder="For example, coingecko"
-              style={fieldStyle}
-            />
-          </label>
-
-          <label style={labelStyle}>
-            Metric
-            <input
-              required
-              value={metric}
-              onChange={(event) => setMetric(event.target.value)}
-              placeholder="For example, BTC/USD price"
-              style={fieldStyle}
-            />
-          </label>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 12,
-            }}
-          >
-            <label style={labelStyle}>
-              Comparison
-              <select
-                value={comparison}
-                onChange={(event) =>
-                  setComparison(
-                    event.target.value as
-                      MarketProposalInput["resolutionRule"]["comparison"]
-                  )
-                }
-                style={fieldStyle}
-              >
-                <option value="ABOVE">Above</option>
-                <option value="AT_LEAST">At or above (inclusive)</option>
-                <option value="BELOW">Below</option>
-                <option value="EQUALS">Equals</option>
-              </select>
-            </label>
-
-            <label style={labelStyle}>
-              Target value
-              <input
-                required
-                type="number"
-                step="any"
-                value={targetValue}
-                onChange={(event) => setTargetValue(event.target.value)}
-                placeholder="150000"
-                style={fieldStyle}
-              />
-            </label>
-          </div>
-
-          <label style={labelStyle}>
-            Currency (optional)
-            <input
-              value={currency}
-              onChange={(event) => setCurrency(event.target.value)}
-              placeholder="USD"
-              style={fieldStyle}
-            />
-          </label>
-
-          <label style={labelStyle}>
-            Observation date and time
-            <input
-              required
-              type="datetime-local"
-              value={observationTime}
-              onChange={(event) => setObservationTime(event.target.value)}
-              style={fieldStyle}
-            />
-          </label>
-
-          <label style={labelStyle}>
-            Explain how the outcome will be resolved
+            What must happen for YES or NO to win?
             <textarea
               required
               minLength={10}
-              value={ruleDescription}
-              onChange={(event) => setRuleDescription(event.target.value)}
-              placeholder="Identify the source, observation, and condition that determine the outcome."
+              maxLength={2000}
+              value={resolutionCriteria}
+              onChange={(event) => setResolutionCriteria(event.target.value)}
+              placeholder="Explain the exact conditions for YES and NO, including how an unclear, cancelled, or postponed event should be handled."
               rows={4}
               style={{ ...fieldStyle, resize: "vertical" }}
             />
+            <span>Be specific so the final outcome can be determined fairly.</span>
           </label>
+
 
           {errors.length > 0 && (
             <div
