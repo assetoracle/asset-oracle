@@ -49,8 +49,12 @@ import {
   createReferralCode,
   getPersonalReferralStats,
   getReferralLeaderboard,
+  getPointsLeaderboard,
+  getTotalLeaderboard,
   attributeReferral,
   type ReferralLeaderboardEntry,
+  type PointsLeaderboardEntry,
+  type TotalLeaderboardEntry,
   type StoredMarketProposal,
   type WalletRoleResponse,
   type WalletAccountData,
@@ -161,6 +165,8 @@ export default function App() {
   const [referralMessage, setReferralMessage] = useState("");
   const [referralLink, setReferralLink] = useState("");
   const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
+  const [pointsLeaderboard, setPointsLeaderboard] = useState<PointsLeaderboardEntry[]>([]);
+  const [totalLeaderboard, setTotalLeaderboard] = useState<TotalLeaderboardEntry[]>([]);
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
   const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
   const [referralActionLoading, setReferralActionLoading] = useState(false);
@@ -201,7 +207,6 @@ export default function App() {
   const [myProposalsError, setMyProposalsError] = useState("");
   const [myProposalsLoaded, setMyProposalsLoaded] = useState(false);
   const [walletRole, setWalletRole] = useState<WalletRoleResponse | null>(null);
-  const [roleLoading, setRoleLoading] = useState(false);
   const [roleError, setRoleError] = useState("");
 
   const {
@@ -373,22 +378,39 @@ useEffect(() => {
     setMyProposalsError("");
     setWalletRole(null);
     setRoleError("");
-    setRoleLoading(false);
   }, [address]);
+
+  // Establish and cache the wallet session once after the wallet connects.
+  // Role checks and protected actions reuse this session until it expires or
+  // the active account changes.
+  useEffect(() => {
+    if (!address || networkState !== "correct") return;
+    let active = true;
+    setRoleError("");
+    void ensureWalletSession(address, (message) => signMessageAsync({ message }))
+      .then(() => getWalletRole(address))
+      .then((role) => { if (active) setWalletRole(role); })
+      .catch((error) => {
+        if (active) setRoleError(error instanceof Error ? error.message : "Unable to verify wallet role.");
+      })
+      .finally(() => { /* Session and role loading are reflected by the request lifecycle. */ });
+    return () => { active = false; };
+  }, [address, networkState, signMessageAsync]);
 
   useEffect(() => {
     if (page !== "Referrals") return;
     let active = true;
     setReferralLeaderboardLoading(true);
     setReferralLeaderboardError("");
-    void getReferralLeaderboard()
-      .then((result) => {
-        if (active) setReferralLeaderboard(result.leaderboard);
+    void Promise.all([getReferralLeaderboard(), getPointsLeaderboard(), getTotalLeaderboard()])
+      .then(([referralsResult, pointsResult, totalResult]) => {
+        if (!active) return;
+        setReferralLeaderboard(referralsResult.leaderboard);
+        setPointsLeaderboard(pointsResult.leaderboard);
+        setTotalLeaderboard(totalResult.leaderboard);
       })
       .catch((error) => {
-        if (active) {
-          setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load referral leaderboard.");
-        }
+        if (active) setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load leaderboard.");
       })
       .finally(() => {
         if (active) setReferralLeaderboardLoading(false);
@@ -558,44 +580,6 @@ useEffect(() => {
     );
   }
 
-  async function handleVerifyWalletRole() {
-    const requestedAddress = addressRef.current;
-
-    if (!requestedAddress) {
-      setRoleError("Connect your wallet first.");
-      return;
-    }
-
-    setRoleLoading(true);
-    setRoleError("");
-
-    try {
-      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
-      const result = await getWalletRole(requestedAddress);
-
-      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
-        return;
-      }
-
-      setWalletRole(result);
-    } catch (error) {
-      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
-        return;
-      }
-
-      setRoleError(
-        error instanceof Error
-          ? error.message
-          : "Unable to verify this wallet's role.",
-      );
-      setWalletRole(null);
-    } finally {
-      if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
-        setRoleLoading(false);
-      }
-    }
-  }
-
   async function handleLoadMyProposals() {
     const requestedAddress = addressRef.current;
 
@@ -609,14 +593,12 @@ useEffect(() => {
 
     try {
       await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
-      const role = await getWalletRole(requestedAddress);
       const result = await getMyProposals(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
       }
 
-      setWalletRole(role);
       setMyProposals(result.proposals);
       setMyProposalsLoaded(true);
     } catch (error) {
@@ -812,9 +794,7 @@ useEffect(() => {
           onConnect={() => void handleConnect()}
           onLoad={() => void handleLoadMyProposals()}
           walletRole={walletRole}
-          roleLoading={roleLoading}
           roleError={roleError}
-          onVerifyRole={() => void handleVerifyWalletRole()}
         />
       );
     }
@@ -837,6 +817,8 @@ useEffect(() => {
           referralLink={referralLink}
           referralCode={new URLSearchParams(window.location.search).get("ref") ?? ""}
           leaderboard={referralLeaderboard}
+          pointsLeaderboard={pointsLeaderboard}
+          totalLeaderboard={totalLeaderboard}
           leaderboardLoading={referralLeaderboardLoading}
           leaderboardError={referralLeaderboardError}
           actionLoading={referralActionLoading}
@@ -845,9 +827,13 @@ useEffect(() => {
           onRetryLeaderboard={() => {
             setReferralLeaderboardLoading(true);
             setReferralLeaderboardError("");
-            void getReferralLeaderboard()
-              .then((result) => setReferralLeaderboard(result.leaderboard))
-              .catch((error) => setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load referral leaderboard."))
+            void Promise.all([getReferralLeaderboard(), getPointsLeaderboard(), getTotalLeaderboard()])
+              .then(([referralsResult, pointsResult, totalResult]) => {
+                setReferralLeaderboard(referralsResult.leaderboard);
+                setPointsLeaderboard(pointsResult.leaderboard);
+                setTotalLeaderboard(totalResult.leaderboard);
+              })
+              .catch((error) => setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load leaderboard."))
               .finally(() => setReferralLeaderboardLoading(false));
           }}
         />

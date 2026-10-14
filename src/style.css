@@ -5303,3 +5303,12 @@ body::before {
     padding: 13px 12px;
   }
 }
+
+
+.referral-view-tabs { display:flex; gap:6px; margin:18px 0 12px; padding:4px; border:1px solid rgba(141,169,179,.16); border-radius:12px; background:rgba(7,26,36,.45); width:fit-content; max-width:100%; }
+.referral-view-tabs button { min-width:94px; padding:10px 16px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:650; cursor:pointer; transition:background 160ms ease,color 160ms ease,border-color 160ms ease; }
+.referral-view-tabs button:hover { color:var(--text); border-color:rgba(18,217,245,.18); }
+.referral-view-tabs button.active,.referral-view-tabs button[aria-selected="true"] { color:var(--text); background:rgba(18,217,245,.12); border-color:rgba(18,217,245,.3); }
+.referral-table-wrap { overflow-x:auto; }
+.referral-table { min-width:540px; width:100%; }
+@media (max-width:640px) { .referral-view-tabs { width:100%; } .referral-view-tabs button { flex:1; min-width:0; padding:10px 8px; } }

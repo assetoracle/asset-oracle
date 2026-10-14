@@ -10,9 +10,7 @@ type MyProposalsPageProps = {
   onConnect: () => void;
   onLoad: () => void;
   walletRole: WalletRoleResponse | null;
-  roleLoading: boolean;
   roleError: string;
-  onVerifyRole: () => void;
 };
 
 export default function MyProposalsPage({
@@ -24,9 +22,7 @@ export default function MyProposalsPage({
   onConnect,
   onLoad,
   walletRole,
-  roleLoading,
   roleError,
-  onVerifyRole,
 }: MyProposalsPageProps) {
   return (
     <section className="page-section account-page">
@@ -70,14 +66,6 @@ export default function MyProposalsPage({
           </div>
 
           <div className="proposal-actions">
-            <button
-              className="primary-button"
-              type="button"
-              onClick={onVerifyRole}
-              disabled={roleLoading}
-            >
-              {roleLoading ? "Verifying role..." : walletRole ? "Refresh wallet role" : "Verify wallet role"}
-            </button>
             <button
               className="primary-button"
               type="button"

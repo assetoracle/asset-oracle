@@ -261,7 +261,23 @@ export async function getWalletRole(address: string) {
 export type ReferralLeaderboardEntry = {
   rank: number;
   wallet: string;
-  verifiedReferrals: number;
+  referrals: number;
+  referralPoints: number;
+};
+
+export type PointsLeaderboardEntry = {
+  rank: number;
+  wallet: string;
+  points: number;
+};
+
+export type TotalLeaderboardEntry = {
+  rank: number;
+  wallet: string;
+  referrals: number;
+  referralPoints: number;
+  activityPoints: number;
+  totalPoints: number;
 };
 
 export async function createReferralCode(address: string) {
@@ -290,7 +306,21 @@ export async function getReferralLeaderboard() {
   return request<{
     period: "ALL_TIME";
     leaderboard: ReferralLeaderboardEntry[];
-  }>("/api/referrals/leaderboard");
+  }>("/api/referrals/referral-leaderboard");
+}
+
+export async function getPointsLeaderboard() {
+  return request<{
+    period: "ALL_TIME";
+    leaderboard: PointsLeaderboardEntry[];
+  }>("/api/referrals/points-leaderboard");
+}
+
+export async function getTotalLeaderboard() {
+  return request<{
+    period: "ALL_TIME";
+    leaderboard: TotalLeaderboardEntry[];
+  }>("/api/referrals/total-leaderboard");
 }
 
 export async function attributeReferral(address: string, referralCode: string) {
