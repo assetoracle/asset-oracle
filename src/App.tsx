@@ -58,7 +58,7 @@ import "./style.css";
 const categories: MarketFilter[] = [
   "All Markets",
   "Live",
-  "Crypto",
+  "Digital Assets",
   "Sports",
   "Economics",
   "RWA",
@@ -427,7 +427,7 @@ useEffect(() => {
         activeCategory === "All Markets" ||
         activeCategory === "Live" ||
         activeCategory === "Settled Markets" ||
-        market.category === activeCategory;
+        (activeCategory === "Digital Assets" ? market.category === "Crypto" : market.category === activeCategory);
 
       const matchesSearch =
         market.question.toLowerCase().includes(query) ||
