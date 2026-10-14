@@ -10,7 +10,6 @@ type MyProposalsPageProps = {
   onConnect: () => void;
   onLoad: () => void;
   walletRole: WalletRoleResponse | null;
-  roleLoading: boolean;
   roleError: string;
 };
 
@@ -23,7 +22,6 @@ export default function MyProposalsPage({
   onConnect,
   onLoad,
   walletRole,
-  roleLoading,
   roleError,
 }: MyProposalsPageProps) {
   return (
