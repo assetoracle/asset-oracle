@@ -17,7 +17,7 @@ type MarketsPageProps = {
   proposalMessage: string;
   walletConnected: boolean;
   onConnect: () => void;
-  onCategoryChange: (category: MarketCategory) => void;
+  onCategoryChange: (category: MarketFilter) => void;
   onSearchChange: (value: string) => void;
   onPropose: () => void;
   onTrackProposal: () => void;
