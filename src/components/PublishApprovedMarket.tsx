@@ -195,8 +195,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setPublicationSaved(true);
       clearPendingPublicationHash(proposal.id);
       setError("");
-      // Return home only after the backend confirms the verified publication record.
-      window.location.hash = "/";
+      // Keep the admin on this publishing view after the backend confirms publication.
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setPublicationSaved(false);
