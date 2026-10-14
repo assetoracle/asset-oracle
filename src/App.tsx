@@ -34,6 +34,7 @@ import MarketsPage from "./pages/MarketsPage";
 import MyProposalsPage from "./pages/MyProposalsPage";
 import ReferralsPage from "./pages/ReferralsPage";
 import AccountPage from "./pages/AccountPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
 import { useWalletStatus } from "./hooks/useWalletStatus";
 import {
   listPublishedMarkets,
@@ -99,6 +100,7 @@ function pathForPage(page: Page, marketId?: string): string {
     History: "/history",
     Referrals: "/referrals",
     Admin: "/admin",
+    "Terms of Service": "/terms",
   };
 
   return paths[page];
@@ -127,6 +129,7 @@ function parseHash(): {
     history: "History",
     referrals: "Referrals",
     admin: "Admin",
+    terms: "Terms of Service",
   };
 
   return {
@@ -770,6 +773,10 @@ useEffect(() => {
       );
     }
 
+    if (page === "Terms of Service") {
+      return <TermsOfServicePage onBack={() => navigateTo("Home")} />;
+    }
+
     if (page === "Admin") {
       if (!isAdmin) {
         return (
@@ -880,6 +887,7 @@ useEffect(() => {
         </button>
 
         <span>Building on Asset Chain</span>
+        <a className="footer-legal-link" href="#/terms">Terms of Service</a>
 
         <div className="footer-socials" aria-label="Official social channels">
           <a
