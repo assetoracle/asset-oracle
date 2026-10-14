@@ -185,7 +185,7 @@ function AccountPage({
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
                       <button className="primary-button" type="button" disabled={busyMarketId !== null || !assetOracleMarketManagerAddress} onClick={() => void handleClaim(item)}>
-                        {busyMarketId === item.marketId ? "Confirming…" : item.status === 3 ? "Claim payout" : "Claim refund"}
+                        {busyMarketId === item.marketId ? "Confirming…" : item.status === 3 ? (item.claimableAmount === "0" ? "Finalize settlement" : "Claim payout") : "Claim refund"}
                       </button>
                     </article>
                   ))}
