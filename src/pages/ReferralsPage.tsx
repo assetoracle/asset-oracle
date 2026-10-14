@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   CheckCircle2,
   Copy,
@@ -12,7 +13,23 @@ import {
 type ReferralLeaderboardEntry = {
   rank: number;
   wallet: string;
+  referrals: number;
+  referralPoints: number;
+};
+
+type PointsLeaderboardEntry = {
+  rank: number;
+  wallet: string;
   points: number;
+};
+
+type TotalLeaderboardEntry = {
+  rank: number;
+  wallet: string;
+  referrals: number;
+  referralPoints: number;
+  activityPoints: number;
+  totalPoints: number;
 };
 
 type ReferralsPageProps = {
@@ -22,6 +39,8 @@ type ReferralsPageProps = {
   referralLink: string;
   referralCode: string;
   leaderboard: ReferralLeaderboardEntry[];
+  pointsLeaderboard: PointsLeaderboardEntry[];
+  totalLeaderboard: TotalLeaderboardEntry[];
   leaderboardLoading: boolean;
   leaderboardError: string;
   actionLoading: boolean;
@@ -37,6 +56,8 @@ export default function ReferralsPage({
   referralLink,
   referralCode,
   leaderboard,
+  pointsLeaderboard,
+  totalLeaderboard,
   leaderboardLoading,
   leaderboardError,
   actionLoading,
@@ -44,7 +65,8 @@ export default function ReferralsPage({
   onAttributeReferral,
   onRetryLeaderboard,
 }: ReferralsPageProps) {
-  const walletEntry = leaderboard.find(
+  const [activeLeaderboard, setActiveLeaderboard] = useState<"referral" | "points" | "total">("referral");
+  const walletEntry = totalLeaderboard.find(
     (entry) => entry.wallet.toLowerCase() === address?.toLowerCase(),
   );
   return (
@@ -62,7 +84,7 @@ export default function ReferralsPage({
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Users size={19} /></span>
           <span>Your verified referrals</span>
-          <strong>{personalStats ? personalStats.verifiedReferrals : walletEntry ? walletEntry.verifiedReferrals : "Connect once to load"}</strong>
+          <strong>{personalStats ? personalStats.verifiedReferrals : walletEntry ? walletEntry.referrals : "Connect once to load"}</strong>
           <small>{personalStats ? `${personalStats.pendingReferrals} pending · ${personalStats.flaggedReferrals} flagged` : "Generate your referral link to load private stats"}</small>
         </article>
         <article className="referral-stat-card">
@@ -112,41 +134,40 @@ export default function ReferralsPage({
 
       <section className="referral-leaderboard-card">
         <div className="referral-table-heading">
-          <div><span className="eyebrow">COMMUNITY RANKINGS</span><h2>Top contributors</h2></div>
+          <div><span className="eyebrow">COMMUNITY RANKINGS</span><h2>Leaderboard</h2></div>
           <span className="network-label">All time</span>
         </div>
+        <div className="referral-view-tabs" role="tablist" aria-label="Leaderboard view">
+          <button type="button" role="tab" aria-selected={activeLeaderboard === "referral"} className={activeLeaderboard === "referral" ? "active" : ""} onClick={() => setActiveLeaderboard("referral")}>Referral</button>
+          <button type="button" role="tab" aria-selected={activeLeaderboard === "points"} className={activeLeaderboard === "points" ? "active" : ""} onClick={() => setActiveLeaderboard("points")}>Points</button>
+          <button type="button" role="tab" aria-selected={activeLeaderboard === "total"} className={activeLeaderboard === "total" ? "active" : ""} onClick={() => setActiveLeaderboard("total")}>Total</button>
+        </div>
         {leaderboardLoading ? (
-          <div className="referral-table-empty" role="status">
-            <Trophy size={30} /><h3>Loading leaderboard</h3><p>Retrieving verified referral records.</p>
-          </div>
+          <div className="referral-table-empty" role="status"><Trophy size={30} /><h3>Loading leaderboard</h3><p>Retrieving verified activity and points.</p></div>
         ) : leaderboardError ? (
-          <div className="referral-table-empty" role="alert">
-            <Trophy size={30} /><h3>Leaderboard unavailable</h3><p>{leaderboardError}</p>
-            <button className="text-action" type="button" onClick={onRetryLeaderboard}>Retry</button>
-          </div>
-        ) : leaderboard.length === 0 ? (
-          <div className="referral-table-empty">
-            <Trophy size={30} /><h3>No points earned yet</h3><p>Rankings appear when a market proposal, verified trade, or qualifying referral earns points.</p>
-          </div>
+          <div className="referral-table-empty" role="alert"><Trophy size={30} /><h3>Leaderboard unavailable</h3><p>{leaderboardError}</p><button className="text-action" type="button" onClick={onRetryLeaderboard}>Retry</button></div>
         ) : (
           <div className="referral-table-wrap">
-            <table className="referral-table">
-              <thead><tr><th>Rank</th><th>Wallet</th><th>Points</th></tr></thead>
-              <tbody>
-                {leaderboard.map((entry) => (
-                  <tr key={entry.wallet}>
-                    <td>#{entry.rank}</td>
-                    <td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td>
-                    <td>{entry.points}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {activeLeaderboard === "referral" ? (
+              leaderboard.length === 0 ? <div className="referral-table-empty"><Users size={30} /><h3>No qualified referrals yet</h3><p>Qualified referrers will appear here after an invited wallet completes a qualifying prediction.</p></div> :
+              <table className="referral-table"><thead><tr><th>Rank</th><th>Wallet address</th><th>Total referrals</th><th>Points earned</th></tr></thead><tbody>
+                {leaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.referrals}</td><td>{entry.referralPoints}</td></tr>)}
+              </tbody></table>
+            ) : activeLeaderboard === "points" ? (
+              pointsLeaderboard.length === 0 ? <div className="referral-table-empty"><Medal size={30} /><h3>No points earned yet</h3><p>Wallets appear here after recorded proposals or qualifying trades earn points.</p></div> :
+              <table className="referral-table"><thead><tr><th>Rank</th><th>Wallet address</th><th>Points</th></tr></thead><tbody>
+                {pointsLeaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.points}</td></tr>)}
+              </tbody></table>
+            ) : (
+              totalLeaderboard.length === 0 ? <div className="referral-table-empty"><Trophy size={30} /><h3>No leaderboard activity yet</h3><p>Combined totals will appear once wallets earn points or qualify referrals.</p></div> :
+              <table className="referral-table"><thead><tr><th>Rank</th><th>Wallet address</th><th>Referrals</th><th>Referral points</th><th>Activity points</th><th>Total points</th></tr></thead><tbody>
+                {totalLeaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.referrals}</td><td>{entry.referralPoints}</td><td>{entry.activityPoints}</td><td><strong>{entry.totalPoints}</strong></td></tr>)}
+              </tbody></table>
+            )}
           </div>
         )}
-        <div className="referral-table-footer"><ShieldCheck size={16} />Only recorded proposals, verified on-chain participation, and qualified referrals count toward points.</div>
+        <div className="referral-table-footer"><ShieldCheck size={16} />Referral counts include qualified referrals only. Points come from backend-verified proposals, on-chain participation, and qualified referrals.</div>
       </section>
-
       <section className="referral-rules-card">
         <div className="referral-rules-heading"><CheckCircle2 size={21} /><h2>Points schedule</h2></div>
         <div className="referral-rule">
