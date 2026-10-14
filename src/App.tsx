@@ -49,8 +49,10 @@ import {
   createReferralCode,
   getPersonalReferralStats,
   getReferralLeaderboard,
+  getPointsLeaderboard,
   attributeReferral,
   type ReferralLeaderboardEntry,
+  type PointsLeaderboardEntry,
   type StoredMarketProposal,
   type WalletRoleResponse,
   type WalletAccountData,
@@ -162,6 +164,9 @@ export default function App() {
   const [referralLink, setReferralLink] = useState("");
   const [referralLeaderboard, setReferralLeaderboard] = useState<ReferralLeaderboardEntry[]>([]);
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
+  const [pointsLeaderboard, setPointsLeaderboard] = useState<PointsLeaderboardEntry[]>([]);
+  const [pointsLeaderboardLoading, setPointsLeaderboardLoading] = useState(false);
+  const [pointsLeaderboardError, setPointsLeaderboardError] = useState("");
   const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
   const [referralActionLoading, setReferralActionLoading] = useState(false);
   const [personalReferralStats, setPersonalReferralStats] = useState<PersonalReferralStats | null>(null);
@@ -381,6 +386,9 @@ useEffect(() => {
     let active = true;
     setReferralLeaderboardLoading(true);
     setReferralLeaderboardError("");
+    setPointsLeaderboardLoading(true);
+    setPointsLeaderboardError("");
+    void getPointsLeaderboard().then((result) => { if (active) setPointsLeaderboard(result.leaderboard); }).catch((error) => { if (active) setPointsLeaderboardError(error instanceof Error ? error.message : "Unable to load points leaderboard."); }).finally(() => { if (active) setPointsLeaderboardLoading(false); });
     void getReferralLeaderboard()
       .then((result) => {
         if (active) setReferralLeaderboard(result.leaderboard);
@@ -837,6 +845,10 @@ useEffect(() => {
           referralLink={referralLink}
           referralCode={new URLSearchParams(window.location.search).get("ref") ?? ""}
           leaderboard={referralLeaderboard}
+          pointsLeaderboard={pointsLeaderboard}
+          pointsLeaderboardLoading={pointsLeaderboardLoading}
+          pointsLeaderboardError={pointsLeaderboardError}
+          onRetryPointsLeaderboard={() => { setPointsLeaderboardLoading(true); setPointsLeaderboardError(""); void getPointsLeaderboard().then((result) => setPointsLeaderboard(result.leaderboard)).catch((error) => setPointsLeaderboardError(error instanceof Error ? error.message : "Unable to load points leaderboard.")).finally(() => setPointsLeaderboardLoading(false)); }}
           leaderboardLoading={referralLeaderboardLoading}
           leaderboardError={referralLeaderboardError}
           actionLoading={referralActionLoading}
