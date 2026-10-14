@@ -4303,3 +4303,43 @@ button:disabled {
     padding: 12px 16px;
   }
 }
+
+
+/* Portfolio cards: cyan-to-teal treatment matching the primary action */
+.account-page .portfolio-network-banner,
+.account-page .portfolio-wallet-card,
+.account-page .portfolio-token-card {
+  border-color: rgba(18, 217, 245, 0.55);
+  background: linear-gradient(110deg, #12D9F5, #00B8A9);
+  color: #06232B;
+}
+.account-page .portfolio-network-banner strong,
+.account-page .portfolio-wallet-card strong,
+.account-page .portfolio-token-card strong,
+.account-page .portfolio-token-card .portfolio-token-balance strong {
+  color: #06232B;
+}
+.account-page .portfolio-network-banner p,
+.account-page .portfolio-wallet-card > span,
+.account-page .portfolio-token-card p,
+.account-page .portfolio-token-card .portfolio-token-balance span,
+.account-page .portfolio-token-card .portfolio-token-balance small,
+.account-page .portfolio-network-banner a,
+.account-page .portfolio-token-link {
+  color: rgba(6, 35, 43, 0.82);
+}
+.account-page .portfolio-token-card .portfolio-token-link {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.account-page .portfolio-token-card .portfolio-token-error {
+  color: #7F1D1D;
+  overflow-wrap: anywhere;
+}
+.account-page .portfolio-refresh-button {
+  border-color: rgba(18, 217, 245, 0.45);
+  background: linear-gradient(110deg, #12D9F5, #00B8A9);
+  color: #06232B;
+  font-weight: 800;
+}
