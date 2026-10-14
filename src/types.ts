@@ -9,5 +9,9 @@ export type MarketCategory =
 export type MarketFilter =
   | "All Markets"
   | "Live"
-  | MarketCategory
+  | "Digital Assets"
+  | "Sports"
+  | "Economics"
+  | "RWA"
+  | "Regional"
   | "Settled Markets";
