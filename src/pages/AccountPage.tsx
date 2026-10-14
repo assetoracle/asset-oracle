@@ -73,7 +73,7 @@ function AccountPage({
     ? [
         ["Claimable markets", String(claimable.length)],
         ["Completed claims / refunds", String(completedClaims.length)],
-        ["Rewards available", claimable.reduce((sum, item) => sum + Number(item.claimableAmount || 0), 0).toLocaleString(undefined, { maximumFractionDigits: 6 })],
+        ["Zero-payout settlements to finalize", String(claimable.filter((item) => Number(item.claimableAmount) === 0).length)],
       ]
     : [
         ["Predictions", String(positions.length)],
