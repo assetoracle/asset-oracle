@@ -12,7 +12,7 @@ import {
 type ReferralLeaderboardEntry = {
   rank: number;
   wallet: string;
-  verifiedReferrals: number;
+  points: number;
 };
 
 type ReferralsPageProps = {
@@ -52,8 +52,8 @@ export default function ReferralsPage({
       <div className="section-heading">
         <div>
           <span className="eyebrow">COMMUNITY REWARDS</span>
-          <h1>Referral leaderboard</h1>
-          <p>Invite people to Asset Oracle. Only qualifying referrals count.</p>
+          <h1>Points leaderboard</h1>
+          <p>Earn points by proposing markets, participating in markets, and referring qualified participants.</p>
         </div>
         <div className="referral-heading-icon"><Trophy size={28} /></div>
       </div>
@@ -68,8 +68,8 @@ export default function ReferralsPage({
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Medal size={19} /></span>
           <span>Your leaderboard rank</span>
-          <strong>{personalStats ? (personalStats.leaderboardRank ? `#${personalStats.leaderboardRank}` : "Not ranked yet") : walletEntry ? `#${walletEntry.rank}` : "Connect once to load"}</strong>
-          <small>{personalStats ? "Your all-time rank across all qualifying referrers" : "Generate your referral link to load private stats"}</small>
+          <strong>{walletEntry ? `#${walletEntry.rank}` : address ? "Not ranked yet" : "Connect once to load"}</strong>
+          <small>{"Your all-time rank by earned activity points"}</small>
         </article>
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Gift size={19} /></span>
@@ -112,7 +112,7 @@ export default function ReferralsPage({
 
       <section className="referral-leaderboard-card">
         <div className="referral-table-heading">
-          <div><span className="eyebrow">COMMUNITY RANKINGS</span><h2>Top referrers</h2></div>
+          <div><span className="eyebrow">COMMUNITY RANKINGS</span><h2>Top contributors</h2></div>
           <span className="network-label">All time</span>
         </div>
         {leaderboardLoading ? (
@@ -126,25 +126,25 @@ export default function ReferralsPage({
           </div>
         ) : leaderboard.length === 0 ? (
           <div className="referral-table-empty">
-            <Trophy size={30} /><h3>No qualifying referrals yet</h3><p>Rankings appear after verified referral records qualify.</p>
+            <Trophy size={30} /><h3>No points earned yet</h3><p>Rankings appear when a market proposal, verified trade, or qualifying referral earns points.</p>
           </div>
         ) : (
           <div className="referral-table-wrap">
             <table className="referral-table">
-              <thead><tr><th>Rank</th><th>Wallet</th><th>Verified referrals</th></tr></thead>
+              <thead><tr><th>Rank</th><th>Wallet</th><th>Points</th></tr></thead>
               <tbody>
                 {leaderboard.map((entry) => (
                   <tr key={entry.wallet}>
                     <td>#{entry.rank}</td>
                     <td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td>
-                    <td>{entry.verifiedReferrals}</td>
+                    <td>{entry.points}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-        <div className="referral-table-footer"><ShieldCheck size={16} />Only verified referral records count toward rankings.</div>
+        <div className="referral-table-footer"><ShieldCheck size={16} />Only recorded proposals, verified on-chain participation, and qualified referrals count toward points.</div>
       </section>
 
       <section className="referral-rules-card">
