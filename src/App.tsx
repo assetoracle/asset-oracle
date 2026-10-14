@@ -10,7 +10,8 @@ import {
   Trophy,
   WalletCards,
 } from "lucide-react";
-import { useSignMessage } from "wagmi";
+import { useReadContracts, useSignMessage } from "wagmi";
+import { MARKET_STATUS, assetOracleMarketManagerAbi } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
   ASSET_CHAIN_TESTNET_ID,
@@ -51,16 +52,18 @@ import {
   categorySymbol,
   formatDate,
 } from "./utils/format";
-import type { MarketCategory } from "./types";
+import type { MarketCategory, MarketFilter } from "./types";
 import "./style.css";
 
-const categories: MarketCategory[] = [
+const categories: MarketFilter[] = [
   "All Markets",
+  "Live",
   "Crypto",
   "Sports",
   "Economics",
   "RWA",
   "Regional",
+  "Settled Markets",
 ];
 
 /**
@@ -138,7 +141,7 @@ export default function App() {
     null,
   );
   const [activeCategory, setActiveCategory] =
-    useState<MarketCategory>("All Markets");
+    useState<MarketFilter>("All Markets");
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
@@ -152,6 +155,27 @@ export default function App() {
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
+
+  // Read each published market's canonical status from its verified manager.
+  // These reads are public and refresh automatically, independent of wallet connection.
+  const onchainPublishedMarkets = publishedMarkets.filter(
+    (market) =>
+      market.onchainMarketId &&
+      market.onchainManagerAddress &&
+      market.onchainChainId === ASSET_CHAIN_TESTNET_ID,
+  );
+  const marketStatusReads = useReadContracts({
+    contracts: onchainPublishedMarkets.map((market) => ({
+      address: market.onchainManagerAddress as `0x${string}`,
+      abi: assetOracleMarketManagerAbi,
+      functionName: "getMarket" as const,
+      args: [BigInt(market.onchainMarketId!)] as const,
+    })),
+    query: {
+      enabled: onchainPublishedMarkets.length > 0,
+      refetchInterval: 15_000,
+    },
+  });
   const [marketsLoading, setMarketsLoading] = useState(true);
   const [marketsError, setMarketsError] = useState("");
 
@@ -362,10 +386,47 @@ useEffect(() => {
 
   const query = search.trim().toLowerCase();
 
-  const filteredMarkets = publishedMarkets
+  const marketLifecycle = new Map<string, { status: number; closeTime: number }>();
+  onchainPublishedMarkets.forEach((market, index) => {
+    const read = marketStatusReads.data?.[index];
+    if (read?.status !== "success" || !read.result) return;
+    const onchainMarket = read.result as unknown as {
+      status?: bigint;
+      closeTime?: bigint;
+      13?: bigint;
+      6?: bigint;
+    };
+    const statusValue = onchainMarket.status ?? onchainMarket[13];
+    const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[6];
+    if (statusValue === undefined) return;
+    marketLifecycle.set(market.id, {
+      status: Number(statusValue),
+      closeTime: closeTimeValue === undefined ? 0 : Number(closeTimeValue),
+    });
+  });
+
+  const settledMarkets = publishedMarkets.filter(
+    (market) => marketLifecycle.get(market.id)?.status === MARKET_STATUS.SETTLED,
+  );
+  const liveMarkets = publishedMarkets.filter((market) => {
+    const lifecycle = marketLifecycle.get(market.id);
+    return lifecycle?.status === MARKET_STATUS.OPEN &&
+      lifecycle.closeTime > Math.floor(Date.now() / 1000);
+  });
+  const activeMarkets = publishedMarkets.filter(
+    (market) => marketLifecycle.get(market.id)?.status !== MARKET_STATUS.SETTLED,
+  );
+  const sourceMarkets =
+    activeCategory === "Live" ? liveMarkets :
+    activeCategory === "Settled Markets" ? settledMarkets :
+    activeMarkets;
+
+  const filteredMarkets = sourceMarkets
     .filter((market) => {
       const matchesCategory =
         activeCategory === "All Markets" ||
+        activeCategory === "Live" ||
+        activeCategory === "Settled Markets" ||
         market.category === activeCategory;
 
       const matchesSearch =
@@ -389,7 +450,13 @@ useEffect(() => {
           <span className="market-symbol">{market.symbol}</span>
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
-            <span className="market-status">{market.status || "Published"}</span>
+            {marketLifecycle.get(market.id)?.status === MARKET_STATUS.SETTLED ? (
+              <span className="market-status market-status-settled">SETTLED</span>
+            ) : liveMarkets.some((item) => item.id === market.id) ? (
+              <span className="market-status market-status-live"><span className="live-indicator" aria-hidden="true" />LIVE</span>
+            ) : (
+              <span className="market-status">{market.status || "Published"}</span>
+            )}
           </div>
         </div>
         <h3>{market.question}</h3>
@@ -631,6 +698,8 @@ useEffect(() => {
           activeCategory={activeCategory}
           search={search}
           markets={filteredMarkets}
+          liveMarketIds={new Set(liveMarkets.map((market) => market.id))}
+          settledMarketIds={new Set(settledMarkets.map((market) => market.id))}
           marketsLoading={marketsLoading}
           marketsError={marketsError}
           proposalMessage={proposalMessage}
