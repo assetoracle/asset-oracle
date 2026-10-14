@@ -269,19 +269,14 @@ export async function getReferralLeaderboard() {
   }>("/api/referrals/leaderboard");
 }
 
-export async function attributeReferral(
-  address: string,
-  message: string,
-  signature: string,
-  referralCode: string,
-) {
+export async function attributeReferral(address: string, referralCode: string) {
   return request<{
     status: string;
     message: string;
     reviewFlagged?: boolean;
   }>("/api/referrals/attribute", {
     method: "POST",
-    body: JSON.stringify({ address, message, signature, referralCode }),
+    body: JSON.stringify({ address, referralCode }),
   });
 }
 
