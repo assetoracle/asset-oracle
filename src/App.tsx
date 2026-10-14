@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   Trophy,
   WalletCards,
+  CircleHelp,
+  X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
 import { MARKET_STATUS, assetOracleMarketManagerAbi } from "./contracts/assetOracle";
@@ -147,6 +149,7 @@ export default function App() {
     useState<MarketFilter>("All Markets");
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
   const [proposalMessage, setProposalMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
@@ -206,6 +209,15 @@ export default function App() {
 
   const { signMessageAsync } = useSignMessage();
   const isAdmin = useIsAdmin(address);
+
+  useEffect(() => {
+    if (!helpOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setHelpOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [helpOpen]);
 
   const addressRef = useRef<string | undefined>(address);
   addressRef.current = address;
@@ -875,6 +887,9 @@ useEffect(() => {
         </div>
 
         <span>Building on Asset Chain</span>
+        <button className="footer-legal-link footer-help-button" type="button" onClick={() => setHelpOpen(true)}>
+          <CircleHelp size={15} aria-hidden="true" /> Help
+        </button>
         <a className="footer-legal-link" href="#/terms">Terms of Service</a>
 
         <div className="footer-socials" aria-label="Official social channels">
@@ -922,6 +937,79 @@ useEffect(() => {
           </a>
         </div>
       </footer>
+
+      {helpOpen && (
+        <div className="help-overlay" role="presentation" onClick={() => setHelpOpen(false)}>
+          <section
+            className="help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="help-dialog-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="help-dialog-header">
+              <div className="help-dialog-heading">
+                <span className="help-dialog-icon"><CircleHelp size={22} aria-hidden="true" /></span>
+                <div>
+                  <p className="help-eyebrow">ASSET ORACLE GUIDE</p>
+                  <h2 id="help-dialog-title">How can we help?</h2>
+                </div>
+              </div>
+              <button className="help-close-button" type="button" onClick={() => setHelpOpen(false)} aria-label="Close help">
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="help-intro">A quick guide to exploring markets and using the platform safely.</p>
+
+            <div className="help-topics">
+              <article className="help-topic">
+                <span className="help-topic-number">01</span>
+                <div>
+                  <h3>Explore markets</h3>
+                  <p>Open <strong>Markets</strong> to browse published markets. Use search and category filters to find a topic. <strong>Live</strong> shows markets currently open, while <strong>Settled Markets</strong> shows markets whose on-chain status is settled.</p>
+                </div>
+              </article>
+              <article className="help-topic">
+                <span className="help-topic-number">02</span>
+                <div>
+                  <h3>Read the market details</h3>
+                  <p>Before taking any action, review the market question, closing time, resolution time, and resolution rules. Those rules explain what evidence determines the outcome.</p>
+                </div>
+              </article>
+              <article className="help-topic">
+                <span className="help-topic-number">03</span>
+                <div>
+                  <h3>Connect your wallet</h3>
+                  <p>Use a wallet you control and check every request before approving it. The app is configured for Asset Chain Testnet (Chain ID 42421). Never share your recovery phrase or private keys.</p>
+                </div>
+              </article>
+              <article className="help-topic">
+                <span className="help-topic-number">04</span>
+                <div>
+                  <h3>Proposals and your account</h3>
+                  <p>Use <strong>My Proposals</strong> to submit or review proposals, and <strong>Portfolio</strong>, <strong>Claims</strong>, and <strong>History</strong> to inspect the information those sections make available to your wallet. Available actions depend on the market state and enabled features.</p>
+                </div>
+              </article>
+              <article className="help-topic">
+                <span className="help-topic-number">05</span>
+                <div>
+                  <h3>Stay safe</h3>
+                  <p>Asset Oracle is a developing testnet platform. Market availability and features can change; do not assume a market action is enabled just because a market is visible. Testnet assets may have no real-world value. This platform is not financial advice.</p>
+                </div>
+              </article>
+            </div>
+
+            <div className="help-dialog-footer">
+              <span>Still need assistance?</span>
+              <div className="help-contact-links">
+                <a href="https://t.me/assetoracle" target="_blank" rel="noopener noreferrer">Telegram</a>
+                <a href="https://discord.gg/2HfFcsWEFq" target="_blank" rel="noopener noreferrer">Discord</a>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       <BottomNav
         items={navItems}
