@@ -576,44 +576,6 @@ useEffect(() => {
     );
   }
 
-  async function handleVerifyWalletRole() {
-    const requestedAddress = addressRef.current;
-
-    if (!requestedAddress) {
-      setRoleError("Connect your wallet first.");
-      return;
-    }
-
-    setRoleLoading(true);
-    setRoleError("");
-
-    try {
-      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
-      const result = await getWalletRole(requestedAddress);
-
-      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
-        return;
-      }
-
-      setWalletRole(result);
-    } catch (error) {
-      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
-        return;
-      }
-
-      setRoleError(
-        error instanceof Error
-          ? error.message
-          : "Unable to verify this wallet's role.",
-      );
-      setWalletRole(null);
-    } finally {
-      if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
-        setRoleLoading(false);
-      }
-    }
-  }
-
   async function handleLoadMyProposals() {
     const requestedAddress = addressRef.current;
 
@@ -627,14 +589,12 @@ useEffect(() => {
 
     try {
       await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
-      const role = await getWalletRole(requestedAddress);
       const result = await getMyProposals(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
       }
 
-      setWalletRole(role);
       setMyProposals(result.proposals);
       setMyProposalsLoaded(true);
     } catch (error) {
