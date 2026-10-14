@@ -4,7 +4,7 @@ import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
 import {
-  requestWalletNonce,
+  ensureWalletSession,
   type StoredMarketProposal,
 } from "../markets/marketApi";
 
@@ -29,10 +29,8 @@ export default function AdminDashboard({
   const authenticate = useCallback(async () => {
     if (!address) throw new Error("Connect your admin wallet first.");
 
-    const { message } = await requestWalletNonce(address);
-    const signature = await signMessage(message);
-
-    return { address, message, signature };
+    const session = await ensureWalletSession(address, signMessage);
+    return { address, token: session.token };
   }, [address, signMessage]);
 
   const loadProposals = useCallback(async () => {
@@ -45,11 +43,11 @@ export default function AdminDashboard({
     setError("");
 
     try {
-      const walletAuth = await authenticate();
-      const response = await fetch(`${API}/api/markets/admin/proposals/list`, {
+      const session = await authenticate();
+      const response = await fetch(`${API}/api/markets/admin/proposals/list/session`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(walletAuth),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+        body: JSON.stringify({ address }),
       });
 
       const data = await response.json();
@@ -87,13 +85,13 @@ export default function AdminDashboard({
     setNotice("");
 
     try {
-      const walletAuth = await authenticate();
+      const session = await authenticate();
       const response = await fetch(
-        `${API}/api/markets/admin/proposals/${encodeURIComponent(id)}/decision`,
+        `${API}/api/markets/admin/proposals/${encodeURIComponent(id)}/decision/session`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status, walletAuth }),
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+          body: JSON.stringify({ address, status }),
         },
       );
 

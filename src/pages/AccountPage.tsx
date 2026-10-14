@@ -1,107 +1,226 @@
+import { useState } from "react";
+import { CircleHelp, History, WalletCards, ExternalLink, RefreshCw } from "lucide-react";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import {
-  CircleHelp,
-  History,
-  WalletCards,
-} from "lucide-react";
+  ASSET_CHAIN_TESTNET_ID,
+  ASSET_CHAIN_TESTNET_EXPLORER,
+  assetOracleMarketManagerAbi,
+  assetOracleMarketManagerAddress,
+} from "../contracts/assetOracle";
+import type { WalletAccountData, WalletHistoryRecord, WalletPositionRecord } from "../markets/marketApi";
 
 type AccountPageProps = {
   page: "Claims" | "History";
   walletConnected: boolean;
+  address?: string;
+  accountData: WalletAccountData | null;
+  loading: boolean;
+  error: string;
   onConnect: () => void;
-  onExploreMarkets: () => void;
+  onRetry: () => Promise<void>;
 };
 
-const accountPageInfo = {
-  Claims: {
-    eyebrow: "YOUR REWARDS",
-    title: "Claims",
-    description:
-      "Track eligible winnings and refunds after verified market settlement.",
-    icon: WalletCards,
-    cards: [
-      ["Claimable rewards", "Awaiting settlement data"],
-      ["Completed claims", "Awaiting transaction history"],
-      ["Refunds", "Awaiting contract data"],
-    ],
-  },
-  History: {
-    eyebrow: "YOUR RECORDS",
-    title: "History",
-    description:
-      "Review predictions, outcomes, settlement events, and refunds.",
-    icon: History,
-    cards: [
-      ["Predictions", "No records loaded"],
-      ["Settlements", "No records loaded"],
-      ["Transactions", "No records loaded"],
-    ],
-  },
-} as const;
+const statusLabels: Record<number, string> = {
+  0: "Open",
+  1: "Closed",
+  2: "Disputed",
+  3: "Settled",
+  4: "Refundable",
+  5: "Cancelled",
+  6: "Arbitration",
+};
 
-export default function AccountPage({
+const outcomeLabels: Record<number, string> = {
+  0: "Pending",
+  1: "YES",
+  2: "NO",
+  3: "Invalid / refund",
+};
+
+function shortHash(hash: string) {
+  return `${hash.slice(0, 10)}…${hash.slice(-8)}`;
+}
+
+function formatTimestamp(value: string | null) {
+  if (!value) return "Not settled";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleString();
+}
+
+function AccountPage({
   page,
   walletConnected,
+  address,
+  accountData,
+  loading,
+  error,
   onConnect,
-  onExploreMarkets,
+  onRetry,
 }: AccountPageProps) {
-  const info = accountPageInfo[page];
-  const PageIcon = info.icon;
+  const { chainId } = useAccount();
+  const publicClient = usePublicClient();
+  const { writeContractAsync } = useWriteContract();
+  const [busyMarketId, setBusyMarketId] = useState<number | null>(null);
+  const [actionMessage, setActionMessage] = useState("");
+  const [actionError, setActionError] = useState("");
+
+  const isClaims = page === "Claims";
+  const history = accountData?.history ?? [];
+  const positions = accountData?.positions ?? [];
+  const claimable = accountData?.claimable ?? [];
+  const completedClaims = history.filter((item) => item.type === "Claimed" || item.type === "Refunded");
+  const summary = isClaims
+    ? [
+        ["Claimable markets", String(claimable.length)],
+        ["Completed claims / refunds", String(completedClaims.length)],
+        ["Zero-payout settlements to finalize", String(claimable.filter((item) => Number(item.claimableAmount) === 0).length)],
+      ]
+    : [
+        ["Predictions", String(positions.length)],
+        ["Settled positions", String(positions.filter((item) => item.status === 3).length)],
+        ["Indexed transactions", accountData?.historyStatus === "VERIFIED_ONCHAIN_EVENT_INDEX" ? String(history.length) : "Indexer unavailable"],
+      ];
+
+  async function handleClaim(position: WalletPositionRecord) {
+    if (!assetOracleMarketManagerAddress || !address || !publicClient) {
+      setActionError("Verified market manager or wallet connection is unavailable.");
+      return;
+    }
+    if (chainId !== ASSET_CHAIN_TESTNET_ID) {
+      setActionError("Switch your wallet to Asset Chain Enugu Testnet before claiming.");
+      return;
+    }
+    setBusyMarketId(position.marketId);
+    setActionError("");
+    setActionMessage("");
+    try {
+      const functionName = position.status === 3 ? "claim" : "refundCancelled";
+      const hash = await writeContractAsync({
+        address: assetOracleMarketManagerAddress,
+        abi: assetOracleMarketManagerAbi,
+        functionName,
+        args: [BigInt(position.marketId)],
+        chainId: ASSET_CHAIN_TESTNET_ID,
+      });
+      setActionMessage("Transaction submitted. Waiting for network confirmation…");
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") throw new Error("The claim transaction failed on-chain.");
+      setActionMessage("Claim/refund confirmed. Updating your account records…");
+      await onRetry();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Unable to submit claim.");
+    } finally {
+      setBusyMarketId(null);
+    }
+  }
+
+  function renderHistoryRow(item: WalletHistoryRecord) {
+    const label = item.type === "Staked" ? "Prediction placed"
+      : item.type === "Claimed" ? "Claim paid"
+      : item.type === "Refunded" ? "Refund paid"
+      : "Market settled";
+    return (
+      <article className="account-summary-card" key={item.transactionHash + item.type + item.marketId}>
+        <span>{label} · Market #{item.marketId}</span>
+        <strong>{item.amount ? `Amount: ${item.amount}` : item.outcome !== null ? outcomeLabels[item.outcome] ?? "Outcome recorded" : "On-chain event"}</strong>
+        <small>{formatTimestamp(item.timestamp)}</small>
+        <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${item.transactionHash}`} target="_blank" rel="noreferrer">
+          {shortHash(item.transactionHash)} <ExternalLink size={13} />
+        </a>
+      </article>
+    );
+  }
 
   return (
     <section className="page-section account-page">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">{info.eyebrow}</span>
-          <h1>{info.title}</h1>
-          <p>{info.description}</p>
+          <span className="eyebrow">{isClaims ? "YOUR REWARDS" : "YOUR RECORDS"}</span>
+          <h1>{page}</h1>
+          <p>{isClaims
+            ? "Review verified claimable payouts and submit claims or refunds through your wallet."
+            : "Review your on-chain predictions, settlement status, claims, refunds, and indexed transactions."}</p>
         </div>
-        <div className="account-page-icon">
-          <PageIcon size={25} />
-        </div>
+        <div className="account-page-icon">{isClaims ? <WalletCards size={25} /> : <History size={25} />}</div>
       </div>
 
-      <div className="account-summary-grid">
-        {info.cards.map(([label, value]) => (
-          <article className="account-summary-card" key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-          </article>
-        ))}
-      </div>
-
-      <div className="account-empty-state">
-        <div className="account-empty-icon">
+      {!walletConnected ? (
+        <div className="account-empty-state">
           <CircleHelp size={25} />
+          <h2>Connect your wallet</h2>
+          <p>Connect the wallet used to place predictions to load its verified account records.</p>
+          <button className="primary-button" type="button" onClick={onConnect}>Connect wallet</button>
         </div>
-        <h2>
-          {walletConnected
-            ? "No records available yet"
-            : "Connect your wallet"}
-        </h2>
-        <p>
-          {walletConnected
-            ? "Your wallet is connected, but verified account records are not yet available. This page will populate when the market contracts and account data services are integrated."
-            : "Connect your wallet to prepare for account features. Positions, balances, claims, and history will appear only when verified data is available."}
-        </p>
+      ) : (
+        <>
+          <div className="account-summary-grid">
+            {summary.map(([label, value]) => (
+              <article className="account-summary-card" key={label}><span>{label}</span><strong>{loading ? "Loading…" : value}</strong></article>
+            ))}
+          </div>
 
-        {!walletConnected && (
-          <button
-            className="primary-button"
-            type="button"
-            onClick={onConnect}
-          >
-            Connect wallet
-          </button>
-        )}
+          <div className="proposal-actions">
+            <button className="primary-button" type="button" onClick={onRetry} disabled={loading}>
+              <RefreshCw size={16} /> {loading ? "Refreshing…" : "Refresh account data"}
+            </button>
+          </div>
 
-        <button
-          className="text-action"
-          type="button"
-          onClick={onExploreMarkets}
-        >
-          Explore markets
-        </button>
-      </div>
+          {error && <div className="empty-state" role="alert"><h3>Account data unavailable</h3><p>{error}</p></div>}
+          {actionMessage && <p className="wallet-message" role="status">{actionMessage}</p>}
+          {actionError && <p className="wallet-message" role="alert">{actionError}</p>}
+
+          {isClaims ? (
+            <section className="account-record-section">
+              <h2>Available claims and refunds</h2>
+              {claimable.length === 0 && !loading ? (
+                <div className="empty-state"><h3>No claimable payouts found</h3><p>Claimable amounts appear after verified settlement or cancellation/refund status is available on-chain.</p></div>
+              ) : (
+                <div className="market-grid">
+                  {claimable.map((item) => (
+                    <article className="market-card" key={item.marketId}>
+                      <span className="market-category">Market #{item.marketId} · {statusLabels[item.status] ?? "Status unavailable"}</span>
+                      <h3>{item.question}</h3>
+                      <p className="market-description">Verified available amount: <strong>{item.claimableAmount}</strong></p>
+                      <div className="market-meta"><span>YES stake</span><span>{item.yesStake}</span></div>
+                      <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
+                      <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
+                      <button className="primary-button" type="button" disabled={busyMarketId !== null || !assetOracleMarketManagerAddress} onClick={() => void handleClaim(item)}>
+                        {busyMarketId === item.marketId ? "Confirming…" : item.status === 3 ? (item.claimableAmount === "0" ? "Finalize settlement" : "Claim payout") : "Claim refund"}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              )}
+              <h2>Completed claims and refunds</h2>
+              {completedClaims.length === 0 ? <p>No confirmed claim or refund transactions found in the indexed history.</p> : <div className="account-summary-grid">{completedClaims.map(renderHistoryRow)}</div>}
+            </section>
+          ) : (
+            <section className="account-record-section">
+              <h2>Your on-chain positions</h2>
+              {positions.length === 0 && !loading ? <div className="empty-state"><h3>No predictions found</h3><p>No positions were found for this wallet on the configured market manager.</p></div> : (
+                <div className="market-grid">
+                  {positions.map((item) => (
+                    <article className="market-card" key={item.marketId}>
+                      <span className="market-category">Market #{item.marketId} · {statusLabels[item.status] ?? "Status unavailable"}</span>
+                      <h3>{item.question}</h3>
+                      <div className="market-meta"><span>YES stake</span><span>{item.yesStake}</span></div>
+                      <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
+                      <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
+                      <div className="market-meta"><span>Claim status</span><span>{item.claimed ? "Claimed" : item.claimableAmount !== "0" ? "Claim available" : "Not claimable"}</span></div>
+                    </article>
+                  ))}
+                </div>
+              )}
+              <h2>Transaction history</h2>
+              {accountData?.historyStatus !== "VERIFIED_ONCHAIN_EVENT_INDEX" ? (
+                <div className="empty-state"><h3>Transaction index unavailable</h3><p>Your current positions are read directly from the verified chain, but a complete transaction timeline requires the backend event indexer to be enabled and caught up.</p></div>
+              ) : history.length === 0 ? <p>No indexed transactions found for this wallet.</p> : <div className="account-summary-grid">{history.map(renderHistoryRow)}</div>}
+            </section>
+          )}
+        </>
+      )}
     </section>
   );
 }
+
+export default AccountPage;

@@ -19,6 +19,7 @@ import {
   TESTNET_USDC_ADDRESS,
   TESTNET_USDC_DECIMALS,
 } from "../contracts/assetOracle";
+import { ensureWalletSession } from "../markets/marketApi";
 
 type Props = { marketId: bigint; managerAddress?: string | null; closeTime: number };
 
@@ -279,18 +280,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       setReferralPreparing(true);
       try {
         const base = "https://asset-oracle-backend.onrender.com";
-        const nonceResponse = await fetch(`${base}/api/markets/auth/nonce`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ address }),
-        });
-        const nonceData = await nonceResponse.json();
-        if (!nonceResponse.ok || typeof nonceData.message !== "string") throw new Error("Could not obtain referral verification nonce.");
-        const signature = await signMessageAsync({ message: nonceData.message });
+        const session = await ensureWalletSession(address, (message) => signMessageAsync({ message }));
         const attributionResponse = await fetch(`${base}/api/referrals/attribute`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ address, message: nonceData.message, signature, referralCode }),
+          headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${session.token}` },
+          body: JSON.stringify({ address, referralCode }),
         });
         const attributionData = await attributionResponse.json();
         if (!attributionResponse.ok) throw new Error(attributionData.error || "Referral attribution could not be confirmed.");
@@ -406,23 +400,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     void (async () => {
       try {
         const base = "https://asset-oracle-backend.onrender.com";
-        const nonceResponse = await fetch(`${base}/api/markets/auth/nonce`, {
+        const session = await ensureWalletSession(address, (message) => signMessageAsync({ message }));
+        const qualificationResponse = await fetch(`${base}/api/referrals/qualify/session`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ address }),
-        });
-        const nonceData = await nonceResponse.json();
-        if (!nonceResponse.ok || typeof nonceData.message !== "string") throw new Error("Could not obtain referral verification nonce.");
-        const signature = await signMessageAsync({ message: nonceData.message });
-        const qualificationResponse = await fetch(`${base}/api/referrals/qualify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({
-            address,
-            message: nonceData.message,
-            signature,
-            transactionHash: txHash,
-          }),
+          headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${session.token}` },
+          body: JSON.stringify({ address, transactionHash: txHash }),
         });
         const qualificationData = await qualificationResponse.json();
         if (!qualificationResponse.ok) throw new Error(qualificationData.error || "Referral qualification could not be verified.");

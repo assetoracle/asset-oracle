@@ -48,15 +48,19 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const activeSession = getStoredWalletSession();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(activeSession && activeSession.expiresAt > Date.now() ? { Authorization: `Bearer ${activeSession.token}` } : {}),
       ...options.headers,
     },
   });
 
   const data = await response.json().catch(() => null);
+
+  if (response.status === 401 && activeSession) clearWalletSession();
 
   if (!response.ok) {
     throw new Error(
@@ -68,6 +72,99 @@ async function request<T>(
   }
 
   return data as T;
+}
+
+
+export type WalletSession = {
+  address: string;
+  token: string;
+  expiresAt: number;
+  role: WalletRole;
+};
+
+const WALLET_SESSION_KEY = "asset-oracle-wallet-session";
+
+function getStoredWalletSession(): WalletSession | null {
+  try {
+    const raw = window.sessionStorage.getItem(WALLET_SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw) as WalletSession;
+    if (!session.token || !session.address || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) {
+      window.sessionStorage.removeItem(WALLET_SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+export function getWalletSession(address: string): WalletSession | null {
+  const session = getStoredWalletSession();
+  return session && session.address.toLowerCase() === address.toLowerCase() ? session : null;
+}
+
+export async function ensureWalletSession(
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+): Promise<WalletSession> {
+  const existing = getWalletSession(address);
+  if (existing) return existing;
+  const { message } = await requestWalletNonce(address);
+  const signature = await signMessage(message);
+  const created = await request<{ address: string; token: string; expiresAt: string; role: WalletRole }>("/api/markets/auth/session", {
+    method: "POST",
+    body: JSON.stringify({ address, message, signature }),
+  });
+  const session: WalletSession = {
+    address: created.address,
+    token: created.token,
+    expiresAt: new Date(created.expiresAt).getTime(),
+    role: created.role,
+  };
+  window.sessionStorage.setItem(WALLET_SESSION_KEY, JSON.stringify(session));
+  return session;
+}
+
+export function clearWalletSession(): void {
+  try { window.sessionStorage.removeItem(WALLET_SESSION_KEY); } catch { /* ignore unavailable storage */ }
+}
+
+
+export type WalletPositionRecord = {
+  marketId: number;
+  question: string;
+  yesStake: string;
+  noStake: string;
+  status: number;
+  outcome: number;
+  claimed: boolean;
+  timestamp: string | null;
+  tokenDecimals: number;
+  claimableAmount: string;
+};
+
+export type WalletHistoryRecord = {
+  type: "Staked" | "MarketFinalized" | "Claimed" | "Refunded";
+  transactionHash: string;
+  blockNumber: string;
+  timestamp: string;
+  marketId: string;
+  amount: string | null;
+  outcome: number | null;
+};
+
+export type WalletAccountData = {
+  address: string;
+  chainId: number;
+  positions: WalletPositionRecord[];
+  claimable: WalletPositionRecord[];
+  history: WalletHistoryRecord[];
+  historyStatus: string;
+};
+
+export async function getWalletAccountData(address: string) {
+  return request<WalletAccountData>("/api/stats/wallet/" + encodeURIComponent(address));
 }
 
 export async function validateMarketProposal(
@@ -101,22 +198,13 @@ export async function createMarketProposal(
   address: string,
   signMessage: (message: string) => Promise<string>,
 ) {
-  const { message } = await requestWalletNonce(address);
-  const signature = await signMessage(message);
-
+  await ensureWalletSession(address, signMessage);
   return request<{
     message: string;
     proposal: StoredMarketProposal;
-  }>("/api/markets/proposals", {
+  }>("/api/markets/proposals/session", {
     method: "POST",
-    body: JSON.stringify({
-      proposal,
-      walletAuth: {
-        address,
-        message,
-        signature,
-      },
-    }),
+    body: JSON.stringify({ proposal, address }),
   });
 }
 
@@ -135,21 +223,13 @@ export async function listPublishedMarkets() {
   }>("/api/markets/public");
 }
 
-export async function getMyProposals(
-  address: string,
-  message: string,
-  signature: string,
-) {
+export async function getMyProposals(address: string) {
   return request<{
     proposals: StoredMarketProposal[];
     count: number;
-  }>("/api/markets/proposals/mine", {
+  }>("/api/markets/proposals/mine/session", {
     method: "POST",
-    body: JSON.stringify({
-      address,
-      message,
-      signature,
-    }),
+    body: JSON.stringify({ address }),
   });
 }
 
@@ -166,15 +246,21 @@ export type WalletRoleResponse = {
   };
 };
 
-export async function getWalletRole(
-  address: string,
-  message: string,
-  signature: string,
-) {
-  return request<WalletRoleResponse>("/api/markets/auth/role", {
-    method: "POST",
-    body: JSON.stringify({ address, message, signature }),
-  });
+export async function getWalletRole(address: string) {
+  const session = getWalletSession(address);
+  if (session) {
+    return {
+      address,
+      role: session.role,
+      permissions: {
+        createMarketProposal: true,
+        viewOwnProposals: true,
+        reviewAllProposals: session.role === "OWNER",
+        approveOrRejectProposals: session.role === "OWNER",
+      },
+    } satisfies WalletRoleResponse;
+  }
+  throw new Error("Verify your wallet once to establish a secure session.");
 }
 
 
@@ -184,15 +270,26 @@ export type ReferralLeaderboardEntry = {
   verifiedReferrals: number;
 };
 
-export async function createReferralCode(
-  address: string,
-  message: string,
-  signature: string,
-) {
-  return request<{ code: string }>("/api/referrals/code", {
+export async function createReferralCode(address: string) {
+  return request<{ code: string }>("/api/referrals/code/session", {
     method: "POST",
-    body: JSON.stringify({ address, message, signature }),
+    body: JSON.stringify({ address }),
   });
+}
+
+export type PersonalReferralStats = {
+  address: string;
+  code: string | null;
+  verifiedReferrals: number;
+  pendingReferrals: number;
+  flaggedReferrals: number;
+  leaderboardRank: number | null;
+  rewardsEarned: number | null;
+  rewardsAvailable: boolean;
+};
+
+export async function getPersonalReferralStats(address: string) {
+  return request<PersonalReferralStats>("/api/referrals/me/session?address=" + encodeURIComponent(address));
 }
 
 export async function getReferralLeaderboard() {
@@ -202,19 +299,14 @@ export async function getReferralLeaderboard() {
   }>("/api/referrals/leaderboard");
 }
 
-export async function attributeReferral(
-  address: string,
-  message: string,
-  signature: string,
-  referralCode: string,
-) {
+export async function attributeReferral(address: string, referralCode: string) {
   return request<{
     status: string;
     message: string;
     reviewFlagged?: boolean;
   }>("/api/referrals/attribute", {
     method: "POST",
-    body: JSON.stringify({ address, message, signature, referralCode }),
+    body: JSON.stringify({ address, referralCode }),
   });
 }
 

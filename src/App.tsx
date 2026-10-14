@@ -40,15 +40,21 @@ import TermsOfServicePage from "./pages/TermsOfServicePage";
 import { useWalletStatus } from "./hooks/useWalletStatus";
 import {
   listPublishedMarkets,
-  requestWalletNonce,
+  ensureWalletSession,
+  clearWalletSession,
+  getWalletSession,
+  getWalletAccountData,
   getMyProposals,
   getWalletRole,
   createReferralCode,
+  getPersonalReferralStats,
   getReferralLeaderboard,
   attributeReferral,
   type ReferralLeaderboardEntry,
   type StoredMarketProposal,
   type WalletRoleResponse,
+  type WalletAccountData,
+  type PersonalReferralStats,
 } from "./markets/marketApi";
 import {
   categoryLabel,
@@ -158,6 +164,10 @@ export default function App() {
   const [referralLeaderboardLoading, setReferralLeaderboardLoading] = useState(false);
   const [referralLeaderboardError, setReferralLeaderboardError] = useState("");
   const [referralActionLoading, setReferralActionLoading] = useState(false);
+  const [personalReferralStats, setPersonalReferralStats] = useState<PersonalReferralStats | null>(null);
+  const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
+  const [accountDataLoading, setAccountDataLoading] = useState(false);
+  const [accountDataError, setAccountDataError] = useState("");
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
@@ -349,8 +359,15 @@ useEffect(() => {
   }, [marketsLoading, marketsError, publishedMarkets]);
 
   useEffect(() => {
+    if (!address || !getWalletSession(address)) clearWalletSession();
+  }, [address]);
+
+  useEffect(() => {
     setReferralMessage("");
     setReferralLink("");
+    setPersonalReferralStats(null);
+    setAccountData(null);
+    setAccountDataError("");
     setMyProposals([]);
     setMyProposalsLoaded(false);
     setMyProposalsError("");
@@ -378,6 +395,55 @@ useEffect(() => {
       });
     return () => { active = false; };
   }, [page]);
+
+
+  const loadWalletAccountData = useCallback(async () => {
+    const requestedAddress = addressRef.current;
+    if (!requestedAddress) {
+      setAccountData(null);
+      setAccountDataError("");
+      return;
+    }
+    setAccountDataLoading(true);
+    setAccountDataError("");
+    try {
+      const result = await getWalletAccountData(requestedAddress);
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setAccountData(result);
+    } catch (error) {
+      if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setAccountDataError(error instanceof Error ? error.message : "Unable to load wallet account data.");
+    } finally {
+      if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) setAccountDataLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (page !== "Claims" && page !== "History") return;
+    if (!address) {
+      setAccountData(null);
+      setAccountDataLoading(false);
+      setAccountDataError("");
+      return;
+    }
+    void loadWalletAccountData();
+  }, [page, address, loadWalletAccountData]);
+
+  useEffect(() => {
+    if (page !== "Referrals" || !address) return;
+    const session = getWalletSession(address);
+    if (!session) {
+      setPersonalReferralStats(null);
+      return;
+    }
+    let active = true;
+    void getPersonalReferralStats(address).then((stats) => {
+      if (active) setPersonalReferralStats(stats);
+    }).catch(() => {
+      if (active) setPersonalReferralStats(null);
+    });
+    return () => { active = false; };
+  }, [page, address]);
 
   const selectedMarket = selectedMarketId
     ? publishedMarkets.find((market) => market.id === selectedMarketId) ?? null
@@ -504,9 +570,8 @@ useEffect(() => {
     setRoleError("");
 
     try {
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-      const result = await getWalletRole(requestedAddress, message, signature);
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
+      const result = await getWalletRole(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
@@ -543,21 +608,15 @@ useEffect(() => {
     setMyProposalsError("");
 
     try {
-      // TODO: replace per-load signing with a short-lived backend session
-      // token when a session-creation endpoint is implemented.
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-
-      const result = await getMyProposals(
-        requestedAddress,
-        message,
-        signature,
-      );
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
+      const role = await getWalletRole(requestedAddress);
+      const result = await getMyProposals(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
       }
 
+      setWalletRole(role);
       setMyProposals(result.proposals);
       setMyProposalsLoaded(true);
     } catch (error) {
@@ -599,10 +658,11 @@ useEffect(() => {
     setReferralActionLoading(true);
     setReferralMessage("");
     try {
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-      const { code } = await createReferralCode(requestedAddress, message, signature);
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
+      const { code } = await createReferralCode(requestedAddress);
+      const stats = await getPersonalReferralStats(requestedAddress);
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
+      setPersonalReferralStats(stats);
       const url = new URL(window.location.href);
       url.searchParams.set("ref", code);
       url.hash = "/referrals";
@@ -637,9 +697,10 @@ useEffect(() => {
     setReferralActionLoading(true);
     setReferralMessage("");
     try {
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-      const result = await attributeReferral(requestedAddress, message, signature, referralCode);
+      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
+      const result = await attributeReferral(requestedAddress, referralCode);
+      const stats = await getPersonalReferralStats(requestedAddress);
+      setPersonalReferralStats(stats);
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
       setReferralMessage(result.message);
       const url = new URL(window.location.href);
@@ -771,6 +832,7 @@ useEffect(() => {
       return (
         <ReferralsPage
           address={address}
+          personalStats={personalReferralStats}
           message={referralMessage}
           referralLink={referralLink}
           referralCode={new URLSearchParams(window.location.search).get("ref") ?? ""}
@@ -818,8 +880,12 @@ useEffect(() => {
       <AccountPage
         page={page}
         walletConnected={Boolean(wallet)}
+        address={address}
+        accountData={accountData}
+        loading={accountDataLoading}
+        error={accountDataError}
+        onRetry={loadWalletAccountData}
         onConnect={() => void handleConnect()}
-        onExploreMarkets={() => navigateTo("Markets")}
       />
     );
   }

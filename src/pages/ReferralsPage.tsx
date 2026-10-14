@@ -17,6 +17,7 @@ type ReferralLeaderboardEntry = {
 
 type ReferralsPageProps = {
   address?: string;
+  personalStats: { verifiedReferrals: number; pendingReferrals: number; flaggedReferrals: number; leaderboardRank: number | null; rewardsEarned: number | null; rewardsAvailable: boolean } | null;
   message: string;
   referralLink: string;
   referralCode: string;
@@ -31,6 +32,7 @@ type ReferralsPageProps = {
 
 export default function ReferralsPage({
   address,
+  personalStats,
   message,
   referralLink,
   referralCode,
@@ -60,20 +62,20 @@ export default function ReferralsPage({
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Users size={19} /></span>
           <span>Your verified referrals</span>
-          <strong>{walletEntry ? walletEntry.verifiedReferrals : "—"}</strong>
-          <small>{walletEntry ? "Verified qualifying referrals" : "Count unavailable outside the public top 100"}</small>
+          <strong>{personalStats ? personalStats.verifiedReferrals : walletEntry ? walletEntry.verifiedReferrals : "Connect once to load"}</strong>
+          <small>{personalStats ? `${personalStats.pendingReferrals} pending · ${personalStats.flaggedReferrals} flagged` : "Generate your referral link to load private stats"}</small>
         </article>
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Medal size={19} /></span>
           <span>Your leaderboard rank</span>
-          <strong>{walletEntry ? `#${walletEntry.rank}` : "—"}</strong>
-          <small>{walletEntry ? "Current all-time rank" : "Rank shown when present in the public top 100"}</small>
+          <strong>{personalStats ? (personalStats.leaderboardRank ? `#${personalStats.leaderboardRank}` : "Not ranked yet") : walletEntry ? `#${walletEntry.rank}` : "Connect once to load"}</strong>
+          <small>{personalStats ? "Your all-time rank across all qualifying referrers" : "Generate your referral link to load private stats"}</small>
         </article>
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Gift size={19} /></span>
           <span>Rewards earned</span>
-          <strong>—</strong>
-          <small>Shown when reward rules are configured</small>
+          <strong>{personalStats?.rewardsAvailable && personalStats.rewardsEarned !== null ? personalStats.rewardsEarned : "Not configured"}</strong>
+          <small>Reward rules and records are not configured</small>
         </article>
       </div>
 

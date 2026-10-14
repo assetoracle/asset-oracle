@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Check, RefreshCw, ShieldAlert } from "lucide-react";
-import { requestWalletNonce } from "../markets/marketApi";
+import { ensureWalletSession } from "../markets/marketApi";
 
 const API = "https://asset-oracle-backend.onrender.com";
 
@@ -25,9 +25,8 @@ export default function ReferralReviewPanel({ address, signMessage }: Props) {
 
   const authenticate = useCallback(async () => {
     if (!address) throw new Error("Connect the configured owner wallet first.");
-    const { message } = await requestWalletNonce(address);
-    const signature = await signMessage(message);
-    return { address, message, signature };
+    const session = await ensureWalletSession(address, signMessage);
+    return { address, token: session.token };
   }, [address, signMessage]);
 
   const loadQueue = useCallback(async () => {
@@ -40,10 +39,10 @@ export default function ReferralReviewPanel({ address, signMessage }: Props) {
     setNotice("");
     try {
       const auth = await authenticate();
-      const response = await fetch(`${API}/api/referrals/review/queue`, {
+      const response = await fetch(`${API}/api/referrals/review/queue/session`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(auth),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${auth.token}` },
+        body: JSON.stringify({ address }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load flagged referrals.");
@@ -61,10 +60,10 @@ export default function ReferralReviewPanel({ address, signMessage }: Props) {
     setNotice("");
     try {
       const auth = await authenticate();
-      const response = await fetch(`${API}/api/referrals/review`, {
+      const response = await fetch(`${API}/api/referrals/review/session`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...auth, invitedWallet: item.invitedWallet, decision }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${auth.token}` },
+        body: JSON.stringify({ address, invitedWallet: item.invitedWallet, decision }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to update referral review.");
