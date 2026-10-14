@@ -874,18 +874,6 @@ useEffect(() => {
           <p>REAL-WORLD TRUTH, ON-CHAIN.</p>
         </div>
 
-        <button
-          className="footer-help"
-          type="button"
-          onClick={() =>
-            setWalletMessage(
-              "Asset Oracle is building transparent prediction markets and verifiable settlement infrastructure. Market participation is not yet enabled.",
-            )
-          }
-        >
-          Help
-        </button>
-
         <span>Building on Asset Chain</span>
         <a className="footer-legal-link" href="#/terms">Terms of Service</a>
 
