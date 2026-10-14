@@ -52,7 +52,7 @@ import {
   categorySymbol,
   formatDate,
 } from "./utils/format";
-import type { MarketCategory, MarketFilter } from "./types";
+import type { MarketFilter } from "./types";
 import "./style.css";
 
 const categories: MarketFilter[] = [
