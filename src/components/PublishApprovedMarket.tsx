@@ -86,6 +86,35 @@ type Props = {
   signMessage: (message: string) => Promise<string>;
 };
 
+const pendingPublicationKey = (proposalId: string) => `asset-oracle:pending-publication:${proposalId}`;
+
+function readPendingPublicationHash(proposalId: string): `0x${string}` | undefined {
+  try {
+    const value = window.localStorage.getItem(pendingPublicationKey(proposalId));
+    return value && /^0x[0-9a-fA-F]{64}$/.test(value)
+      ? value as `0x${string}`
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function storePendingPublicationHash(proposalId: string, hash: string): void {
+  try {
+    window.localStorage.setItem(pendingPublicationKey(proposalId), hash);
+  } catch {
+    // The publication flow still works if browser storage is unavailable.
+  }
+}
+
+function clearPendingPublicationHash(proposalId: string): void {
+  try {
+    window.localStorage.removeItem(pendingPublicationKey(proposalId));
+  } catch {
+    // Ignore storage restrictions; the backend remains the source of truth.
+  }
+}
+
 export default function PublishApprovedMarket({ proposal, signMessage }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
@@ -95,7 +124,9 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
   const [checkingContract, setCheckingContract] = useState(false);
   const [error, setError] = useState("");
   const [marketId, setMarketId] = useState<string | null>(proposal.onchainMarketId ?? null);
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(proposal.onchainTxHash as `0x${string}` | undefined);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(() =>
+    (proposal.onchainTxHash as `0x${string}` | undefined) ?? readPendingPublicationHash(proposal.id),
+  );
   const [publicationSaved, setPublicationSaved] = useState(Boolean(proposal.onchainTxHash));
   const [savingPublication, setSavingPublication] = useState(false);
   const [publishConfirmation, setPublishConfirmation] = useState(false);
@@ -162,6 +193,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     try {
       await recordMarketPublication(proposal.id, hash, resolvedMarketId, address, signMessage);
       setPublicationSaved(true);
+      clearPendingPublicationHash(proposal.id);
       setError("");
       // Keep the administrator in the current publishing workflow after a successful save.
     } catch (err) {
@@ -263,6 +295,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
           86400n,
         ],
       });
+      storePendingPublicationHash(proposal.id, hash);
       setTxHash(hash);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wallet rejected or failed to submit the transaction.");
@@ -272,6 +305,12 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
   return (
     <div className="resolution-preview" style={{ marginTop: 16 }}>
       <h4>On-chain publication</h4>
+      {!marketId && txHash && (
+        <>
+          <p><a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${txHash}`} target="_blank" rel="noreferrer">View transaction on explorer</a></p>
+          <p className="disabled-note">Transaction submitted. Recovering the receipt and publication status…</p>
+        </>
+      )}
       {marketId ? (
         <>
           <p role="status">Market created on-chain. Market ID: <strong>{marketId}</strong></p>
