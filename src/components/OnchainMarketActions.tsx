@@ -20,10 +20,10 @@ import {
   TESTNET_USDC_DECIMALS,
 } from "../contracts/assetOracle";
 
-type Props = { marketId: bigint; closeTime: number };
+type Props = { marketId: bigint; managerAddress?: string | null; closeTime: number };
 
 
-export default function OnchainMarketActions({ marketId, closeTime }: Props) {
+export default function OnchainMarketActions({ marketId, managerAddress, closeTime }: Props) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -39,7 +39,14 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
-  const manager = assetOracleMarketManagerAddress;
+  const manager = managerAddress && isAddress(managerAddress)
+    ? (managerAddress as Address)
+    : assetOracleMarketManagerAddress;
+  const isCurrentManager = Boolean(
+    manager && assetOracleMarketManagerAddress &&
+    manager.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase()
+  );
+  const isLegacyManager = Boolean(manager && !isCurrentManager);
 
   const managerCode = useMemo(() => manager, [manager]);
   useEffect(() => {
@@ -162,7 +169,7 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
   const claimed = position.data?.[2] ?? true;
   const hasPosition = positionYes > 0n || positionNo > 0n;
   const safe = Boolean(
-    manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
+    isCurrentManager && manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
     stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
     !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError &&
     balance.data !== undefined && allowance.data !== undefined
@@ -171,7 +178,9 @@ export default function OnchainMarketActions({ marketId, closeTime }: Props) {
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount > 0n &&
     balance.data !== undefined && parsedAmount <= balance.data;
-  const stakeDisabledReason = !isConnected
+  const stakeDisabledReason = isLegacyManager
+    ? "This market uses an earlier manager deployment. Your on-chain position is read-only here; trading and settlement actions are disabled to avoid sending transactions to the wrong contract."
+    : !isConnected
     ? "Connect your wallet to stake."
     : chainId !== ASSET_CHAIN_TESTNET_ID
       ? "Switch your wallet to Asset Chain Testnet (Chain ID 42421)."
