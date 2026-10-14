@@ -339,3 +339,92 @@ export async function recordMarketPublication(
     }),
   });
 }
+
+
+export type PaidSubmissionToken = "USDC" | "USDT" | "cNGN";
+
+export type PaidSubmissionQuote = {
+  quoteId: string;
+  network: "MAINNET";
+  token: PaidSubmissionToken;
+  tokenAddress: `0x${string}`;
+  tokenDecimals: number;
+  amountAtomic: string;
+  usdValue: "10.00";
+  issuedAtMs: number;
+  expiresAtMs: number;
+  rateSource: string;
+};
+
+export type PaidSubmissionIntent = {
+  message: string;
+  submissionId: string;
+  proposal: {
+    id: string;
+    question: string;
+    status: "PENDING_APPROVAL";
+    submittedAt: string;
+  };
+  payment: {
+    network: "MAINNET";
+    token: PaidSubmissionToken;
+    tokenAddress: `0x${string}`;
+    tokenDecimals: number;
+    amountAtomic: string;
+    treasuryAddress: `0x${string}`;
+    expiresAtMs: number;
+  };
+};
+
+async function createSignedWalletAuth(
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const { message } = await requestWalletNonce(address);
+  const signature = await signMessage(message);
+  return { address, message, signature };
+}
+
+/** Requests a server-issued $10-equivalent quote; this does not send a transaction. */
+export async function requestPaidSubmissionQuote(
+  token: PaidSubmissionToken,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const walletAuth = await createSignedWalletAuth(address, signMessage);
+  return request<PaidSubmissionQuote>("/api/markets/paid-submissions/quote", {
+    method: "POST",
+    body: JSON.stringify({ token, walletAuth }),
+  });
+}
+
+/** Creates a pending proposal/payment intent; this does not transfer tokens or publish a market. */
+export async function createPaidSubmissionIntent(
+  proposal: MarketProposalInput,
+  quoteId: string,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const walletAuth = await createSignedWalletAuth(address, signMessage);
+  return request<PaidSubmissionIntent>("/api/markets/paid-submissions/intent", {
+    method: "POST",
+    body: JSON.stringify({ proposal, quoteId, walletAuth }),
+  });
+}
+
+/** Verifies an existing transaction hash; this helper itself never sends a transaction. */
+export async function verifyPaidSubmissionPayment(
+  submissionId: string,
+  transactionHash: string,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const walletAuth = await createSignedWalletAuth(address, signMessage);
+  return request<{ status: string; message: string }>(
+    "/api/markets/paid-submissions/verify-payment",
+    {
+      method: "POST",
+      body: JSON.stringify({ submissionId, transactionHash, walletAuth }),
+    },
+  );
+}
