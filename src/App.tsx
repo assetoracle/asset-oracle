@@ -41,9 +41,11 @@ import { useWalletStatus } from "./hooks/useWalletStatus";
 import {
   listPublishedMarkets,
   requestWalletNonce,
+  ensureWalletSession,
   getMyProposals,
   getWalletRole,
   createReferralCode,
+  getPersonalReferralStats,
   getReferralLeaderboard,
   attributeReferral,
   type ReferralLeaderboardEntry,
@@ -504,9 +506,8 @@ useEffect(() => {
     setRoleError("");
 
     try {
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-      const result = await getWalletRole(requestedAddress, message, signature);
+      await ensureWalletSession(requestedAddress, signMessageAsync);
+      const result = await getWalletRole(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
@@ -543,16 +544,8 @@ useEffect(() => {
     setMyProposalsError("");
 
     try {
-      // TODO: replace per-load signing with a short-lived backend session
-      // token when a session-creation endpoint is implemented.
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-
-      const result = await getMyProposals(
-        requestedAddress,
-        message,
-        signature,
-      );
+      await ensureWalletSession(requestedAddress, signMessageAsync);
+      const result = await getMyProposals(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
         return;
@@ -599,9 +592,8 @@ useEffect(() => {
     setReferralActionLoading(true);
     setReferralMessage("");
     try {
-      const { message } = await requestWalletNonce(requestedAddress);
-      const signature = await signMessageAsync({ message });
-      const { code } = await createReferralCode(requestedAddress, message, signature);
+      await ensureWalletSession(requestedAddress, signMessageAsync);
+      const { code } = await createReferralCode(requestedAddress);
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
       const url = new URL(window.location.href);
       url.searchParams.set("ref", code);
