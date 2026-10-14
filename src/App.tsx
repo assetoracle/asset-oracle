@@ -376,6 +376,24 @@ useEffect(() => {
     setRoleLoading(false);
   }, [address]);
 
+  // Establish and cache the wallet session once after the wallet connects.
+  // Role checks and protected actions reuse this session until it expires or
+  // the active account changes.
+  useEffect(() => {
+    if (!address || networkState !== "correct") return;
+    let active = true;
+    setRoleLoading(true);
+    setRoleError("");
+    void ensureWalletSession(address, (message) => signMessageAsync({ message }))
+      .then(() => getWalletRole(address))
+      .then((role) => { if (active) setWalletRole(role); })
+      .catch((error) => {
+        if (active) setRoleError(error instanceof Error ? error.message : "Unable to verify wallet role.");
+      })
+      .finally(() => { if (active) setRoleLoading(false); });
+    return () => { active = false; };
+  }, [address, networkState, signMessageAsync]);
+
   useEffect(() => {
     if (page !== "Referrals") return;
     let active = true;
