@@ -14,7 +14,6 @@ import { useSignMessage } from "wagmi";
 import { isAddress } from "viem";
 import {
   ASSET_CHAIN_TESTNET_ID,
-  assetOracleMarketManagerAddress,
 } from "./contracts/assetOracle";
 
 import Header from "./components/Header";
