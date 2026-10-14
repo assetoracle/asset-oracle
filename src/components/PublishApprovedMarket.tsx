@@ -163,9 +163,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       await recordMarketPublication(proposal.id, hash, resolvedMarketId, address, signMessage);
       setPublicationSaved(true);
       setError("");
-      // Return home only after the backend confirms the verified publication record.
-      window.location.hash = "/";
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Keep the administrator in the current publishing workflow after a successful save.
     } catch (err) {
       setPublicationSaved(false);
       setError(err instanceof Error
