@@ -248,19 +248,13 @@ export type WalletRoleResponse = {
 
 export async function getWalletRole(address: string) {
   const session = getWalletSession(address);
-  if (session) {
-    return {
-      address,
-      role: session.role,
-      permissions: {
-        createMarketProposal: true,
-        viewOwnProposals: true,
-        reviewAllProposals: session.role === "OWNER",
-        approveOrRejectProposals: session.role === "OWNER",
-      },
-    } satisfies WalletRoleResponse;
+  if (!session) {
+    throw new Error("Verify your wallet once to establish a secure session.");
   }
-  throw new Error("Verify your wallet once to establish a secure session.");
+  return request<WalletRoleResponse>("/api/markets/auth/role/session", {
+    method: "POST",
+    body: JSON.stringify({ address }),
+  });
 }
 
 
