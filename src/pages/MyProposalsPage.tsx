@@ -12,7 +12,6 @@ type MyProposalsPageProps = {
   walletRole: WalletRoleResponse | null;
   roleLoading: boolean;
   roleError: string;
-  onVerifyRole: () => void;
 };
 
 export default function MyProposalsPage({
@@ -26,7 +25,6 @@ export default function MyProposalsPage({
   walletRole,
   roleLoading,
   roleError,
-  onVerifyRole,
 }: MyProposalsPageProps) {
   return (
     <section className="page-section account-page">
@@ -70,14 +68,6 @@ export default function MyProposalsPage({
           </div>
 
           <div className="proposal-actions">
-            <button
-              className="primary-button"
-              type="button"
-              onClick={onVerifyRole}
-              disabled={roleLoading}
-            >
-              {roleLoading ? "Verifying role..." : walletRole ? "Refresh wallet role" : "Verify wallet role"}
-            </button>
             <button
               className="primary-button"
               type="button"
