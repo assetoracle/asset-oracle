@@ -209,8 +209,9 @@ export async function recordMarketPublication(
   address: string,
   signMessage: (message: string) => Promise<string>,
 ) {
-  const { message } = await requestWalletNonce(address);
-  const signature = await signMessage(message);
+  // Reuse the session created during initial wallet/role verification.
+  // A new signature is requested only when no valid session exists.
+  await ensureWalletSession(address, signMessage);
   return request<{
     message: string;
     proposal: StoredMarketProposal;
@@ -221,12 +222,8 @@ export async function recordMarketPublication(
       chainId: number;
       explorerUrl: string;
     };
-  }>(`/api/markets/admin/proposals/${encodeURIComponent(proposalId)}/publish`, {
+  }>(`/api/markets/admin/proposals/${encodeURIComponent(proposalId)}/publish/session`, {
     method: "POST",
-    body: JSON.stringify({
-      txHash,
-      marketId,
-      walletAuth: { address, message, signature },
-    }),
+    body: JSON.stringify({ txHash, marketId, address }),
   });
 }
