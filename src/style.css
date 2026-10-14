@@ -5655,3 +5655,167 @@ select:focus {
     animation-duration: 0.01ms !important;
   }
 }
+
+
+/* Page-specific surface pass: account, referral, portfolio, help, terms, and market detail. */
+.page-content {
+  position: relative;
+  isolation: isolate;
+}
+
+.page-section,
+.simple-page,
+.market-detail-page,
+.referral-page,
+.account-page,
+.terms-page {
+  position: relative;
+}
+
+.page-section,
+.simple-page {
+  border-radius: 22px;
+}
+
+.page-hint {
+  border-color: rgba(18, 217, 245, 0.2);
+  background: linear-gradient(115deg, rgba(18, 217, 245, 0.07), rgba(0, 184, 169, 0.06));
+}
+
+.detail-info-card,
+.referral-stat-card,
+.account-summary-card,
+.referral-link-card,
+.referral-leaderboard-card,
+.referral-rules-card,
+.portfolio-wallet-card,
+.portfolio-token-card,
+.referral-promo,
+.referral-status-banner,
+.referral-rule,
+.terms-notice,
+.terms-section,
+.help-topic {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(99, 243, 255, 0.17);
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.075), transparent 55%),
+    linear-gradient(145deg, rgba(16, 47, 58, 0.96), rgba(8, 32, 42, 0.96));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.035), 0 10px 28px rgba(0, 0, 0, 0.1);
+}
+
+.referral-stat-card,
+.account-summary-card,
+.portfolio-token-card,
+.help-topic {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.referral-stat-card:hover,
+.account-summary-card:hover,
+.portfolio-token-card:hover,
+.help-topic:hover {
+  border-color: rgba(18, 217, 245, 0.36);
+  box-shadow: var(--glow-cyan);
+  transform: translateY(-2px);
+}
+
+.referral-promo {
+  border-color: rgba(0, 184, 169, 0.28);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(0, 184, 169, 0.17), transparent 58%),
+    linear-gradient(130deg, #123945, #0a2631);
+}
+
+.referral-stat-icon,
+.referral-promo-icon,
+.referral-heading-icon,
+.referral-link-icon,
+.account-page-icon,
+.simple-page-icon,
+.help-dialog-icon,
+.terms-hero-icon {
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.08), 0 6px 20px rgba(18, 217, 245, 0.07);
+}
+
+.referral-view-tabs,
+.referral-period-tabs {
+  border-color: rgba(99, 243, 255, 0.14);
+  background: rgba(7, 26, 36, 0.54);
+}
+
+.referral-table-wrap {
+  border: 1px solid rgba(99, 243, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(7, 26, 36, 0.42);
+  overflow-x: auto;
+}
+
+.referral-table th {
+  background: linear-gradient(100deg, rgba(18, 217, 245, 0.1), rgba(0, 184, 169, 0.07));
+}
+
+.referral-table tbody tr {
+  transition: background 150ms ease;
+}
+
+.referral-table tbody tr:hover {
+  background: rgba(18, 217, 245, 0.045);
+}
+
+.portfolio-network-banner {
+  border-color: rgba(0, 184, 169, 0.25);
+  background: linear-gradient(115deg, rgba(0, 184, 169, 0.1), rgba(18, 217, 245, 0.06));
+}
+
+.approval-modal,
+.help-dialog {
+  border: 1px solid rgba(99, 243, 255, 0.28);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.13), transparent 56%),
+    linear-gradient(145deg, #123945, #071a24);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(242, 252, 255, 0.06);
+}
+
+.approval-modal-backdrop,
+.help-overlay {
+  backdrop-filter: blur(12px);
+  background: rgba(2, 12, 18, 0.76);
+}
+
+.terms-hero {
+  border-color: rgba(99, 243, 255, 0.23);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.13), transparent 56%),
+    linear-gradient(135deg, #102f3a, #071a24);
+}
+
+.more-navigation-sheet {
+  border: 1px solid rgba(99, 243, 255, 0.22);
+  background: linear-gradient(145deg, #123945, #071a24);
+  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.38);
+}
+
+.nav-link,
+.bottom-nav-link {
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.nav-link:hover,
+.bottom-nav-link:hover {
+  background: linear-gradient(120deg, rgba(18, 217, 245, 0.08), rgba(0, 184, 169, 0.07));
+}
+
+@media (max-width: 600px) {
+  .referral-table-wrap {
+    border-radius: 12px;
+  }
+  .approval-modal,
+  .help-dialog {
+    max-height: min(88vh, 760px);
+    overflow-y: auto;
+  }
+}
