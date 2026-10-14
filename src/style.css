@@ -4807,3 +4807,40 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .globe-halo { animation: none !important; }
 }
+
+
+/* Live and settled market navigation */
+.category-button.live-category-button,
+.category-button.settled-category-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.live-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 0 0 #22C55E66;
+  animation: live-indicator-pulse 1.5s ease-out infinite;
+}
+.market-status-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4ADE80;
+}
+.market-status-settled {
+  color: #63F3FF;
+}
+@keyframes live-indicator-pulse {
+  0% { box-shadow: 0 0 0 0 #22C55E66; opacity: 1; }
+  70% { box-shadow: 0 0 0 5px #22C55E00; opacity: .72; }
+  100% { box-shadow: 0 0 0 0 #22C55E00; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-indicator { animation: none; }
+}
