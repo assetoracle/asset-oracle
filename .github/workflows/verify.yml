@@ -1,13 +1,10 @@
-name: Frontend Verify
+name: Frontend Feature Branch Verify
 
 on:
-  pull_request:
   push:
     branches:
-      - main
       - feat/dashboard-stats-referral-eligibility
       - feat/connect-referral-frontend
-      - feat/enugu-testnet-contract-integration
 
 jobs:
   verify:
