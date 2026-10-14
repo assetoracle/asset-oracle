@@ -40,7 +40,6 @@ import TermsOfServicePage from "./pages/TermsOfServicePage";
 import { useWalletStatus } from "./hooks/useWalletStatus";
 import {
   listPublishedMarkets,
-  requestWalletNonce,
   ensureWalletSession,
   clearWalletSession,
   getWalletSession,
