@@ -39,9 +39,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
-  const manager = managerAddress && isAddress(managerAddress)
-    ? (managerAddress as Address)
-    : assetOracleMarketManagerAddress;
+  const manager = managerAddress == null
+    ? assetOracleMarketManagerAddress
+    : isAddress(managerAddress)
+      ? (managerAddress as Address)
+      : undefined;
   const isCurrentManager = Boolean(
     manager && assetOracleMarketManagerAddress &&
     manager.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase()
