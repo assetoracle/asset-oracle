@@ -42,6 +42,7 @@ import {
   listPublishedMarkets,
   requestWalletNonce,
   ensureWalletSession,
+  clearWalletSession,
   getWalletSession,
   getWalletAccountData,
   getMyProposals,
@@ -357,6 +358,10 @@ useEffect(() => {
       setSelectedMarketId(null);
     }
   }, [marketsLoading, marketsError, publishedMarkets]);
+
+  useEffect(() => {
+    if (!address || !getWalletSession(address)) clearWalletSession();
+  }, [address]);
 
   useEffect(() => {
     setReferralMessage("");
