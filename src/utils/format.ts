@@ -21,7 +21,7 @@ export function formatDate(value: string): string {
 
 export function categoryLabel(category: string): string {
   const labels: Record<string, string> = {
-    Crypto: "CRYPTO",
+    Crypto: "DIGITAL ASSETS",
     Sports: "SPORTS",
     Economics: "ECONOMICS",
     RWA: "REAL-WORLD ASSETS",
@@ -33,7 +33,7 @@ export function categoryLabel(category: string): string {
 
 export function categorySymbol(category: string): string {
   const symbols: Record<string, string> = {
-    Crypto: "CR",
+    Crypto: "DA",
     Sports: "SP",
     Economics: "EC",
     RWA: "RW",
