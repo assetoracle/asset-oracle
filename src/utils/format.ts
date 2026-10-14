@@ -24,7 +24,7 @@ export function categoryLabel(category: string): string {
     Crypto: "DIGITAL ASSETS",
     Sports: "SPORTS",
     Economics: "ECONOMICS",
-    RWA: "REAL-WORLD ASSETS",
+    RWA: "RWA",
     Regional: "REGIONAL & GLOBAL",
   };
 
