@@ -60,8 +60,8 @@ const categories: MarketFilter[] = [
   "Live",
   "Digital Assets",
   "Sports",
-  "Economics",
   "RWA",
+  "Economics",
   "Regional",
   "Settled Markets",
 ];
