@@ -60,6 +60,8 @@ async function request<T>(
 
   const data = await response.json().catch(() => null);
 
+  if (response.status === 401 && activeSession) clearWalletSession();
+
   if (!response.ok) {
     throw new Error(
       compactErrorMessage(
