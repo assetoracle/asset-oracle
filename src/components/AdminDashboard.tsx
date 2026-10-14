@@ -5,7 +5,6 @@ import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
 import {
   ensureWalletSession,
-  getWalletSession,
   type StoredMarketProposal,
 } from "../markets/marketApi";
 
