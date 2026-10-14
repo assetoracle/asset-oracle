@@ -3,13 +3,15 @@ import {
   Search,
 } from "lucide-react";
 import type { DisplayMarket } from "./HomePage";
-import type { MarketCategory } from "../types";
+import type { MarketFilter } from "../types";
 
 type MarketsPageProps = {
-  categories: MarketCategory[];
-  activeCategory: MarketCategory;
+  categories: MarketFilter[];
+  activeCategory: MarketFilter;
   search: string;
   markets: DisplayMarket[];
+  liveMarketIds: Set<string>;
+  settledMarketIds: Set<string>;
   marketsLoading: boolean;
   marketsError: string;
   proposalMessage: string;
@@ -28,6 +30,8 @@ export default function MarketsPage({
   activeCategory,
   search,
   markets,
+  liveMarketIds,
+  settledMarketIds,
   marketsLoading,
   marketsError,
   proposalMessage,
@@ -46,7 +50,13 @@ export default function MarketsPage({
           <span className="market-symbol">#{categoryIndex + 1}</span>
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
-            <span className="market-status">{market.status || "Published"}</span>
+            {settledMarketIds.has(market.id) ? (
+              <span className="market-status market-status-settled">SETTLED</span>
+            ) : liveMarketIds.has(market.id) ? (
+              <span className="market-status market-status-live"><span className="live-indicator" aria-hidden="true" />LIVE</span>
+            ) : (
+              <span className="market-status">{market.status || "Published"}</span>
+            )}
           </div>
         </div>
         <h3>{market.question}</h3>
@@ -92,9 +102,17 @@ export default function MarketsPage({
 
       <div className="category-list" aria-label="Market categories">
         {categories.map((category) => (
-          <button className={activeCategory === category ? "category-button active" : "category-button"}
+          <button className={[
+            "category-button",
+            activeCategory === category ? "active" : "",
+            category === "Live" ? "live-category-button" : "",
+            category === "Settled Markets" ? "settled-category-button" : "",
+          ].filter(Boolean).join(" ")}
             key={category} type="button" onClick={() => onCategoryChange(category)}
-            aria-pressed={activeCategory === category}>{category}</button>
+            aria-pressed={activeCategory === category}>
+            {category === "Live" && <span className="live-indicator" aria-hidden="true" />}
+            {category}
+          </button>
         ))}
       </div>
 
@@ -106,7 +124,7 @@ export default function MarketsPage({
           <button className="primary-button" type="button" onClick={onRetryMarkets}>Try again</button>
         </div>
       ) : markets.length === 0 ? (
-        <div className="empty-state"><h3>No published markets in this category</h3><p>Markets appear here after publication and are filtered by the selected category.</p></div>
+        <div className="empty-state"><h3>{activeCategory === "Live" ? "No live markets right now" : activeCategory === "Settled Markets" ? "No settled markets yet" : "No published markets in this category"}</h3><p>{activeCategory === "Live" ? "Markets appear here only while on-chain status is open and the participation deadline has not passed." : activeCategory === "Settled Markets" ? "Markets move here after their on-chain settlement status is confirmed." : "Markets appear here after publication and are filtered by the selected category."}</p></div>
       ) : (
         <div className="market-grid">{markets.map((market, index) => renderMarketCard(market, index))}</div>
       )}
