@@ -129,7 +129,13 @@ export default function MyProposalsPage({
             </div>
           )}
 
-          <div className="market-grid">
+          {loading ? (
+            <div className="empty-state proposal-state" role="status">
+              <h3>Verifying wallet and loading proposals</h3>
+              <p>Please wait while we verify your wallet and retrieve your submissions.</p>
+            </div>
+          ) : error ? null : loaded && proposals.length === 0 ? null : (
+          <div className="market-grid my-proposal-grid">
             {proposals.map((proposal) => (
               <article className="market-card" key={proposal.id}>
                 <div className="market-card-top">
@@ -168,6 +174,7 @@ export default function MyProposalsPage({
               </article>
             ))}
           </div>
+          )}
         </>
       )}
     </section>
