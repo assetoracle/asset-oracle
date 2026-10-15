@@ -147,6 +147,7 @@ export type WalletPositionRecord = {
 
 export type WalletHistoryRecord = {
   type: "Staked" | "MarketFinalized" | "Claimed" | "Refunded";
+  managerAddress?: string;
   transactionHash: string;
   blockNumber: string;
   timestamp: string;
