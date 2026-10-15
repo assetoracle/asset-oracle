@@ -123,19 +123,6 @@ export default function ValidatorDashboard() {
     setNotice("Market closed on-chain. Confirm the follow-up vote transaction in your wallet.");
   }, [receipt.isSuccess, actionType, pendingVote, txHash, manager, reset, writeContract]);
 
-  function closeExpiredMarket(market: ChainMarket) {
-    if (chainId !== ASSET_CHAIN_TESTNET_ID || market.status !== MARKET_STATUS.OPEN || market.closeTime > BigInt(Math.floor(Date.now() / 1000))) return;
-    setNotice("");
-    setActionType("close");
-    reset();
-    writeContract({
-      address: manager,
-      abi: assetOracleMarketManagerAbi,
-      functionName: "closeMarket",
-      args: [market.id],
-    });
-  }
-
   function submitVote(market: ChainMarket) {
     if (!address || !authorizedValidator || chainId !== ASSET_CHAIN_TESTNET_ID) return;
     const evidence = market.evidenceSource.trim();
