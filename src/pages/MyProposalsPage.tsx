@@ -53,7 +53,11 @@ export default function MyProposalsPage({
           <div className="account-summary-grid">
             <article className="account-summary-card">
               <span>Wallet role</span>
-              <strong>{walletRole ? walletRole.role.replace(/_/g, " ") : "Not verified"}</strong>
+              <strong>{walletRole
+                ? walletRole.humanValidator
+                  ? (walletRole.isOwner ? "OWNER · HUMAN VALIDATOR 1" : `HUMAN VALIDATOR ${walletRole.validatorNumber}`)
+                  : walletRole.role.replace(/_/g, " ")
+                : "Not verified"}</strong>
             </article>
             <article className="account-summary-card">
               <span>Proposal review</span>
@@ -78,11 +82,13 @@ export default function MyProposalsPage({
 
           {walletRole && (
             <p className="wallet-message" role="status">
-              {walletRole.role === "OWNER"
-                ? "Owner permissions: review, approve, and reject proposals."
-                : walletRole.role === "MARKET_CREATOR"
-                  ? "Market creator permissions: submit proposals and track your own submissions. Approval and rejection remain owner-only."
-                  : "Standard wallet: submit proposals and track your own submissions. Approval and rejection remain owner-only."}
+              {walletRole.humanValidator
+                ? `Human validator ${walletRole.validatorNumber} recognized. Manual market resolution is enabled only when the deployed contract confirms this validator and the required two matching votes are reached.`
+                : walletRole.isOwner
+                  ? "Owner permissions: review, approve, and reject proposals."
+                  : walletRole.role === "MARKET_CREATOR"
+                    ? "Market creator permissions: submit proposals and track your own submissions. Approval and rejection remain owner-only."
+                    : "Standard wallet: submit proposals and track your own submissions. Approval and rejection remain owner-only."}
             </p>
           )}
 
