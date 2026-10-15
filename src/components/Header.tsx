@@ -57,6 +57,34 @@ export default function Header({
         />
 
         <div className="header-actions">
+          <a
+            className="pumpflow-link"
+            href="https://www.pumpflow.meme/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open PumpFlow"
+            title="PumpFlow"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 36,
+              height: 36,
+              flexShrink: 0,
+              marginRight: 8,
+              borderRadius: 9,
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src="https://www.google.com/s2/favicons?domain=pumpflow.meme&sz=128"
+              alt="PumpFlow"
+              width={32}
+              height={32}
+              style={{ display: "block", objectFit: "contain" }}
+            />
+          </a>
+
           {wallet ? (
             <div className="wallet-header-actions">
               <button
