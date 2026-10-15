@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowUpRight,
   Search,
@@ -44,6 +45,16 @@ export default function MarketsPage({
   onRetryMarkets,
   onOpenMarket,
 }: MarketsPageProps) {
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const selectedSubjectCategory =
+    categories.includes(activeCategory) &&
+    !["All Markets", "Live", "Settled Markets"].includes(activeCategory)
+      ? activeCategory
+      : "All Markets";
+  const subjectCategories = categories.filter(
+    (category) => !["All Markets", "Live", "Settled Markets"].includes(category),
+  );
+
   function renderMarketCard(market: DisplayMarket, categoryIndex: number) {
     return (
       <article className="market-card market-card-compact" key={market.id}>
@@ -120,22 +131,51 @@ export default function MarketsPage({
         <div className="market-category-filter">
           <label htmlFor="market-category-select">Category</label>
           <div className="market-category-select-wrap">
-            <select
+            <button
               id="market-category-select"
-              className="market-category-select"
-              value={categories.includes(activeCategory) && !["All Markets", "Live", "Settled Markets"].includes(activeCategory) ? activeCategory : "All Markets"}
-              onChange={(event) => onCategoryChange(event.target.value as MarketFilter)}
+              className="market-category-select market-category-select-trigger"
+              type="button"
               aria-label="Filter markets by category"
+              aria-haspopup="listbox"
+              aria-expanded={categoryDropdownOpen}
+              onClick={() => setCategoryDropdownOpen((open) => !open)}
             >
-              <option value="All Markets">All categories</option>
-              {categories.filter((category) => !["All Markets", "Live", "Settled Markets"].includes(category)).map((category) => (
-                <option key={category} value={category}>{category === "RWA" ? "Real-World Assets (RWA)" : category}</option>
-              ))}
-            </select>
-            <span className="market-category-select-value" aria-hidden="true">
-              <span>{categories.includes(activeCategory) && !["All Markets", "Live", "Settled Markets"].includes(activeCategory) ? (activeCategory === "RWA" ? "Real-World Assets (RWA)" : activeCategory) : "All categories"}</span>
+              <span>{selectedSubjectCategory === "All Markets" ? "All categories" : selectedSubjectCategory === "RWA" ? "Real-World Assets (RWA)" : selectedSubjectCategory}</span>
               <span className="market-category-select-icon"><ChevronDown size={17} /></span>
-            </span>
+            </button>
+            {categoryDropdownOpen && (
+              <>
+                <button
+                  className="market-category-dropdown-backdrop"
+                  type="button"
+                  aria-label="Close category menu"
+                  onClick={() => setCategoryDropdownOpen(false)}
+                />
+                <div className="market-category-dropdown" role="listbox" aria-label="Market categories">
+                  <button
+                    className={["market-category-option", selectedSubjectCategory === "All Markets" ? "active" : ""].filter(Boolean).join(" ")}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedSubjectCategory === "All Markets"}
+                    onClick={() => { onCategoryChange("All Markets"); setCategoryDropdownOpen(false); }}
+                  >
+                    All categories
+                  </button>
+                  {subjectCategories.map((category) => (
+                    <button
+                      className={["market-category-option", selectedSubjectCategory === category ? "active" : ""].filter(Boolean).join(" ")}
+                      key={category}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedSubjectCategory === category}
+                      onClick={() => { onCategoryChange(category); setCategoryDropdownOpen(false); }}
+                    >
+                      {category === "RWA" ? "Real-World Assets (RWA)" : category}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
