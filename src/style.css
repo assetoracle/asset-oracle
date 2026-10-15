@@ -8168,3 +8168,48 @@ select.brand-select option,
   color: var(--highlight);
 }
 .validator-outcome-select { margin: 8px 0 14px; }
+
+
+/* Settled market outcome cards and dedicated verification page */
+.settled-outcome-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 4px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(115deg, rgba(18, 217, 245, .08), rgba(0, 184, 169, .07));
+}
+.settled-outcome-preview span,
+.verification-detail-label { color: var(--muted); font-size: 12px; }
+.settled-outcome-preview strong { font-size: 19px; letter-spacing: .5px; }
+.outcome-yes { color: #16a34a !important; }
+.outcome-no { color: #dc2626 !important; }
+.verify-market-button { gap: 8px; }
+.verification-details-page { max-width: 1040px; margin: 0 auto; }
+.verification-details-heading { margin: 24px 0 28px; }
+.verification-details-heading h1 { margin: 10px 0 8px; font-size: clamp(26px, 4vw, 38px); line-height: 1.18; }
+.verification-details-heading p { color: var(--muted); font-size: 13px; }
+.verification-section { margin-top: 22px; padding: clamp(18px, 3vw, 26px); border: 1px solid var(--border); border-radius: 18px; background: var(--secondary); }
+.verification-section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.verification-section-title h2 { margin: 2px 0 0; font-size: 20px; }
+.verification-section-icon { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 12px; background: rgba(18, 217, 245, .08); color: var(--accent); }
+.verification-outcome-panel { display: flex; flex-direction: column; gap: 8px; padding: 22px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface, #fff); }
+.verification-outcome-panel > span { color: var(--muted); font-size: 13px; }
+.verification-outcome-panel > strong { font-size: clamp(42px, 8vw, 64px); line-height: 1; }
+.verification-outcome-panel p { margin: 0; color: var(--muted); font-size: 13px; }
+.verification-detail-grid, .verification-position-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.verification-detail-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface, #fff); overflow-wrap: anywhere; }
+.verification-detail-card > strong { font-size: 14px; }
+.verification-detail-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.verification-detail-card a { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-size: 12px; text-decoration: underline; }
+.verification-hash { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.verification-empty-position { padding: 18px; border: 1px dashed var(--border); border-radius: 12px; }
+.verification-empty-position p { margin: 0; color: var(--muted); font-size: 13px; }
+.verification-disclaimer { margin: 18px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+@media (max-width: 560px) {
+  .verification-detail-grid, .verification-position-grid { grid-template-columns: 1fr; }
+  .verification-details-heading h1 { font-size: 27px; }
+}

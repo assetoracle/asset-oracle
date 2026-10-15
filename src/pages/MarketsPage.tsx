@@ -3,6 +3,7 @@ import {
   ArrowUpRight,
   Search,
   ChevronDown,
+  ShieldCheck,
 } from "lucide-react";
 import type { DisplayMarket } from "./HomePage";
 import type { MarketFilter } from "../types";
@@ -14,6 +15,8 @@ type MarketsPageProps = {
   markets: DisplayMarket[];
   liveMarketIds: Set<string>;
   settledMarketIds: Set<string>;
+  marketOutcomes: Map<string, number>;
+  onVerify: (market: DisplayMarket) => void;
   marketsLoading: boolean;
   marketsError: string;
   proposalMessage: string;
@@ -34,6 +37,8 @@ export default function MarketsPage({
   markets,
   liveMarketIds,
   settledMarketIds,
+  marketOutcomes,
+  onVerify,
   marketsLoading,
   marketsError,
   proposalMessage,
@@ -72,19 +77,28 @@ export default function MarketsPage({
           </div>
         </div>
         <h3>{market.question}</h3>
+        {settledMarketIds.has(market.id) && (() => {
+          const outcome = marketOutcomes.get(market.id);
+          const label = outcome === 1 ? "YES" : outcome === 2 ? "NO" : outcome === 3 ? "INVALID" : "Outcome pending";
+          return <div className="settled-outcome-preview"><span>Final outcome</span><strong className={label === "YES" ? "outcome-yes" : label === "NO" ? "outcome-no" : ""}>{label}</strong></div>;
+        })()}
         <div className="market-card-bottom">
-          <span className="market-status-note">Closes {market.closesAt || "date unavailable"}</span>
-          <button
-            className="primary-button open-market-button"
-            type="button"
-            onClick={() => onOpenMarket(market)}
-            disabled={!liveMarketIds.has(market.id)}
-            aria-disabled={!liveMarketIds.has(market.id)}
-            title={!liveMarketIds.has(market.id) ? "This market is closed to participation." : "Open live market"}
-          >
-            {liveMarketIds.has(market.id) ? "Open Market" : "Market Closed"}
-            {liveMarketIds.has(market.id) && <ArrowUpRight size={15} />}
-          </button>
+          <span className="market-status-note">{settledMarketIds.has(market.id) ? "Resolution confirmed on-chain" : `Closes ${market.closesAt || "date unavailable"}`}</span>
+          {settledMarketIds.has(market.id) ? (
+            <button className="primary-button open-market-button verify-market-button" type="button" onClick={() => onVerify(market)}><ShieldCheck size={15} /> Verify</button>
+          ) : (
+            <button
+              className="primary-button open-market-button"
+              type="button"
+              onClick={() => onOpenMarket(market)}
+              disabled={!liveMarketIds.has(market.id)}
+              aria-disabled={!liveMarketIds.has(market.id)}
+              title={!liveMarketIds.has(market.id) ? "This market is closed to participation." : "Open live market"}
+            >
+              {liveMarketIds.has(market.id) ? "Open Market" : "Market Closed"}
+              {liveMarketIds.has(market.id) && <ArrowUpRight size={15} />}
+            </button>
+          )}
         </div>
       </article>
     );
