@@ -284,9 +284,9 @@ export default function App() {
     if (isAdmin) {
       items.push({ label: "Admin", icon: ShieldCheck });
     }
-    // Keep Validators discoverable in the top navigation on mobile.
-    // The dashboard itself still enforces on-chain validator authorization.
-    items.push({ label: "Validators", icon: ShieldCheck });
+    if (canAccessValidatorDashboard) {
+      items.push({ label: "Validators", icon: ShieldCheck });
+    }
 
     return items;
   }, [isAdmin, canAccessValidatorDashboard]);
