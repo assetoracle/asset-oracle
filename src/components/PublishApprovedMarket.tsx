@@ -292,22 +292,38 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
         </>
       ) : (
         <>
-          <p className="disabled-note">
+          <p className="disabled-note" role="status">
             {checkingContract ? "Checking the configured testnet contract…" :
-              !manager ? "Unavailable: no verified market-manager address is configured." :
-              chainId !== ASSET_CHAIN_TESTNET_ID ? "Switch to Asset Chain Enugu testnet to publish." :
-              !contractVerified ? "Blocked: contract bytecode has not been verified." :
-              !stablecoinReady ? "Blocked: testnet stablecoin is not enabled on the manager." :
-              validatorRoster.data !== true ? "Blocked: this manager does not expose a configured validator roster; it may be an outdated deployment." :
+              !address || !isConnected ? "Connect the wallet authorized to publish markets." :
+              chainId !== ASSET_CHAIN_TESTNET_ID ? "Switch your wallet to Asset Chain Enugu testnet (Chain ID 42421)." :
+              !manager ? "Unavailable: no market-manager address is configured." :
+              !contractVerified ? "Blocked: contract bytecode has not been verified on this network." :
+              tokenConfig.isLoading ? "Checking the manager's approved USDC configuration…" :
+              tokenConfig.isError ? "Unable to read the manager's USDC configuration. Check the network/RPC and retry." :
+              !stablecoinReady ? "Blocked: testnet USDC is not enabled on the configured manager." :
+              validatorRoster.isLoading ? "Checking validator configuration…" :
+              validatorRoster.isError ? "Unable to read validator configuration from the manager." :
+              validatorRoster.data !== true ? "Blocked: the configured manager does not report a configured validator roster." :
+              marketCreatorRole.isLoading ? "Checking this wallet's market-creator permission…" :
+              marketCreatorRole.isError ? "Unable to verify this wallet's market-creator permission." :
               marketCreatorRole.data !== true ? "Blocked: connected wallet lacks the on-chain market-creator role." :
-              "This submits a separate on-chain transaction. Approval alone does not publish a market."}
+              proposal.status !== "APPROVED" ? "Only owner-approved proposals can be published." :
+              !Number.isFinite(closeTimestamp) || closeTimestamp <= Math.floor(Date.now() / 1000) ? "The proposal closing time has passed; it cannot be published as-is." :
+              "Ready to publish to the configured Asset Chain testnet market manager. Approval alone does not publish a market."}
           </p>
+          {txHash && (
+            <p role="status">
+              A transaction is already associated with this proposal:{" "}
+              <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${txHash}`} target="_blank" rel="noreferrer">check its status on the explorer</a>.
+              Do not submit another transaction until its result is verified.
+            </p>
+          )}
           {receipt.isLoading && <p role="status">Waiting for blockchain confirmation…</p>}
-          {receipt.isError && <p role="alert">The transaction receipt failed. Check the explorer before retrying.</p>}
+          {receipt.isError && <p role="alert">The saved transaction receipt could not be loaded. Check the explorer link above before retrying.</p>}
           <button
             className="primary-button"
             type="button"
-            disabled={!address || !isConnected || chainId !== ASSET_CHAIN_TESTNET_ID || !manager || !contractVerified || !stablecoinReady || validatorRoster.data !== true || marketCreatorRole.data !== true || checkingContract || isPending || receipt.isLoading || Boolean(txHash)}
+            disabled={isPending || receipt.isLoading || Boolean(txHash) || Boolean(marketId) || publishInFlight.current}
             onClick={() => void publish()}
           >
             {isPending ? "Confirm in wallet…" : receipt.isLoading ? "Confirming on-chain…" : "Publish on testnet"}
