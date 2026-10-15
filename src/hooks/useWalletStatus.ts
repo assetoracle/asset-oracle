@@ -1,3 +1,4 @@
+import { friendlyError } from "../utils/friendlyError";
 import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
