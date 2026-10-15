@@ -607,7 +607,14 @@ useEffect(() => {
     setMyProposalsError("");
 
     try {
-      await ensureWalletSession(requestedAddress, (message) => signMessageAsync({ message }));
+      // My Proposals must never initiate a wallet signature. The one-time
+      // verification session is established by the wallet-connected effect.
+      // If the user reaches this page before that completes, ask them to wait
+      // or retry rather than prompting for a second signature here.
+      const session = getWalletSession(requestedAddress);
+      if (!session) {
+        throw new Error("Wallet verification is not ready yet. Complete the one-time verification requested after connecting your wallet, then try again.");
+      }
       const result = await getMyProposals(requestedAddress);
 
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
