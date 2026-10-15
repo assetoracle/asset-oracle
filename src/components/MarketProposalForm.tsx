@@ -199,7 +199,7 @@ export function MarketProposalForm({
               ASSET ORACLE
             </p>
             <h2 id="proposal-title" style={{ margin: 0, fontSize: 26 }}>
-              Propose a market
+              {initialProposal ? "Edit and resubmit proposal" : "Propose a market"}
             </h2>
             <p style={{ color: "#8DA9B3", lineHeight: 1.7 }}>
               Create a clear market question and explain exactly what must happen for each outcome.
