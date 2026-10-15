@@ -132,7 +132,7 @@ export function clearWalletSession(): void {
 
 
 export type WalletPositionRecord = {
-  managerAddress: string;
+  managerAddress?: string;
   marketId: number;
   question: string;
   yesStake: string;
