@@ -7707,3 +7707,40 @@ svg {
   .market-category-filter { min-width: 0; }
   .market-category-select-value { min-height: 50px; }
 }
+
+
+/* Desktop header layout: keep every navigation destination on one row below the brand/actions row. */
+@media (min-width: 651px) {
+  .header {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    row-gap: 14px;
+  }
+
+  .header > .brand {
+    order: 1;
+  }
+
+  .header > .header-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .header > .desktop-navigation {
+    order: 3;
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+    justify-content: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding: 2px 0 4px;
+    scrollbar-width: thin;
+  }
+
+  .header > .desktop-navigation .nav-link {
+    flex: 0 0 auto;
+  }
+}
