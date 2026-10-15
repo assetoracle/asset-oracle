@@ -191,6 +191,7 @@ function AccountPage({
     return (
       <article className="account-summary-card" key={item.transactionHash + item.type + item.marketId}>
         <span>{label} · Market #{item.marketId}</span>
+        {item.managerAddress && <small>Manager: {item.managerAddress.slice(0, 8)}…{item.managerAddress.slice(-6)}</small>}
         <strong>{item.amount ? `Amount: ${item.amount}` : item.outcome !== null ? outcomeLabels[item.outcome] ?? "Outcome recorded" : "On-chain event"}</strong>
         <small>{formatTimestamp(item.timestamp)}</small>
         <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${item.transactionHash}`} target="_blank" rel="noreferrer">
