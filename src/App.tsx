@@ -28,6 +28,7 @@ import {
 import MarketDetailPage from "./components/MarketDetailPage";
 import { MarketProposalForm } from "./components/MarketProposalForm";
 import AdminDashboard from "./components/AdminDashboard";
+import ValidatorDashboard from "./components/ValidatorDashboard";
 import Portfolio from "./components/Portfolio";
 import HomePage, {
   type DisplayMarket,
@@ -87,12 +88,24 @@ const categories: MarketFilter[] = [
  * Configure VITE_ADMIN_WALLET_ADDRESSES as a comma-separated list of
  * designated public wallet addresses in the frontend deployment settings.
  */
+const VALIDATOR_WALLET_ADDRESSES = (
+  import.meta.env.VITE_VALIDATOR_WALLET_ADDRESSES ?? ""
+)
+  .split(",")
+  .map((value: string) => value.trim().toLowerCase())
+  .filter(Boolean);
+
 const ADMIN_WALLET_ADDRESSES = (
   import.meta.env.VITE_ADMIN_WALLET_ADDRESSES ?? ""
 )
   .split(",")
   .map((value: string) => value.trim().toLowerCase())
   .filter(Boolean);
+
+function useIsValidatorWallet(address: string | undefined): boolean {
+  if (!address) return false;
+  return VALIDATOR_WALLET_ADDRESSES.includes(address.toLowerCase());
+}
 
 function useIsAdmin(address: string | undefined): boolean {
   if (!address) return false;
@@ -113,6 +126,7 @@ function pathForPage(page: Page, marketId?: string): string {
     History: "/history",
     Referrals: "/referrals",
     Admin: "/admin",
+    Validators: "/validators",
     "Terms of Service": "/terms",
   };
 
@@ -142,6 +156,7 @@ function parseHash(): {
     history: "History",
     referrals: "Referrals",
     admin: "Admin",
+    validators: "Validators",
     terms: "Terms of Service",
   };
 
@@ -225,6 +240,8 @@ export default function App() {
 
   const { signMessageAsync } = useSignMessage();
   const isAdmin = useIsAdmin(address);
+  const isDesignatedValidatorWallet = useIsValidatorWallet(address);
+  const canAccessValidatorDashboard = isDesignatedValidatorWallet && onchainValidatorStatus === true;
 
   const validatorStatusReads = useReadContracts({
     contracts: address && assetOracleMarketManagerAddress ? [
@@ -280,9 +297,12 @@ export default function App() {
     if (isAdmin) {
       items.push({ label: "Admin", icon: ShieldCheck });
     }
+    if (canAccessValidatorDashboard) {
+      items.push({ label: "Validators", icon: ShieldCheck });
+    }
 
     return items;
-  }, [isAdmin]);
+  }, [isAdmin, canAccessValidatorDashboard]);
 
   const isMountedRef = useRef(false);
 
@@ -923,6 +943,18 @@ useEffect(() => {
 
     if (page === "Terms of Service") {
       return <TermsOfServicePage onBack={() => navigateTo("Home")} />;
+    }
+
+    if (page === "Validators") {
+      if (!canAccessValidatorDashboard) {
+        return (
+          <div className="empty-state">
+            <h3>Validator access unavailable</h3>
+            <p>This dashboard is restricted to designated validator wallets that are authorized by the on-chain manager.</p>
+          </div>
+        );
+      }
+      return <ValidatorDashboard />;
     }
 
     if (page === "Admin") {
