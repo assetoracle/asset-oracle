@@ -6361,3 +6361,1149 @@ select:focus {
     transform: none;
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   ASSET ORACLE — unified platform visual refresh
+   Presentation-only overrides. Preserve existing page logic and interactions.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --ao-bg: #071A24;
+  --ao-surface-1: #0B2A35;
+  --ao-surface-2: #102F3A;
+  --ao-surface-3: #123945;
+  --ao-accent: #12D9F5;
+  --ao-teal: #00B8A9;
+  --ao-glow: #63F3FF;
+  --ao-text: #F2FCFF;
+  --ao-muted: #8DA9B3;
+  --ao-border: rgba(99, 243, 255, 0.17);
+  --ao-border-strong: rgba(18, 217, 245, 0.38);
+  --ao-shadow-card: 0 12px 36px rgba(0, 0, 0, 0.16);
+  --ao-shadow-hover: 0 18px 44px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(18, 217, 245, 0.09);
+  --ao-radius-sm: 12px;
+  --ao-radius-md: 18px;
+  --ao-radius-lg: 24px;
+  --ao-ease: cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+html {
+  color-scheme: dark;
+  scroll-padding-top: 24px;
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 8% 7%, rgba(18, 217, 245, 0.075), transparent 32%),
+    radial-gradient(ellipse at 95% 24%, rgba(0, 184, 169, 0.065), transparent 35%),
+    linear-gradient(180deg, #071A24 0%, #081D27 48%, #071A24 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.24;
+  background-image: radial-gradient(rgba(99, 243, 255, 0.19) 0.65px, transparent 0.65px);
+  background-size: 30px 30px;
+  mask-image: linear-gradient(to bottom, black, transparent 75%);
+}
+
+.app {
+  width: min(1320px, 100%);
+  padding: clamp(14px, 2.2vw, 30px);
+}
+
+/* Shared depth, borders and focus states */
+.page-content {
+  min-width: 0;
+  min-height: 48vh;
+  animation: ao-page-enter 360ms var(--ao-ease) both;
+}
+
+@keyframes ao-page-enter {
+  from { opacity: 0.7; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-section {
+  min-width: 0;
+  margin-top: 24px;
+}
+
+.page-section > .section-heading {
+  margin-bottom: 26px;
+}
+
+.page-section .eyebrow,
+.dashboard-overview .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 1.9px;
+}
+
+.section-heading h1,
+.section-heading h2,
+.section-heading h3,
+.page-section > h1,
+.page-section > h2 {
+  text-wrap: balance;
+}
+
+.section-heading p,
+.page-hint,
+.market-disclaimer {
+  max-width: 760px;
+  line-height: 1.8;
+}
+
+.text-action {
+  border-color: var(--ao-border-strong);
+  border-radius: 999px;
+  color: var(--ao-glow);
+  transition: background 180ms var(--ao-ease), border-color 180ms var(--ao-ease), transform 180ms var(--ao-ease);
+}
+
+.text-action:hover {
+  background: rgba(18, 217, 245, 0.09);
+  border-color: rgba(99, 243, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+/* Header and navigation */
+.header {
+  position: relative;
+  z-index: 20;
+  padding: 13px 15px 17px;
+  border: 1px solid rgba(99, 243, 255, 0.12);
+  border-radius: 20px;
+  background: linear-gradient(110deg, rgba(11, 42, 53, 0.88), rgba(7, 26, 36, 0.76));
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(242, 252, 255, 0.035);
+  backdrop-filter: blur(18px);
+}
+
+.brand-logo {
+  filter: drop-shadow(0 0 10px rgba(18, 217, 245, 0.15));
+}
+
+.desktop-navigation {
+  min-width: 0;
+  gap: 3px;
+}
+
+.nav-link {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #A9C1C9;
+  font-weight: 650;
+  transition: color 180ms var(--ao-ease), background 180ms var(--ao-ease), border-color 180ms var(--ao-ease);
+}
+
+.nav-link:hover {
+  border-color: rgba(99, 243, 255, 0.12);
+  background: rgba(18, 217, 245, 0.055);
+  color: var(--ao-text);
+}
+
+.nav-link.active,
+.nav-link[aria-current="page"] {
+  border-color: rgba(18, 217, 245, 0.2);
+  background: linear-gradient(135deg, rgba(18, 217, 245, 0.13), rgba(0, 184, 169, 0.07));
+  color: var(--ao-glow);
+}
+
+.header-actions {
+  gap: 9px;
+}
+
+.connect-button,
+.disconnect-button {
+  border-radius: 12px;
+  font-weight: 800;
+  transition: transform 180ms var(--ao-ease), box-shadow 180ms var(--ao-ease), background 180ms var(--ao-ease);
+}
+
+.connect-button {
+  border-color: rgba(99, 243, 255, 0.65);
+  background: linear-gradient(110deg, var(--ao-accent), var(--ao-teal));
+  color: #04171F;
+  box-shadow: 0 5px 20px rgba(18, 217, 245, 0.13);
+}
+
+.connect-button:hover {
+  background: linear-gradient(110deg, #63F3FF, #18D8C1);
+  box-shadow: 0 8px 24px rgba(18, 217, 245, 0.22);
+  transform: translateY(-1px);
+}
+
+.disconnect-button {
+  border: 1px solid rgba(255, 130, 130, 0.24);
+  background: rgba(255, 100, 100, 0.055);
+  color: #FFB4B4;
+}
+
+.disconnect-button:hover {
+  background: rgba(255, 100, 100, 0.12);
+}
+
+.mobile-menu-button {
+  border: 1px solid var(--ao-border);
+  border-radius: 11px;
+  background: linear-gradient(145deg, #102F3A, #0B2A35);
+  color: var(--ao-glow);
+}
+
+.mobile-navigation,
+.more-navigation-sheet {
+  border: 1px solid var(--ao-border-strong);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(16, 47, 58, 0.98), rgba(7, 26, 36, 0.98));
+  box-shadow: var(--ao-shadow-hover);
+  backdrop-filter: blur(20px);
+}
+
+/* Buttons: clear hierarchy, consistent states */
+.primary-button {
+  border: 1px solid rgba(99, 243, 255, 0.4);
+  border-radius: 12px;
+  background: linear-gradient(110deg, #12D9F5 0%, #00B8A9 100%);
+  box-shadow: 0 7px 22px rgba(18, 217, 245, 0.11), inset 0 1px 0 rgba(242, 252, 255, 0.25);
+  color: #04171F;
+  font-weight: 850;
+  transition: transform 180ms var(--ao-ease), box-shadow 180ms var(--ao-ease), filter 180ms var(--ao-ease);
+}
+
+.primary-button:hover:not(:disabled) {
+  box-shadow: 0 10px 28px rgba(18, 217, 245, 0.2), inset 0 1px 0 rgba(242, 252, 255, 0.32);
+  filter: saturate(1.08);
+  transform: translateY(-2px);
+}
+
+.primary-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.primary-button:disabled,
+.connect-button:disabled,
+.disconnect-button:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.55);
+  opacity: 0.58;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ao-glow);
+  outline-offset: 3px;
+}
+
+/* Unified card language */
+.principle,
+.market-card,
+.detail-info-card,
+.dashboard-stat-card,
+.account-summary-card,
+.referral-stat-card,
+.referral-link-card,
+.referral-leaderboard-card,
+.referral-rules-card,
+.portfolio-wallet-card,
+.portfolio-token-card,
+.account-card,
+.portfolio-card,
+.proposal-card,
+.admin-card,
+.market-detail-card,
+.terms-card,
+.page-panel,
+.source-panel,
+.bitcoin-price-card,
+.referral-promo,
+.terms-notice,
+.terms-section,
+.account-record-section {
+  position: relative;
+  min-width: 0;
+  border-color: var(--ao-border);
+  border-radius: var(--ao-radius-md);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.055), transparent 54%),
+    linear-gradient(145deg, rgba(16, 47, 58, 0.96), rgba(9, 35, 45, 0.97));
+  box-shadow: var(--ao-shadow-card), inset 0 1px 0 rgba(242, 252, 255, 0.025);
+}
+
+.market-card,
+.principle,
+.detail-info-card,
+.dashboard-stat-card,
+.account-summary-card,
+.referral-stat-card,
+.portfolio-token-card,
+.portfolio-wallet-card,
+.referral-link-card,
+.referral-leaderboard-card,
+.referral-rules-card,
+.page-panel,
+.terms-section {
+  transition: transform 200ms var(--ao-ease), border-color 200ms var(--ao-ease), box-shadow 200ms var(--ao-ease);
+}
+
+.market-card:hover,
+.principle:hover,
+.detail-info-card:hover,
+.dashboard-stat-card:hover,
+.account-summary-card:hover,
+.referral-stat-card:hover,
+.portfolio-token-card:hover {
+  border-color: rgba(99, 243, 255, 0.33);
+  box-shadow: var(--ao-shadow-hover), inset 0 1px 0 rgba(242, 252, 255, 0.035);
+}
+
+.market-card:hover,
+.principle:hover {
+  transform: translateY(-3px);
+}
+
+.market-symbol,
+.dashboard-stat-icon,
+.referral-stat-icon,
+.referral-heading-icon,
+.account-page-icon,
+.simple-page-icon,
+.portfolio-token-icon,
+.portfolio-token-heading > span,
+.verification-icon,
+.terms-hero-icon,
+.help-dialog-icon {
+  border-color: rgba(18, 217, 245, 0.25);
+  background: linear-gradient(145deg, rgba(18, 217, 245, 0.16), rgba(0, 184, 169, 0.09));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.06);
+  color: var(--ao-glow);
+}
+
+.dashboard-stat-card {
+  overflow: hidden;
+  padding: 19px;
+}
+
+.dashboard-stat-card::after,
+.referral-stat-card::after {
+  position: absolute;
+  right: -34px;
+  bottom: -48px;
+  width: 100px;
+  height: 100px;
+  border: 1px solid rgba(18, 217, 245, 0.09);
+  border-radius: 50%;
+  box-shadow: 0 0 0 14px rgba(18, 217, 245, 0.025), 0 0 0 29px rgba(18, 217, 245, 0.018);
+  content: "";
+  pointer-events: none;
+}
+
+.dashboard-stat-label,
+.referral-stat-card p,
+.account-summary-card p {
+  color: var(--ao-muted);
+}
+
+.dashboard-stats-note {
+  color: #9CB7C0;
+}
+
+/* Home page: hero, globe, stats and feature cards */
+.hero {
+  border-color: rgba(99, 243, 255, 0.24);
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse at 90% 10%, rgba(18, 217, 245, 0.16), transparent 42%),
+    radial-gradient(ellipse at 10% 100%, rgba(0, 184, 169, 0.09), transparent 42%),
+    linear-gradient(135deg, #0B2A35 0%, #0A2531 54%, #071A24 100%);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.19), inset 0 1px 0 rgba(242, 252, 255, 0.04);
+}
+
+.hero::after {
+  border-color: rgba(18, 217, 245, 0.12);
+  box-shadow: 0 0 0 32px rgba(18, 217, 245, 0.025), 0 0 0 64px rgba(18, 217, 245, 0.018);
+}
+
+.hero h1 {
+  text-wrap: balance;
+}
+
+.hero-globe {
+  filter: drop-shadow(0 14px 40px rgba(18, 217, 245, 0.13));
+}
+
+.globe-halo {
+  border-color: rgba(18, 217, 245, 0.16);
+}
+
+.globe-node {
+  border-color: rgba(99, 243, 255, 0.3);
+  background: linear-gradient(145deg, rgba(16, 47, 58, 0.95), rgba(7, 26, 36, 0.93));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22), 0 0 18px rgba(18, 217, 245, 0.07);
+}
+
+.referral-promo {
+  overflow: hidden;
+  border-color: rgba(0, 184, 169, 0.25);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(0, 184, 169, 0.12), transparent 50%),
+    linear-gradient(130deg, #0B2A35, #102F3A);
+}
+
+.verification-banner {
+  border-color: rgba(99, 243, 255, 0.19);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(0, 184, 169, 0.13), transparent 55%),
+    linear-gradient(135deg, #0B2A35, #081F2A);
+}
+
+/* Markets and market detail */
+.markets-section {
+  min-width: 0;
+}
+
+.search-box {
+  border-color: var(--ao-border);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(11, 42, 53, 0.98), rgba(16, 47, 58, 0.9));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.025);
+}
+
+.search-box:focus-within {
+  border-color: rgba(99, 243, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(18, 217, 245, 0.075);
+}
+
+.category-button {
+  border-color: rgba(99, 243, 255, 0.15);
+  background: rgba(11, 42, 53, 0.48);
+  transition: transform 160ms var(--ao-ease), background 160ms var(--ao-ease), color 160ms var(--ao-ease), border-color 160ms var(--ao-ease);
+}
+
+.category-button:hover {
+  border-color: rgba(99, 243, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.category-button.active {
+  border-color: rgba(99, 243, 255, 0.48);
+  background: linear-gradient(110deg, rgba(18, 217, 245, 0.17), rgba(0, 184, 169, 0.12));
+  box-shadow: inset 0 1px 0 rgba(242, 252, 255, 0.035);
+}
+
+.market-grid {
+  align-items: stretch;
+  gap: 18px;
+}
+
+.market-card {
+  overflow: hidden;
+}
+
+.market-card h3 {
+  text-wrap: pretty;
+}
+
+.market-card-top {
+  min-width: 0;
+}
+
+.market-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.market-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid rgba(99, 243, 255, 0.15);
+  border-radius: 999px;
+  background: rgba(18, 217, 245, 0.06);
+  color: var(--ao-glow);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.market-status-live {
+  border-color: rgba(0, 184, 169, 0.28);
+  background: rgba(0, 184, 169, 0.09);
+  color: #72F2D9;
+}
+
+.market-status-settled {
+  border-color: rgba(99, 243, 255, 0.22);
+  background: rgba(18, 217, 245, 0.07);
+  color: #A4F7FF;
+}
+
+.live-indicator {
+  box-shadow: 0 0 0 3px rgba(0, 184, 169, 0.1), 0 0 12px rgba(0, 184, 169, 0.3);
+}
+
+.market-meta {
+  gap: 10px 16px;
+}
+
+.market-meta span {
+  overflow-wrap: anywhere;
+}
+
+.open-market-button {
+  white-space: nowrap;
+}
+
+.market-detail-heading {
+  gap: 22px;
+  align-items: flex-start;
+}
+
+.market-detail-page {
+  min-width: 0;
+}
+
+.market-detail-description {
+  max-width: 820px;
+  line-height: 1.85;
+}
+
+.market-detail-grid {
+  gap: 16px;
+}
+
+.detail-info-card {
+  padding: clamp(16px, 2.3vw, 24px);
+}
+
+.resolution-preview,
+.outcome-preview,
+.settlement-section,
+.settlement-network-note,
+.disabled-note {
+  border-color: var(--ao-border);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(16, 47, 58, 0.94), rgba(9, 35, 45, 0.96));
+}
+
+.settlement-rule {
+  border-color: rgba(99, 243, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(18, 217, 245, 0.035);
+}
+
+.settlement-timeline {
+  gap: 14px;
+}
+
+.timeline-item {
+  border-color: rgba(99, 243, 255, 0.14);
+}
+
+.timeline-marker {
+  box-shadow: 0 0 0 5px rgba(18, 217, 245, 0.07);
+}
+
+/* Account, Portfolio, Claims, History and My Proposals */
+.account-page,
+.account-record-section {
+  min-width: 0;
+}
+
+.account-summary-grid {
+  align-items: stretch;
+  gap: 14px;
+}
+
+.account-summary-card {
+  overflow: hidden;
+  padding: 21px;
+}
+
+.account-summary-card > * {
+  min-width: 0;
+}
+
+.account-empty-state,
+.empty-state {
+  border-color: var(--ao-border);
+  border-radius: var(--ao-radius-lg);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(18, 217, 245, 0.07), transparent 55%),
+    linear-gradient(145deg, rgba(16, 47, 58, 0.92), rgba(7, 26, 36, 0.96));
+  box-shadow: var(--ao-shadow-card);
+}
+
+.account-empty-state {
+  padding: clamp(28px, 5vw, 52px) 22px;
+}
+
+.account-record-section {
+  margin-top: 20px;
+  padding: clamp(16px, 2.6vw, 26px);
+  border: 1px solid var(--ao-border);
+}
+
+.proposal-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wallet-message,
+.portfolio-error,
+.portfolio-token-error {
+  padding: 12px 15px;
+  border: 1px solid rgba(18, 217, 245, 0.17);
+  border-radius: 12px;
+  background: rgba(18, 217, 245, 0.055);
+  line-height: 1.65;
+}
+
+.portfolio-network-banner {
+  border-color: rgba(99, 243, 255, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(110deg, rgba(18, 217, 245, 0.08), rgba(0, 184, 169, 0.045));
+}
+
+.portfolio-wallet-card {
+  padding: clamp(18px, 2.8vw, 28px);
+}
+
+.portfolio-token-list {
+  gap: 12px;
+}
+
+.portfolio-token-card {
+  padding: 17px;
+}
+
+.portfolio-token-balance {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio-refresh-button,
+.price-refresh-button,
+.referral-copy-button {
+  border-radius: 10px;
+  transition: background 160ms var(--ao-ease), border-color 160ms var(--ao-ease), transform 160ms var(--ao-ease);
+}
+
+.portfolio-refresh-button:hover,
+.price-refresh-button:hover,
+.referral-copy-button:hover {
+  border-color: rgba(99, 243, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Referrals, rankings and data tables */
+.referral-page {
+  min-width: 0;
+}
+
+.referral-overview-grid {
+  align-items: stretch;
+  gap: 14px;
+}
+
+.referral-stat-card {
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.referral-link-card,
+.referral-leaderboard-card,
+.referral-rules-card {
+  padding: clamp(18px, 2.6vw, 26px);
+}
+
+.referral-link-field {
+  min-width: 0;
+  border-color: var(--ao-border);
+  border-radius: 12px;
+  background: rgba(7, 26, 36, 0.65);
+}
+
+.referral-link-field input,
+.referral-link-field code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.referral-period-tabs,
+.referral-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.referral-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(99, 243, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(7, 26, 36, 0.3);
+  scrollbar-color: #1D6675 #071A24;
+}
+
+.referral-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.referral-table th {
+  background: rgba(18, 217, 245, 0.055);
+  color: #B7D2DA;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.referral-table th,
+.referral-table td {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(99, 243, 255, 0.09);
+}
+
+.referral-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.referral-table tbody tr:hover {
+  background: rgba(18, 217, 245, 0.035);
+}
+
+.leaderboard-search {
+  border: 1px solid var(--ao-border);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(11, 42, 53, 0.95), rgba(16, 47, 58, 0.85));
+}
+
+/* Admin: separate operational groups without changing admin behavior */
+.admin-dashboard {
+  min-width: 0;
+}
+
+.admin-summary-grid {
+  align-items: stretch;
+  gap: 14px;
+}
+
+.admin-summary-grid .account-summary-card {
+  padding: 20px;
+}
+
+.admin-proposal-grid {
+  align-items: stretch;
+  gap: 16px;
+}
+
+.admin-proposal-grid > * {
+  min-width: 0;
+}
+
+.approval-modal-backdrop,
+.help-overlay,
+.more-sheet-backdrop {
+  backdrop-filter: blur(12px);
+}
+
+.approval-modal,
+.help-dialog {
+  border-color: var(--ao-border-strong);
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.09), transparent 48%),
+    linear-gradient(145deg, #102F3A, #071A24);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48);
+}
+
+/* Terms and educational pages */
+.terms-page {
+  min-width: 0;
+}
+
+.terms-hero {
+  overflow: hidden;
+  border-color: rgba(99, 243, 255, 0.2);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, 0.12), transparent 50%),
+    linear-gradient(135deg, #0B2A35, #071A24);
+}
+
+.terms-meta,
+.terms-notice,
+.terms-section {
+  border-color: var(--ao-border);
+  border-radius: 15px;
+}
+
+.terms-content {
+  gap: 14px;
+}
+
+.terms-section {
+  padding: clamp(17px, 2.5vw, 25px);
+}
+
+.terms-section p,
+.terms-section li {
+  color: #B0C7CE;
+  line-height: 1.85;
+}
+
+.simple-page {
+  border-color: var(--ao-border);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(16, 47, 58, 0.92), rgba(7, 26, 36, 0.97));
+}
+
+/* Help, confirmation and wallet dialogs */
+.help-overlay {
+  background: rgba(2, 12, 18, 0.78);
+}
+
+.help-dialog {
+  border: 1px solid var(--ao-border-strong);
+}
+
+.help-topic {
+  border-color: rgba(99, 243, 255, 0.1);
+  border-radius: 13px;
+  background: rgba(18, 217, 245, 0.025);
+  transition: background 160ms var(--ao-ease), border-color 160ms var(--ao-ease);
+}
+
+.help-topic:hover {
+  border-color: rgba(99, 243, 255, 0.2);
+  background: rgba(18, 217, 245, 0.045);
+}
+
+.approval-modal-cancel,
+.approval-modal-confirm,
+.approval-modal-confirm-danger {
+  border-radius: 11px;
+  transition: transform 160ms var(--ao-ease), filter 160ms var(--ao-ease);
+}
+
+.approval-modal-cancel:hover,
+.approval-modal-confirm:hover,
+.approval-modal-confirm-danger:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* Inputs and form controls across every route */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  border-color: rgba(99, 243, 255, 0.18);
+  background-color: rgba(7, 26, 36, 0.72);
+  color: var(--ao-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #7798A3;
+  opacity: 1;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(99, 243, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(18, 217, 245, 0.07);
+}
+
+label {
+  color: #B7CED5;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid rgba(99, 243, 255, 0.12);
+}
+
+/* Footer and persistent mobile navigation */
+.footer {
+  gap: 18px 24px;
+  margin-top: 64px;
+  padding: 28px 6px 20px;
+  border-color: rgba(99, 243, 255, 0.13);
+}
+
+.footer-socials a,
+.footer-legal-link {
+  transition: color 160ms var(--ao-ease), background 160ms var(--ao-ease);
+}
+
+.footer-socials a:hover,
+.footer-legal-link:hover {
+  color: var(--ao-glow);
+}
+
+.bottom-navigation {
+  border-color: rgba(99, 243, 255, 0.18);
+  background: rgba(7, 26, 36, 0.92);
+  box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(18px);
+}
+
+.bottom-nav-link {
+  border-radius: 11px;
+  transition: color 160ms var(--ao-ease), background 160ms var(--ao-ease);
+}
+
+.bottom-nav-link.active,
+.bottom-nav-link[aria-current="page"] {
+  background: linear-gradient(145deg, rgba(18, 217, 245, 0.13), rgba(0, 184, 169, 0.06));
+  color: var(--ao-glow);
+}
+
+/* Ensure long data, addresses and market titles never break layouts */
+.market-card,
+.detail-info-card,
+.account-summary-card,
+.referral-stat-card,
+.portfolio-token-card,
+.admin-proposal-grid > *,
+.referral-table-wrap,
+.terms-section {
+  overflow-wrap: anywhere;
+}
+
+.market-card h3,
+.section-heading h1,
+.section-heading h2,
+.market-detail-heading h1 {
+  overflow-wrap: anywhere;
+}
+
+button,
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+/* Responsive consistency: prevent card overlap and keep controls usable */
+@media (min-width: 1180px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1050px) {
+  .app {
+    padding: 18px;
+  }
+
+  .header {
+    gap: 12px;
+  }
+
+  .desktop-navigation {
+    gap: 1px;
+  }
+
+  .nav-link {
+    padding: 9px 10px;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .referral-overview-grid,
+  .account-summary-grid,
+  .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .app {
+    padding: 14px;
+  }
+
+  .header {
+    padding: 10px 11px 13px;
+    border-radius: 16px;
+  }
+
+  .page-section {
+    margin-top: 18px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .market-grid,
+  .market-detail-grid,
+  .principles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .dashboard-stat-card {
+    padding: 15px;
+  }
+
+  .referral-overview-grid,
+  .account-summary-grid,
+  .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-detail-heading {
+    flex-direction: column;
+  }
+
+  .terms-hero {
+    padding: 24px 19px;
+  }
+
+  .footer {
+    margin-top: 42px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 10px;
+  }
+
+  .header {
+    gap: 7px;
+    border-radius: 14px;
+  }
+
+  .dashboard-stats-grid,
+  .referral-overview-grid,
+  .account-summary-grid,
+  .admin-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-stat-card {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .dashboard-stat-icon {
+    grid-row: 1 / span 2;
+  }
+
+  .dashboard-stat-label {
+    min-width: 0;
+  }
+
+  .market-card {
+    padding: 17px;
+  }
+
+  .market-card-bottom {
+    flex-wrap: wrap;
+  }
+
+  .open-market-button {
+    width: 100%;
+  }
+
+  .account-summary-card,
+  .referral-stat-card {
+    padding: 17px;
+  }
+
+  .referral-table th,
+  .referral-table td {
+    padding: 11px 12px;
+    white-space: nowrap;
+  }
+
+  .proposal-actions > button,
+  .proposal-actions > a {
+    max-width: 100%;
+  }
+
+  .wallet-status {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .wallet-message {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .hero {
+    border-radius: 20px;
+  }
+
+  .footer {
+    gap: 13px;
+    padding-bottom: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-content {
+    animation: none;
+  }
+
+  .market-card,
+  .principle,
+  .detail-info-card,
+  .dashboard-stat-card,
+  .account-summary-card,
+  .referral-stat-card,
+  .portfolio-token-card,
+  .category-button,
+  .primary-button,
+  .nav-link {
+    transition: none !important;
+  }
+
+  .market-card:hover,
+  .principle:hover,
+  .primary-button:hover {
+    transform: none;
+  }
+}
