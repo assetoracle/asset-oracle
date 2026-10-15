@@ -46,6 +46,7 @@ import {
   getWalletAccountData,
   getMyProposals,
   getWalletRole,
+  getPublicWalletRole,
   createReferralCode,
   getPersonalReferralStats,
   getReferralLeaderboard,
@@ -387,12 +388,19 @@ useEffect(() => {
     if (!address || networkState !== "correct") return;
     let active = true;
     setRoleError("");
+    // Show the configured role immediately from the connected address. This is
+    // display-only; all protected actions continue to require a verified session.
+    void getPublicWalletRole(address)
+      .then((role) => {
+        if (active && addressRef.current?.toLowerCase() === address.toLowerCase()) setWalletRole(role);
+      })
+      .catch(() => { /* A public role preview failure must not trigger a signature prompt. */ });
+
+    // Establish the one-time session in the connection flow, never from My Proposals.
     void ensureWalletSession(address, (message) => signMessageAsync({ message }))
       .then(async () => {
         const role = await getWalletRole(address);
         if (active) setWalletRole(role);
-        // Create or retrieve the wallet's stable referral code using the already
-        // established session. This requires no transaction or extra signature.
         const { code } = await createReferralCode(address);
         const stats = await getPersonalReferralStats(address);
         if (!active || addressRef.current?.toLowerCase() !== address.toLowerCase()) return;
@@ -403,12 +411,13 @@ useEffect(() => {
         setReferralLink(url.toString());
       })
       .catch((error) => {
-        if (active) {
-          setRoleError(error instanceof Error ? error.message : "Unable to verify wallet role.");
-          setReferralMessage(error instanceof Error ? error.message : "Referral link is temporarily unavailable.");
-        }
+        if (!active) return;
+        const message = error instanceof Error ? error.message : "Wallet session could not be established.";
+        // Keep the role preview visible if the user declines the one-time session signature.
+        if (!getWalletSession(address)) setRoleError("");
+        setReferralMessage(message);
       })
-      .finally(() => { /* Session and role loading are reflected by the request lifecycle. */ });
+      .finally(() => { /* Role preview and session are handled independently. */ });
     return () => { active = false; };
   }, [address, networkState, signMessageAsync]);
 
