@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
@@ -231,7 +232,7 @@ export default function AdminDashboard({
       </div>
       <ReferralReviewPanel address={address} signMessage={signMessage} />
 
-      {confirmation && (() => {
+      {confirmation && createPortal((() => {
         const selectedProposal = proposals.find((proposal) => proposal.id === confirmation.id);
         const approving = confirmation.status === "APPROVED";
         return (
@@ -286,7 +287,7 @@ export default function AdminDashboard({
             </section>
           </div>
         );
-      })()}
+      })(), document.body)}
     </section>
   );
 }
