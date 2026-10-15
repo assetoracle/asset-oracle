@@ -20,7 +20,6 @@ import {
 } from "./contracts/assetOracle";
 
 import Header from "./components/Header";
-import WalletHelpPanel from "./components/WalletHelpPanel";
 import {
   BottomNav,
   type NavItem,
@@ -161,7 +160,6 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [walletHelpOpen, setWalletHelpOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
   const [proposalMessage, setProposalMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
@@ -237,15 +235,6 @@ export default function App() {
 
   const addressRef = useRef<string | undefined>(address);
   addressRef.current = address;
-
-  useEffect(() => {
-    if (!walletHelpOpen) return;
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setWalletHelpOpen(false);
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [walletHelpOpen]);
 
   const navItems = useMemo<NavItem[]>(() => {
     const items: NavItem[] = [
@@ -709,12 +698,10 @@ useEffect(() => {
     }
   }
 
+  // Open Reown AppKit directly. It detects injected browser wallets and offers
+  // WalletConnect/app handoff when no injected provider is available. Avoid an
+  // intermediate recommendation modal, which can break mobile wallet handoff.
   function openWalletHelp() {
-    setWalletHelpOpen(true);
-  }
-
-  function openWalletSelector() {
-    setWalletHelpOpen(false);
     void handleConnect();
   }
 
@@ -1016,13 +1003,6 @@ useEffect(() => {
           </a>
         </div>
       </footer>
-
-      {walletHelpOpen && (
-        <WalletHelpPanel
-          onConnect={openWalletSelector}
-          onClose={() => setWalletHelpOpen(false)}
-        />
-      )}
 
       {helpOpen && (
         <div className="help-overlay" role="presentation" onClick={() => setHelpOpen(false)}>
