@@ -113,34 +113,18 @@ function MarketDetailPage({
         </article>
         <article className="detail-info-card">
           <ShieldCheck size={22} />
-          <span>Validation method</span>
-          <strong>2 of 3 human validators</strong>
+          <span>Market status</span>
+          <strong>On-chain record</strong>
         </article>
       </div>
 
       <section className="resolution-preview">
         <span className="eyebrow">MARKET RULES</span>
         <h2>What decides YES or NO?</h2>
-        <p>{resolutionRule?.description || "Resolution criteria were not provided with this proposal. Validators must agree on a public evidence source before voting."}</p>
+        <p>{resolutionRule?.description || "Resolution criteria were not provided with this market."}</p>
       </section>
 
-      <section className="resolution-preview settlement-section">
-        <span className="eyebrow">02 / HUMAN VALIDATION AND SETTLEMENT</span>
-        <h2>Human validation</h2>
-        <p>When the market is CLOSED, three authorized validators review the public evidence. Any two must submit the same YES or NO outcome and the same evidence reference. Votes are recorded on-chain.</p>
-        <ol>
-          <li>Review the market question and resolution rules.</li>
-          <li>Agree on a public evidence URL or reference.</li>
-          <li>Two authorized validators submit matching votes.</li>
-          <li>The contract enters its challenge period. Finalization and claims follow the contract rules.</li>
-        </ol>
-        <p className="settlement-network-note">
-          Network: Asset Chain Testnet ·{" "}
-          <a href="https://scan-testnet.assetchain.org" target="_blank" rel="noreferrer">
-            Open block explorer <ExternalLink size={13} />
-          </a>
-        </p>
-      </section>
+
 
       <p className="market-disclaimer">
         Transparency notice: this interface does not claim that a market

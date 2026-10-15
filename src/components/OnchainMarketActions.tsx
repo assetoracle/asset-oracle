@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { encodeAbiParameters, formatUnits, isAddress, keccak256, parseUnits, toBytes, type Address } from "viem";
+import { formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useSignMessage } from "wagmi";
 import {
   useAccount,
@@ -30,13 +30,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const { signMessageAsync } = useSignMessage();
   const client = usePublicClient();
   const [amount, setAmount] = useState("");
-  const [evidenceText, setEvidenceText] = useState("");
-  const [resolutionOutcome, setResolutionOutcome] = useState<1 | 2 | 3>(1);
   const [yesSide, setYesSide] = useState(true);
   const [codeVerified, setCodeVerified] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
   const [message, setMessage] = useState("");
-  const [lastAction, setLastAction] = useState<"approve" | "stake" | "close" | "resolve" | "resolveDispute" | "finalize" | "dispute" | "claim" | "refund" | "timeout" | "disputeTimeout" | null>(null);
+  const [lastAction, setLastAction] = useState<"approve" | "stake" | "close" | "claim" | "refund" | "timeout" | null>(null);
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
@@ -88,33 +86,6 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     functionName: "stablecoins",
     args: [0],
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
-  });
-  const validatorRoster = useReadContract({
-    address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "validatorRosterConfigured",
-    query: { enabled: Boolean(manager && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
-  });
-  const validatorStatus = useReadContract({
-    address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "isValidator",
-    args: [address!],
-    query: { enabled: Boolean(manager && address && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
-  });
-  const hasVoted = useReadContract({
-    address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "hasVoted",
-    args: [marketId, address!],
-    query: { enabled: Boolean(manager && address && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
-  });
-  const hasVotedOnDispute = useReadContract({
-    address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "hasVotedOnDispute",
-    args: [marketId, address!],
-    query: { enabled: Boolean(manager && address && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
   });
   const tokenDecimals = useReadContract({
     address: TESTNET_USDC_ADDRESS,
@@ -220,49 +191,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const canStartTimeoutRefund = safe && isConnected && hasPosition && !claimed &&
     Number(marketData?.status) === MARKET_STATUS.CLOSED &&
     Date.now() / 1000 >= closeTime + Number(marketData?.challengePeriod ?? 0n);
-  const canStartDisputeTimeoutRefund = safe && isConnected && hasPosition && !claimed &&
-    Number(marketData?.status) === MARKET_STATUS.ARBITRATION &&
-    Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + 7 * 24 * 60 * 60;
 
-  const isConfiguredValidator = validatorStatus.data === true && validatorRoster.data === true;
-  // Validators must independently review the same public evidence and enter the same reference.
-  // The contract stores only this commitment hash, not the evidence text itself.
-  const evidenceHash = evidenceText.trim() ? keccak256(toBytes(evidenceText.trim())) : undefined;
-  // The market's published evidence source is the canonical shared reference for the initial 2-of-3 vote.
-  // This prevents otherwise matching validator outcomes from silently splitting into different vote keys
-  // because each validator had to retype the same URL/reference manually.
-  const marketEvidenceReference = marketData?.evidenceSource?.trim();
-  const marketEvidenceHash = marketEvidenceReference ? keccak256(toBytes(marketEvidenceReference)) : undefined;
-  const disputeEvidenceHash = evidenceText.trim() ? keccak256(toBytes(evidenceText.trim())) : undefined;
-  const emptyVoteKey = `0x${"0".repeat(64)}` as const;
-  const voteKey = marketEvidenceHash
-    ? keccak256(encodeAbiParameters([{ type: "uint8" }, { type: "bytes32" }], [resolutionOutcome, marketEvidenceHash]))
-    : emptyVoteKey;
-  const initialVoteCount = useReadContract({
-    address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "voteCountByKey",
-    args: [marketId, voteKey],
-    query: { enabled: Boolean(manager && marketEvidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
-  });
-  const disputeVoteKey = disputeEvidenceHash ? keccak256(encodeAbiParameters([{ type: "uint8" }, { type: "bytes32" }], [resolutionOutcome, disputeEvidenceHash])) : emptyVoteKey;
-  const disputeVoteCount = useReadContract({
-    address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "disputeVoteCountByKey",
-    args: [marketId, disputeVoteKey],
-    query: { enabled: Boolean(manager && disputeEvidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
-  });
-  const canResolve = safe && isConnected && isConfiguredValidator && hasVoted.data === false &&
-    marketEvidenceHash !== undefined && Number(marketData?.status) === MARKET_STATUS.CLOSED;
-  const canResolveDispute = safe && isConnected && isConfiguredValidator && hasVotedOnDispute.data === false &&
-    disputeEvidenceHash !== undefined && Number(marketData?.status) === MARKET_STATUS.ARBITRATION;
-  const canFinalize = safe && isConnected &&
-    Number(marketData?.status) === MARKET_STATUS.DISPUTED &&
-    Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + Number(marketData?.challengePeriod ?? 0n);
-  const canDispute = safe && isConnected && hasPosition && disputeEvidenceHash !== undefined &&
-    Number(marketData?.status) === MARKET_STATUS.DISPUTED &&
-    Date.now() / 1000 < Number(marketData?.resolvedAt ?? 0n) + Number(marketData?.challengePeriod ?? 0n);
 
   useEffect(() => {
     if (receipt.isSuccess) {
@@ -326,13 +255,12 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     });
   }
 
-  function submitAction(action: "close" | "claim" | "refund" | "timeout" | "disputeTimeout") {
+  function submitAction(action: "close" | "claim" | "refund" | "timeout") {
     if (!manager) return;
     if (action === "close" && !canClose) return;
     if (action === "claim" && !canClaim) return;
     if (action === "refund" && !canRefund) return;
     if (action === "timeout" && !canStartTimeoutRefund) return;
-    if (action === "disputeTimeout" && !canStartDisputeTimeoutRefund) return;
     setMessage("");
     reset();
     setLastAction(action);
@@ -345,52 +273,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
           ? "claim"
         : action === "timeout"
           ? "refundTimedOutMarket"
-          : action === "disputeTimeout"
-            ? "refundDisputedTimeout"
-            : "refundCancelled",
+          : "refundCancelled",
       args: [marketId],
     });
   }
 
-  function submitResolution(action: "resolve" | "resolveDispute" | "finalize" | "dispute") {
-    if (!manager) return;
-    if (action === "resolve" && !canResolve) return;
-    if (action === "resolveDispute" && (!canResolveDispute || !disputeEvidenceHash)) return;
-    if (action === "finalize" && !canFinalize) return;
-    if (action === "dispute" && (!canDispute || !disputeEvidenceHash)) return;
-    setMessage("");
-    reset();
-    setLastAction(action);
-    if (action === "resolve") {
-      writeContract({
-        address: manager,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "resolveMarket",
-        args: [marketId, resolutionOutcome, marketEvidenceHash!],
-      });
-    } else if (action === "resolveDispute") {
-      writeContract({
-        address: manager,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "resolveDispute",
-        args: [marketId, resolutionOutcome, disputeEvidenceHash!],
-      });
-    } else if (action === "dispute") {
-      writeContract({
-        address: manager,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "disputeResolution",
-        args: [marketId, disputeEvidenceHash!],
-      });
-    } else {
-      writeContract({
-        address: manager,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "finalizeMarket",
-        args: [marketId],
-      });
-    }
-  }
 
   useEffect(() => {
     if (!receipt.isSuccess || !txHash || !manager || !lastAction) return;
@@ -478,53 +365,10 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
-          {(Number(marketData?.status) === MARKET_STATUS.DISPUTED || Number(marketData?.status) === MARKET_STATUS.ARBITRATION) && <>
-            <label htmlFor={`onchain-evidence-${marketId}`}>Challenge evidence reference</label>
-            <input id={`onchain-evidence-${marketId}`} value={evidenceText} onChange={(event) => setEvidenceText(event.target.value)} placeholder="Paste official source URL or evidence reference" autoComplete="off" />
-            <p className="disabled-note">The evidence text is hashed locally and only its hash is submitted on-chain. Keep the original source available for public verification.</p>
-          </>}
-          {Number(marketData?.status) === MARKET_STATUS.CLOSED && <>
-            <div className="validator-step-heading">
-              <h4>Human validation · 2 of 3</h4>
-              <p>Review the market rules and public evidence. Each authorized validator votes once. Two votes must match on both outcome and evidence reference.</p>
-            </div>
-            {validatorRoster.data === true && isConnected && !isConfiguredValidator && <p role="status">This wallet is not one of the three authorized validators. You can review the market, but cannot submit a validator vote.</p>}
-            {isConfiguredValidator && <>
-              <p className="disabled-note">Both validators vote against the market's published evidence source, so the shared reference is identical for every validator. Review it before voting: <a href={marketEvidenceReference || undefined} target="_blank" rel="noreferrer">{marketEvidenceReference || "No evidence source was published for this market"}</a></p>
-              <label htmlFor={`onchain-outcome-${marketId}`}>Your outcome decision</label>
-              <select className="brand-select" id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2)}>
-                <option value={1}>YES</option><option value={2}>NO</option>
-              </select>
-              <p>Matching votes for this outcome and published evidence: {marketEvidenceHash ? Number(initialVoteCount.data ?? 0n) : 0}/2.</p>
-              {hasVoted.data && <p role="status">Your vote is already recorded. It cannot be changed.</p>}
-              <button className="primary-button" type="button" disabled={!canResolve || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolve")}>{isWalletPending ? "Confirm vote in wallet…" : receipt.isLoading ? "Confirming vote…" : "Submit human validator vote"}</button>
-              {!marketEvidenceHash && <p className="stake-disabled-note">Voting is blocked because this market has no published evidence source. The market listing must provide one before validators can vote.</p>}
-            </>}
-            {validatorRoster.data === false && <p role="alert">Human validation is unavailable: this contract does not have a configured validator roster.</p>}
-          </>}
-          {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <>
-            {isConfiguredValidator && <>
-              <label htmlFor={`onchain-arbitration-outcome-${marketId}`}>Arbitration outcome vote</label>
-              <select className="brand-select" id={`onchain-arbitration-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2 | 3)}>
-                <option value={1}>YES</option><option value={2}>NO</option><option value={3}>INVALID</option>
-              </select>
-              <p>Matching arbitration votes: {evidenceHash ? Number(disputeVoteCount.data ?? 0n) : 0}/2.</p>
-              {hasVotedOnDispute.data && <p>You have already submitted an arbitration vote for this market.</p>}
-              <button className="primary-button" type="button" disabled={!canResolveDispute || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolveDispute")}>Submit arbitration vote</button>
-            </>}
-            {validatorRoster.data === true && isConnected && !isConfiguredValidator && <p>Connected wallet is not one of the three configured validators.</p>}
-          </>}
-          {Number(marketData?.status) === MARKET_STATUS.DISPUTED && <>
-            <p>Outcome recorded. Eligible participants may challenge it before the challenge window closes.</p>
-            <button className="primary-button" type="button" disabled={!canDispute || isWalletPending || receipt.isLoading} onClick={() => submitResolution("dispute")}>Dispute outcome with evidence</button>
-            <button className="primary-button" type="button" disabled={!canFinalize || isWalletPending || receipt.isLoading} onClick={() => submitResolution("finalize")}>Finalize after challenge window</button>
-          </>}
-
+          {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p className="disabled-note">This market is closed.</p>}
           {Number(marketData?.status) === MARKET_STATUS.SETTLED && <button className="primary-button" type="button" disabled={!canClaim || isWalletPending || receipt.isLoading} onClick={() => submitAction("claim")}>Claim settlement</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p>This market has closed but has not been resolved. After the contract timeout, an eligible participant can enable refunds.</p>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <button className="primary-button" type="button" disabled={!canStartTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("timeout")}>Enable timeout refunds</button>}
-          {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <p>A resolution dispute is under review. Refunds become available if arbitration is not completed within seven days of the dispute.</p>}
-          {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <button className="primary-button" type="button" disabled={!canStartDisputeTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("disputeTimeout")}>Enable dispute timeout refunds</button>}
           {(Number(marketData?.status) === MARKET_STATUS.CANCELLED || Number(marketData?.status) === MARKET_STATUS.REFUNDABLE) && <button className="primary-button" type="button" disabled={!canRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("refund")}>Refund position</button>}
           {Number(marketData?.outcome) === MARKET_OUTCOME.INVALID && <p>Invalid outcome: the contract returns the net stake through the settlement claim path.</p>}
         </>}

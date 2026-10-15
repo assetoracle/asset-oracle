@@ -28,6 +28,7 @@ import {
 import MarketDetailPage from "./components/MarketDetailPage";
 import { MarketProposalForm } from "./components/MarketProposalForm";
 import AdminDashboard from "./components/AdminDashboard";
+import ValidatorDashboard from "./components/ValidatorDashboard";
 import Portfolio from "./components/Portfolio";
 import HomePage, {
   type DisplayMarket,
@@ -113,6 +114,7 @@ function pathForPage(page: Page, marketId?: string): string {
     History: "/history",
     Referrals: "/referrals",
     Admin: "/admin",
+    Validators: "/validators",
     "Terms of Service": "/terms",
   };
 
@@ -142,6 +144,7 @@ function parseHash(): {
     history: "History",
     referrals: "Referrals",
     admin: "Admin",
+    validators: "Validators",
     terms: "Terms of Service",
   };
 
@@ -253,6 +256,7 @@ export default function App() {
     validatorStatusReads.data?.[1]?.status === "success"
       ? validatorStatusReads.data[1].result === true
       : null;
+  const canAccessValidatorDashboard = onchainValidatorStatus === true;
 
   useEffect(() => {
     if (!helpOpen) return;
@@ -280,9 +284,12 @@ export default function App() {
     if (isAdmin) {
       items.push({ label: "Admin", icon: ShieldCheck });
     }
+    if (canAccessValidatorDashboard) {
+      items.push({ label: "Validators", icon: ShieldCheck });
+    }
 
     return items;
-  }, [isAdmin]);
+  }, [isAdmin, canAccessValidatorDashboard]);
 
   const isMountedRef = useRef(false);
 
@@ -923,6 +930,18 @@ useEffect(() => {
 
     if (page === "Terms of Service") {
       return <TermsOfServicePage onBack={() => navigateTo("Home")} />;
+    }
+
+    if (page === "Validators") {
+      if (!canAccessValidatorDashboard) {
+        return (
+          <div className="empty-state">
+            <h3>Validator access unavailable</h3>
+            <p>This dashboard is restricted to designated validator wallets that are authorized by the on-chain manager.</p>
+          </div>
+        );
+      }
+      return <ValidatorDashboard />;
     }
 
     if (page === "Admin") {

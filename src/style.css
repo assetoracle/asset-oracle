@@ -7865,3 +7865,43 @@ select.brand-select option,
   font-size: 13px;
   line-height: 1.65;
 }
+
+
+/* Restricted validator settlement workspace */
+.validator-dashboard { min-width: 0; }
+.validator-dashboard .section-heading { align-items: flex-start; gap: 18px; }
+.validator-dashboard .section-heading .eyebrow { display: inline-flex; align-items: center; gap: 7px; }
+.validator-access-card {
+  display: grid; gap: 7px; margin: 18px 0 24px; padding: 16px 18px;
+  border: 1px solid rgba(99,243,255,.2); border-radius: 14px;
+  background: linear-gradient(120deg, rgba(18,217,245,.08), rgba(0,184,169,.035));
+}
+.validator-access-card span { color: var(--muted); font-size: 12px; }
+.validator-access-card strong { overflow-wrap: anywhere; color: var(--text); font-size: 13px; }
+.validator-market-list { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; }
+.validator-market-card {
+  min-width: 0; padding: clamp(18px, 3vw, 26px);
+  border: 1px solid rgba(99,243,255,.17); border-radius: 18px;
+  background: linear-gradient(145deg, rgba(16,47,58,.94), rgba(7,26,36,.98));
+  box-shadow: var(--ao-shadow-card);
+}
+.validator-market-card-header { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.validator-market-card-header .eyebrow { margin-right: auto; }
+.validator-market-card-header > strong { color: var(--highlight); font-size: 19px; }
+.validator-status-pill {
+  padding: 6px 10px; border: 1px solid rgba(99,243,255,.2); border-radius: 999px;
+  background: rgba(18,217,245,.07); color: var(--highlight); font-size: 11px; font-weight: 700;
+}
+.validator-market-card h2 { margin: 18px 0 8px; font-size: clamp(19px, 2.5vw, 24px); line-height: 1.35; overflow-wrap: anywhere; }
+.validator-market-card > p { color: var(--muted); line-height: 1.65; }
+.validator-market-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0; color: var(--muted); font-size: 12px; }
+.validator-evidence { display: grid; gap: 7px; min-width: 0; margin: 16px 0; padding: 13px 14px; border-radius: 12px; background: rgba(2,12,18,.3); }
+.validator-evidence > span { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.validator-evidence a, .validator-evidence strong { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.validator-vote-count { color: var(--highlight) !important; font-weight: 700; }
+.validator-market-card .primary-button { width: 100%; }
+@media (max-width: 600px) {
+  .validator-dashboard .section-heading { flex-direction: column; }
+  .validator-dashboard .section-heading > button { width: 100%; }
+  .validator-market-card { padding: 17px; }
+}
