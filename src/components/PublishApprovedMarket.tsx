@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import {
   isAddress,
@@ -99,6 +99,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
   const [publicationSaved, setPublicationSaved] = useState(Boolean(proposal.onchainTxHash));
   const [savingPublication, setSavingPublication] = useState(false);
   const [publishConfirmation, setPublishConfirmation] = useState(false);
+  const publishInFlight = useRef(false);
   const { writeContractAsync, isPending, error: walletError } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({
     hash: txHash,
@@ -179,7 +180,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     try {
       const events = parseEventLogs({
         abi: marketPublisherAbi,
-        logs: receipt.data.logs,
+        logs: receipt.data.logs.filter((log) => log.address.toLowerCase() === manager.toLowerCase()),
         eventName: "MarketCreated",
         strict: true,
       });
@@ -197,7 +198,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     } catch {
       setError("Transaction confirmed, but its market ID could not be decoded. Verify the transaction on the explorer before retrying.");
     }
-  }, [receipt.isSuccess, receipt.data, proposal.question, proposal.id, address, txHash, marketId, signMessage]);
+  }, [receipt.isSuccess, receipt.data, proposal.question, proposal.id, address, txHash, marketId, signMessage, manager]);
 
   const stablecoinReady = Boolean(
     tokenConfig.data &&
@@ -214,8 +215,10 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
 
   async function publish() {
     setError("");
-    setMarketId(null);
-    setTxHash(undefined);
+    if (marketId || txHash || receipt.isLoading || isPending || publishInFlight.current) {
+      setError("A publication or transaction is already in progress or recorded. Do not submit another transaction; check the transaction status first.");
+      return;
+    }
     if (proposal.status !== "APPROVED") {
       setError("Only owner-approved proposals can be published.");
       return;
@@ -241,6 +244,12 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
   }
 
   async function confirmPublish() {
+    if (marketId || txHash || isPending || publishInFlight.current) {
+      setPublishConfirmation(false);
+      setError("A publication or transaction is already in progress or recorded. Check its status before trying again.");
+      return;
+    }
+    publishInFlight.current = true;
     setPublishConfirmation(false);
     setError("");
     const rules = JSON.stringify({
@@ -266,6 +275,8 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setTxHash(hash);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wallet rejected or failed to submit the transaction.");
+    } finally {
+      publishInFlight.current = false;
     }
   }
 
