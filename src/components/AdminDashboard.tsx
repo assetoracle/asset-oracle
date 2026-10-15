@@ -184,6 +184,28 @@ export default function AdminDashboard({
               </span>
             </div>
 
+            {proposal.status === "PENDING_APPROVAL" && (
+              <div className="hero-actions admin-proposal-actions">
+                <button
+                  className="primary-button"
+                  type="button"
+                  disabled={!!busyId || loading}
+                  onClick={() => decide(proposal.id, "APPROVED")}
+                >
+                  <Check size={16} />
+                  {busyId === proposal.id ? "Processing..." : "Approve"}
+                </button>
+                <button
+                  className="text-action"
+                  type="button"
+                  disabled={!!busyId || loading}
+                  onClick={() => decide(proposal.id, "REJECTED")}
+                >
+                  <X size={16} /> Reject
+                </button>
+              </div>
+            )}
+
             <h3>{proposal.question}</h3>
             <p className="market-description">{proposal.description}</p>
 
@@ -204,27 +226,6 @@ export default function AdminDashboard({
               <span>{new Date(proposal.resolvesAt).toLocaleDateString()}</span>
             </div>
 
-            {proposal.status === "PENDING_APPROVAL" && (
-              <div className="hero-actions">
-                <button
-                  className="primary-button"
-                  type="button"
-                  disabled={!!busyId || loading}
-                  onClick={() => decide(proposal.id, "APPROVED")}
-                >
-                  <Check size={16} />
-                  {busyId === proposal.id ? "Processing..." : "Approve"}
-                </button>
-                <button
-                  className="text-action"
-                  type="button"
-                  disabled={!!busyId || loading}
-                  onClick={() => decide(proposal.id, "REJECTED")}
-                >
-                  <X size={16} /> Reject
-                </button>
-              </div>
-            )}
           </article>
         ))}
       </div>
