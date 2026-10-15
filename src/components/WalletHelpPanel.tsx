@@ -5,30 +5,36 @@ type WalletHelpPanelProps = {
   onClose: () => void;
 };
 
+const appUrl = "https://assetoracleapp.xyz";
+const encodedAppUrl = encodeURIComponent(appUrl);
+
 const recommendedWallets = [
   {
     rank: "01",
     name: "MetaMask",
-    note: "Top recommendation",
-    description: "Our first choice for testing on Asset Chain Enugu Testnet.",
-    url: "https://metamask.io/",
+    note: "Highly recommended",
+    description: "Open Asset Oracle directly in MetaMask's in-app browser.",
+    url: `https://link.metamask.io/dapp/${new URL(appUrl).host}`,
     featured: true,
+    action: "Open in MetaMask ↗",
   },
   {
     rank: "02",
-    name: "OKX Wallet",
-    note: "Recommended alternative",
-    description: "A strong alternative to try for EVM testnet access.",
-    url: "https://www.okx.com/web3",
+    name: "Rabby Wallet",
+    note: "Recommended",
+    description: "Open Rabby Wallet, then use its built-in browser to visit Asset Oracle.",
+    url: "https://go.rabby.io/mobile/",
     featured: false,
+    action: "Open Rabby Wallet ↗",
   },
   {
     rank: "03",
-    name: "Rabby Wallet",
-    note: "Recommended alternative",
-    description: "Another EVM wallet option for testnet interactions.",
-    url: "https://rabby.io/",
+    name: "OKX Wallet",
+    note: "Recommended",
+    description: "Open Asset Oracle through OKX Wallet's mobile DApp browser.",
+    url: `https://web3.okx.com/ul/dapp?dappUrl=${encodedAppUrl}`,
     featured: false,
+    action: "Open in OKX Wallet ↗",
   },
 ];
 
@@ -61,10 +67,10 @@ export default function WalletHelpPanel({
       >
         <div className="wallet-recommendation-header">
           <div>
-            <p className="wallet-recommendation-eyebrow">ASSET ORACLE · TESTNET SETUP</p>
-            <h2 id="wallet-recommendation-title">Choose a wallet</h2>
+            <p className="wallet-recommendation-eyebrow">ASSET ORACLE · WALLET CONNECTION</p>
+            <h2 id="wallet-recommendation-title">Open Asset Oracle in your wallet</h2>
             <p className="wallet-recommendation-subtitle">
-              Recommended wallets for Asset Chain Enugu Testnet
+              Choose a wallet to open Asset Oracle app.xyz in its mobile browser, then connect.
             </p>
           </div>
           <button
@@ -78,12 +84,12 @@ export default function WalletHelpPanel({
         </div>
 
         <div className="wallet-recommendation-note">
-          <strong>Our top pick is MetaMask.</strong>
+          <strong>Choose your wallet below</strong>
           <p>
-            For testing, we recommend trying the wallets below in this order:
-            MetaMask first, followed by OKX Wallet and Rabby Wallet. Wallet
-            behavior can vary by device, so confirm you are using Asset Chain
-            Testnet (Chain ID 42421) before testing.
+            Tap a wallet to open Asset Oracle in its app where supported. If the app
+            opens to its home screen instead, open its built-in browser and visit
+            assetoracleapp.xyz. Your wallet will only connect after you approve the
+            connection request.
           </p>
         </div>
 
@@ -98,12 +104,12 @@ export default function WalletHelpPanel({
             >
               <span className="wallet-recommendation-rank">{wallet.rank}</span>
               {wallet.featured && (
-                <span className="wallet-recommendation-top-pick">TOP PICK</span>
+                <span className="wallet-recommendation-top-pick">HIGHLY RECOMMENDED</span>
               )}
               <strong>{wallet.name}</strong>
               <span className="wallet-recommendation-note-label">{wallet.note}</span>
               <span className="wallet-recommendation-description">{wallet.description}</span>
-              <span className="wallet-recommendation-link">Official website ↗</span>
+              <span className="wallet-recommendation-link">{wallet.action}</span>
             </a>
           ))}
         </div>
@@ -113,12 +119,12 @@ export default function WalletHelpPanel({
           type="button"
           onClick={onConnect}
         >
-          Continue to wallet selector
+          Use the wallet selector instead
           <span aria-hidden="true">→</span>
         </button>
         <p className="wallet-recommendation-hint">
-          The wallet selector opens next. Choose your wallet there to connect;
-          these recommendations do not connect or authorize anything by themselves.
+          Already have a wallet connected? Continue to the existing wallet selector.
+          Deep links can behave differently depending on your device and installed app.
         </p>
 
         <div className="wallet-recommendation-other">
@@ -144,21 +150,23 @@ export default function WalletHelpPanel({
         {showTroubleshooting && (
           <div className="wallet-recommendation-troubleshooting">
             <ol>
-              <li>Unlock your wallet app.</li>
-              <li>On mobile, try opening Asset Oracle in the wallet's built-in browser.</li>
-              <li>Return to Asset Oracle and open the wallet selector.</li>
+              <li>Make sure your wallet app is installed and unlocked.</li>
+              <li>If a wallet opens to its home screen, open its built-in browser.</li>
+              <li>Visit assetoracleapp.xyz inside that browser and tap Connect Wallet.</li>
+              <li>Confirm Asset Chain Enugu Testnet (Chain ID 42421) when prompted.</li>
               <li>Approve only the connection request you initiated.</li>
             </ol>
             <p>
-              Asset Chain Enugu Testnet uses Chain ID 42421. Never share your
-              recovery phrase or private keys.
+              Never share your recovery phrase or private keys. Connecting a wallet
+              does not itself authorize a transaction.
             </p>
           </div>
         )}
 
         <p className="wallet-recommendation-disclaimer">
-          Wallet links lead to the providers' websites and do not guarantee
-          compatibility or a successful connection on every device.
+          App handoff depends on the wallet version, device, and browser. If a link
+          does not open the DApp directly, use the wallet's built-in browser to visit
+          assetoracleapp.xyz.
         </p>
       </section>
     </div>
