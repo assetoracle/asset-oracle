@@ -198,7 +198,7 @@ export default function ValidatorDashboard() {
                 <span>Published evidence</span>
                 {evidence ? <a href={/^https?:\/\//i.test(evidence) ? evidence : undefined} target="_blank" rel="noreferrer">{evidence}</a> : <strong>Missing evidence source — voting disabled</strong>}
               </div>
-              <><label htmlFor={`validator-outcome-${id}`}>Your decision</label>
+              <label htmlFor={`validator-outcome-${id}`}>Your decision</label>
               <BrandedSelect
                 className="validator-outcome-select"
                 id={`validator-outcome-${id}`}
