@@ -225,7 +225,9 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + 7 * 24 * 60 * 60;
 
   const isConfiguredValidator = validatorStatus.data === true && validatorRoster.data === true;
-  const evidenceHash = keccak256(encodeAbiParameters([{ type: "uint256" }], [marketId]));
+  // Validators must independently review the same public evidence and enter the same reference.
+  // The contract stores only this commitment hash, not the evidence text itself.
+  const evidenceHash = evidenceText.trim() ? keccak256(toBytes(evidenceText.trim())) : undefined;
   const disputeEvidenceHash = evidenceText.trim() ? keccak256(toBytes(evidenceText.trim())) : undefined;
   const emptyVoteKey = `0x${"0".repeat(64)}` as const;
   const voteKey = evidenceHash
@@ -247,7 +249,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     query: { enabled: Boolean(manager && disputeEvidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
   const canResolve = safe && isConnected && isConfiguredValidator && hasVoted.data === false &&
-    Number(marketData?.status) === MARKET_STATUS.CLOSED;
+    evidenceHash !== undefined && Number(marketData?.status) === MARKET_STATUS.CLOSED;
   const canResolveDispute = safe && isConnected && isConfiguredValidator && hasVotedOnDispute.data === false &&
     disputeEvidenceHash !== undefined && Number(marketData?.status) === MARKET_STATUS.ARBITRATION;
   const canFinalize = safe && isConnected &&
@@ -471,17 +473,25 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             <p className="disabled-note">The evidence text is hashed locally and only its hash is submitted on-chain. Keep the original source available for public verification.</p>
           </>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <>
-            {validatorRoster.data === true && isConnected && !isConfiguredValidator && <p>Connected wallet is not one of the three configured validators.</p>}
+            <div className="validator-step-heading">
+              <h4>Human validation · 2 of 3</h4>
+              <p>Review the market rules and public evidence. Each authorized validator votes once. Two votes must match on both outcome and evidence reference.</p>
+            </div>
+            {validatorRoster.data === true && isConnected && !isConfiguredValidator && <p role="status">This wallet is not one of the three authorized validators. You can review the market, but cannot submit a validator vote.</p>}
             {isConfiguredValidator && <>
-              <label htmlFor={`onchain-outcome-${marketId}`}>Validator outcome vote</label>
+              <label htmlFor={`onchain-evidence-${marketId}`}>Public evidence URL or reference</label>
+              <input id={`onchain-evidence-${marketId}`} value={evidenceText} onChange={(event) => setEvidenceText(event.target.value)} placeholder="Paste the source URL/reference all validators will use" autoComplete="off" />
+              <p className="disabled-note">Use a stable, publicly accessible source and the exact same reference for each validator. Only its hash is stored on-chain; keep the source available for review.</p>
+              <label htmlFor={`onchain-outcome-${marketId}`}>Your outcome decision</label>
               <select id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2)}>
                 <option value={1}>YES</option><option value={2}>NO</option>
               </select>
-              <p>Matching votes: {evidenceHash ? Number(initialVoteCount.data ?? 0n) : 0}/2. Two matching votes from any two of the three authorized validators are required; votes are recorded on-chain.</p>
-              {hasVoted.data && <p>You have already submitted your vote for this market.</p>}
-              <button className="primary-button" type="button" disabled={!canResolve || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolve")}>Submit validator vote</button>
+              <p>Matching votes for this outcome and evidence: {evidenceHash ? Number(initialVoteCount.data ?? 0n) : 0}/2.</p>
+              {hasVoted.data && <p role="status">Your vote is already recorded. It cannot be changed.</p>}
+              <button className="primary-button" type="button" disabled={!canResolve || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolve")}>{isWalletPending ? "Confirm vote in wallet…" : receipt.isLoading ? "Confirming vote…" : "Submit human validator vote"}</button>
+              {!evidenceHash && <p className="stake-disabled-note">Enter the evidence URL/reference before submitting your vote.</p>}
             </>}
-            {validatorRoster.data === false && <p>Validator roster is not configured on this contract. Resolution is unavailable until the approved contract is deployed and configured.</p>}
+            {validatorRoster.data === false && <p role="alert">Human validation is unavailable: this contract does not have a configured validator roster.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <>
             {isConfiguredValidator && <>
