@@ -209,7 +209,7 @@ export default function ValidatorDashboard() {
                 ariaLabel="Your decision"
               />
               <p className="validator-vote-count">Matching votes: {matchingVotes}/2</p>
-              {hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : "NO"}`}</button>}</>}
+              {hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : "NO"}`}</button>}
             </article>;
           })}
         </div>}
