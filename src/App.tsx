@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
-import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
+import { MARKET_STATUS, MARKET_OUTCOME, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
   ASSET_CHAIN_TESTNET_ID,
@@ -26,6 +26,7 @@ import {
   type Page,
 } from "./components/Nav";
 import MarketDetailPage from "./components/MarketDetailPage";
+import MarketVerificationPage from "./components/MarketVerificationPage";
 import { MarketProposalForm } from "./components/MarketProposalForm";
 import AdminDashboard from "./components/AdminDashboard";
 import ValidatorDashboard from "./components/ValidatorDashboard";
@@ -125,14 +126,24 @@ function pathForPage(page: Page, marketId?: string): string {
 function parseHash(): {
   page: Page;
   marketId: string | null;
+  verificationMarketId: string | null;
 } {
   const raw = window.location.hash.replace(/^#/, "") || "/";
   const parts = raw.split("/").filter(Boolean);
+
+  if (parts[0] === "verify" && parts[1]) {
+    return {
+      page: "Markets",
+      marketId: null,
+      verificationMarketId: decodeURIComponent(parts.slice(1).join("/")),
+    };
+  }
 
   if (parts[0] === "markets" && parts[1]) {
     return {
       page: "Markets",
       marketId: decodeURIComponent(parts.slice(1).join("/")),
+      verificationMarketId: null,
     };
   }
 
@@ -152,6 +163,7 @@ function parseHash(): {
   return {
     page: routes[parts[0] ?? ""] ?? "Home",
     marketId: null,
+    verificationMarketId: null,
   };
 }
 
@@ -160,6 +172,7 @@ export default function App() {
   const [selectedMarketId, setSelectedMarketId] = useState<string | null>(
     null,
   );
+  const [verificationMarketId, setVerificationMarketId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] =
     useState<MarketFilter>("All Markets");
   const [search, setSearch] = useState("");
@@ -366,6 +379,7 @@ useEffect(() => {
       const route = parseHash();
       setPage(route.page);
       setSelectedMarketId(route.marketId);
+      setVerificationMarketId(route.verificationMarketId);
       setMobileMenuOpen(false);
     }
 
@@ -561,21 +575,26 @@ useEffect(() => {
   }
 
   function goBackToMarkets() {
+    setActiveCategory("Settled Markets");
     window.location.hash = pathForPage("Markets");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function openVerification(market: DisplayMarket) {
+    window.location.hash = `/verify/${encodeURIComponent(market.id)}`;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   const query = search.trim().toLowerCase();
 
-  const marketLifecycle = new Map<string, { status: number; closeTime: number }>();
+  const marketLifecycle = new Map<string, { status: number; closeTime: number; outcome: number; resolvedAt: number; evidenceHash: string; evidenceSource: string }>();
   onchainPublishedMarkets.forEach((market, index) => {
     const read = marketStatusReads.data?.[index];
     if (read?.status !== "success" || !read.result) return;
     const onchainMarket = read.result as unknown as {
-      status?: bigint;
-      closeTime?: bigint;
-      13?: bigint;
-      6?: bigint;
+      status?: bigint; closeTime?: bigint; outcome?: bigint; resolvedAt?: bigint;
+      evidenceHash?: string; evidenceSource?: string;
+      6?: bigint; 8?: bigint; 12?: bigint; 13?: bigint; 14?: string;
     };
     const statusValue = onchainMarket.status ?? onchainMarket[13];
     const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[6];
@@ -583,6 +602,10 @@ useEffect(() => {
     marketLifecycle.set(market.id, {
       status: Number(statusValue),
       closeTime: closeTimeValue === undefined ? 0 : Number(closeTimeValue),
+      outcome: Number(onchainMarket.outcome ?? onchainMarket[12] ?? 0n),
+      resolvedAt: Number(onchainMarket.resolvedAt ?? onchainMarket[8] ?? 0n),
+      evidenceHash: String(onchainMarket.evidenceHash ?? onchainMarket[14] ?? ""),
+      evidenceSource: String(onchainMarket.evidenceSource ?? ""),
     });
   });
 
@@ -625,6 +648,9 @@ useEffect(() => {
     });
 
   function renderMarketCard(market: DisplayMarket) {
+    const lifecycle = marketLifecycle.get(market.id);
+    const isSettled = lifecycle?.status === MARKET_STATUS.SETTLED;
+    const outcomeLabel = lifecycle?.outcome === MARKET_OUTCOME.YES ? "YES" : lifecycle?.outcome === MARKET_OUTCOME.NO ? "NO" : lifecycle?.outcome === MARKET_OUTCOME.INVALID ? "INVALID" : "Outcome pending";
     return (
       <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
@@ -641,19 +667,31 @@ useEffect(() => {
           </div>
         </div>
         <h3>{market.question}</h3>
+        {isSettled && (
+          <div className="settled-outcome-preview">
+            <span>Final outcome</span>
+            <strong className={outcomeLabel === "YES" ? "outcome-yes" : outcomeLabel === "NO" ? "outcome-no" : ""}>{outcomeLabel}</strong>
+          </div>
+        )}
         <div className="market-card-bottom">
-          <span className="market-status-note">Closes {market.closesAt ? formatDate(market.closesAt) : "date unavailable"}</span>
-          <button
-            className="primary-button open-market-button"
-            type="button"
-            onClick={() => openMarket(market)}
-            disabled={!liveMarkets.some((item) => item.id === market.id)}
-            aria-disabled={!liveMarkets.some((item) => item.id === market.id)}
-            title={!liveMarkets.some((item) => item.id === market.id) ? "This market is closed to participation." : "Open live market"}
-          >
-            {liveMarkets.some((item) => item.id === market.id) ? "Open Market" : "Market Closed"}
-            {liveMarkets.some((item) => item.id === market.id) && <ArrowUpRight size={15} />}
-          </button>
+          <span className="market-status-note">{isSettled ? `Resolved ${lifecycle?.resolvedAt ? new Date(lifecycle.resolvedAt * 1000).toLocaleDateString() : "on-chain"}` : `Closes ${market.closesAt ? formatDate(market.closesAt) : "date unavailable"}`}</span>
+          {isSettled ? (
+            <button className="primary-button open-market-button verify-market-button" type="button" onClick={() => openVerification(market)}>
+              <ShieldCheck size={15} /> Verify
+            </button>
+          ) : (
+            <button
+              className="primary-button open-market-button"
+              type="button"
+              onClick={() => openMarket(market)}
+              disabled={!liveMarkets.some((item) => item.id === market.id)}
+              aria-disabled={!liveMarkets.some((item) => item.id === market.id)}
+              title={!liveMarkets.some((item) => item.id === market.id) ? "This market is closed to participation." : "Open live market"}
+            >
+              {liveMarkets.some((item) => item.id === market.id) ? "Open Market" : "Market Closed"}
+              {liveMarkets.some((item) => item.id === market.id) && <ArrowUpRight size={15} />}
+            </button>
+          )}
         </div>
       </article>
     );
@@ -801,6 +839,18 @@ useEffect(() => {
   }
 
   function renderContent() {
+    if (verificationMarketId && marketsLoading) {
+      return <div className="empty-state" role="status"><h3>Loading verification record</h3><p>Retrieving the market and its on-chain result.</p></div>;
+    }
+
+    if (verificationMarketId && !marketsLoading) {
+      const market = publishedMarkets.find((item) => item.id === verificationMarketId);
+      if (!market) return <div className="empty-state"><h3>Verification record unavailable</h3><p>This market has not been found in the published market records.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to settled markets</button></div>;
+      const record = marketLifecycle.get(market.id);
+      if (!record || record.status !== MARKET_STATUS.SETTLED) return <div className="empty-state"><h3>Market not confirmed as settled</h3><p>Verification details are shown only after the on-chain market status confirms settlement.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to markets</button></div>;
+      return <MarketVerificationPage market={market} outcome={record.outcome} resolvedAt={record.resolvedAt} evidenceHash={record.evidenceHash} evidenceSource={record.evidenceSource} managerAddress={market.onchainManagerAddress} onBack={goBackToMarkets} />;
+    }
+
     if (selectedMarketId && marketsLoading) {
       return (
         <div className="empty-state" role="status">
@@ -885,6 +935,8 @@ useEffect(() => {
           markets={filteredMarkets}
           liveMarketIds={new Set(liveMarkets.map((market) => market.id))}
           settledMarketIds={new Set(settledMarkets.map((market) => market.id))}
+          marketOutcomes={new Map(settledMarkets.map((market) => [market.id, marketLifecycle.get(market.id)?.outcome ?? 0]))}
+          onVerify={openVerification}
           marketsLoading={marketsLoading}
           marketsError={marketsError}
           proposalMessage={proposalMessage}
