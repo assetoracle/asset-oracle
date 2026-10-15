@@ -238,11 +238,12 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     args: [marketId, voteKey],
     query: { enabled: Boolean(manager && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
+  const disputeVoteKey = disputeEvidenceHash ? keccak256(encodeAbiParameters([{ type: "uint8" }, { type: "bytes32" }], [resolutionOutcome, disputeEvidenceHash])) : emptyVoteKey;
   const disputeVoteCount = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "disputeVoteCountByKey",
-    args: [marketId, voteKey],
+    args: [marketId, disputeVoteKey],
     query: { enabled: Boolean(manager && disputeEvidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
   const canResolve = safe && isConnected && isConfiguredValidator && hasVoted.data === false &&
