@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 type WalletHelpPanelProps = {
@@ -6,398 +5,161 @@ type WalletHelpPanelProps = {
   onClose: () => void;
 };
 
-const wallets = [
+const recommendedWallets = [
   {
+    rank: "01",
     name: "MetaMask",
-    description: "Mobile wallet and browser extension",
+    note: "Top recommendation",
+    description: "Our first choice for testing on Asset Chain Enugu Testnet.",
     url: "https://metamask.io/",
+    featured: true,
   },
   {
-    name: "Trust Wallet",
-    description: "Open Asset Oracle in the Trust Wallet browser",
-    url: "https://trustwallet.com/",
-  },
-  {
+    rank: "02",
     name: "OKX Wallet",
-    description: "Mobile wallet and browser extension",
+    note: "Recommended alternative",
+    description: "A strong alternative to try for EVM testnet access.",
     url: "https://www.okx.com/web3",
+    featured: false,
   },
   {
-    name: "Bitget Wallet",
-    description: "Mobile wallet and Web3 browser",
-    url: "https://web3.bitget.com/",
-  },
-  {
-    name: "Coinbase Wallet",
-    description: "Mobile wallet and browser",
-    url: "https://www.coinbase.com/wallet",
-  },
-  {
+    rank: "03",
     name: "Rabby Wallet",
-    description: "EVM wallet and browser extension",
+    note: "Recommended alternative",
+    description: "Another EVM wallet option for testnet interactions.",
     url: "https://rabby.io/",
+    featured: false,
   },
+];
+
+const otherWallets = [
+  { name: "Trust Wallet", url: "https://trustwallet.com/" },
+  { name: "Bitget Wallet", url: "https://web3.bitget.com/" },
+  { name: "Coinbase Wallet", url: "https://www.coinbase.com/wallet" },
 ];
 
 export default function WalletHelpPanel({
   onConnect,
   onClose,
 }: WalletHelpPanelProps) {
-  const [showTroubleshooting, setShowTroubleshooting] =
-    useState(false);
-
-  const buttonStyle = {
-    width: "100%",
-    padding: 15,
-    border: "1px solid #12D9F5",
-    borderRadius: 12,
-    background: "linear-gradient(110deg, #12D9F5, #00B8A9)",
-    color: "#071A24",
-    fontSize: 15,
-    fontWeight: 800,
-    cursor: "pointer",
-  } as const;
+  const [showTroubleshooting, setShowTroubleshooting] = useState(false);
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="wallet-help-title"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        background: "rgba(3, 13, 19, 0.86)",
-        overflowY: "auto",
-        backdropFilter: "blur(8px)",
-      }}
+      className="wallet-recommendation-overlay"
+      role="presentation"
       onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
+        if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
-        style={{
-          width: "100%",
-          maxWidth: 520,
-          maxHeight: "90vh",
-          overflowY: "auto",
-          background:
-            "radial-gradient(ellipse at 100% 0%, rgba(18,217,245,0.09), transparent 45%), #071A24",
-          color: "#F2FCFF",
-          border: "1px solid #1D6675",
-          borderRadius: 20,
-          padding: 24,
-          boxSizing: "border-box",
-          boxShadow: "0 20px 70px rgba(0,0,0,0.45)",
-          fontFamily: "'Bricolage Grotesque', sans-serif",
-        }}
+        className="wallet-recommendation-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wallet-recommendation-title"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: 12,
-          }}
-        >
+        <div className="wallet-recommendation-header">
           <div>
-            <p
-              style={{
-                color: "#12D9F5",
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: 2.5,
-                margin: "0 0 8px",
-              }}
-            >
-              ASSET ORACLE
-            </p>
-
-            <h2
-              id="wallet-help-title"
-              style={{
-                fontSize: 25,
-                fontWeight: 800,
-                letterSpacing: "-0.6px",
-                lineHeight: 1.2,
-                margin: 0,
-              }}
-            >
-              Connect your wallet
-            </h2>
-
-            <p
-              style={{
-                color: "#8DA9B3",
-                fontSize: 12,
-                letterSpacing: 0.5,
-                margin: "8px 0 0",
-              }}
-            >
-              CONNECT TO ON-CHAIN INTELLIGENCE
+            <p className="wallet-recommendation-eyebrow">ASSET ORACLE · TESTNET SETUP</p>
+            <h2 id="wallet-recommendation-title">Choose a wallet</h2>
+            <p className="wallet-recommendation-subtitle">
+              Recommended wallets for Asset Chain Enugu Testnet
             </p>
           </div>
-
           <button
+            className="wallet-recommendation-close"
             type="button"
             onClick={onClose}
-            aria-label="Close wallet assistance"
-            style={{
-              display: "grid",
-              placeItems: "center",
-              width: 38,
-              height: 38,
-              flexShrink: 0,
-              background: "#0B2A35",
-              color: "#63F3FF",
-              border: "1px solid rgba(18,217,245,0.25)",
-              borderRadius: 10,
-              fontSize: 18,
-              cursor: "pointer",
-            }}
+            aria-label="Close wallet recommendations"
           >
             ×
           </button>
         </div>
 
-        <p
-          style={{
-            color: "#8DA9B3",
-            lineHeight: 1.8,
-            fontSize: 14,
-            margin: "18px 0 20px",
-          }}
-        >
-          Connect using the wallet selector, or get help opening
-          Asset Oracle inside your preferred wallet app.
-        </p>
-
-        <button
-          type="button"
-          onClick={onConnect}
-          style={buttonStyle}
-        >
-          Open wallet selector →
-        </button>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            margin: "24px 0",
-            color: "#8DA9B3",
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: 1.5,
-          }}
-        >
-          <span
-            style={{
-              height: 1,
-              flex: 1,
-              background: "rgba(29,102,117,0.7)",
-            }}
-          />
-          OTHER WALLET OPTIONS
-          <span
-            style={{
-              height: 1,
-              flex: 1,
-              background: "rgba(29,102,117,0.7)",
-            }}
-          />
+        <div className="wallet-recommendation-note">
+          <strong>Our top pick is MetaMask.</strong>
+          <p>
+            For testing, we recommend trying the wallets below in this order:
+            MetaMask first, followed by OKX Wallet and Rabby Wallet. Wallet
+            behavior can vary by device, so confirm you are using Asset Chain
+            Testnet (Chain ID 42421) before testing.
+          </p>
         </div>
 
-        <h3
-          style={{
-            fontSize: 17,
-            fontWeight: 800,
-            margin: "0 0 8px",
-          }}
-        >
-          Having trouble connecting?
-        </h3>
-
-        <p
-          style={{
-            color: "#8DA9B3",
-            fontSize: 13,
-            lineHeight: 1.8,
-            margin: "0 0 16px",
-          }}
-        >
-          On mobile, try opening Asset Oracle in your wallet's
-          built-in browser before connecting.
-        </p>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: 10,
-          }}
-        >
-          {wallets.map((wallet) => (
+        <div className="wallet-recommendation-grid">
+          {recommendedWallets.map((wallet) => (
             <a
               key={wallet.name}
+              className={`wallet-recommendation-card${wallet.featured ? " wallet-recommendation-card-featured" : ""}`}
               href={wallet.url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                display: "block",
-                minWidth: 0,
-                textDecoration: "none",
-                color: "#F2FCFF",
-                background:
-                  "linear-gradient(145deg, #102F3A, #0B2A35)",
-                border: "1px solid rgba(29,102,117,0.65)",
-                borderRadius: 12,
-                padding: 13,
-                transition:
-                  "border-color 160ms ease, background 160ms ease",
-              }}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.borderColor = "#12D9F5";
-                event.currentTarget.style.background = "#103744";
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.borderColor =
-                  "rgba(29,102,117,0.65)";
-                event.currentTarget.style.background =
-                  "linear-gradient(145deg, #102F3A, #0B2A35)";
-              }}
             >
-              <strong
-                style={{
-                  display: "block",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {wallet.name}
-              </strong>
-
-              <span
-                style={{
-                  display: "block",
-                  color: "#8DA9B3",
-                  fontSize: 12,
-                  lineHeight: 1.6,
-                  marginTop: 7,
-                }}
-              >
-                {wallet.description}
-              </span>
-
-              <span
-                style={{
-                  display: "block",
-                  color: "#63F3FF",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  marginTop: 10,
-                }}
-              >
-                Official website ↗
-              </span>
+              <span className="wallet-recommendation-rank">{wallet.rank}</span>
+              {wallet.featured && (
+                <span className="wallet-recommendation-top-pick">TOP PICK</span>
+              )}
+              <strong>{wallet.name}</strong>
+              <span className="wallet-recommendation-note-label">{wallet.note}</span>
+              <span className="wallet-recommendation-description">{wallet.description}</span>
+              <span className="wallet-recommendation-link">Official website ↗</span>
             </a>
           ))}
         </div>
 
         <button
+          className="wallet-recommendation-continue"
           type="button"
-          onClick={() =>
-            setShowTroubleshooting((current) => !current)
-          }
+          onClick={onConnect}
+        >
+          Continue to wallet selector
+          <span aria-hidden="true">→</span>
+        </button>
+        <p className="wallet-recommendation-hint">
+          The wallet selector opens next. Choose your wallet there to connect;
+          these recommendations do not connect or authorize anything by themselves.
+        </p>
+
+        <div className="wallet-recommendation-other">
+          <span>Other wallet options</span>
+          {otherWallets.map((wallet) => (
+            <a key={wallet.name} href={wallet.url} target="_blank" rel="noopener noreferrer">
+              {wallet.name}
+            </a>
+          ))}
+        </div>
+
+        <button
+          className="wallet-recommendation-troubleshoot-toggle"
+          type="button"
+          onClick={() => setShowTroubleshooting((current) => !current)}
           aria-expanded={showTroubleshooting}
-          style={{
-            width: "100%",
-            marginTop: 20,
-            padding: 14,
-            background: "rgba(18,217,245,0.04)",
-            border: "1px solid rgba(18,217,245,0.2)",
-            borderRadius: 10,
-            color: "#63F3FF",
-            textAlign: "left",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
         >
           {showTroubleshooting
-            ? "Hide troubleshooting ↑"
-            : "Connection troubleshooting ↓"}
+            ? "Hide connection tips ↑"
+            : "Having trouble connecting? View tips ↓"}
         </button>
 
         {showTroubleshooting && (
-          <div
-            style={{
-              background: "#0B2A35",
-              border: "1px solid rgba(29,102,117,0.55)",
-              borderRadius: 10,
-              padding: 15,
-              marginTop: 10,
-              color: "#8DA9B3",
-              fontSize: 13,
-              lineHeight: 1.8,
-            }}
-          >
-            <ol style={{ paddingLeft: 20, margin: 0 }}>
+          <div className="wallet-recommendation-troubleshooting">
+            <ol>
               <li>Unlock your wallet app.</li>
-              <li>Open Asset Oracle in its built-in browser.</li>
-              <li>Return to Asset Oracle and select Connect Wallet.</li>
-              <li>Approve the connection in your wallet.</li>
-              <li>If it still fails, close the pending connection and try again.</li>
+              <li>On mobile, try opening Asset Oracle in the wallet's built-in browser.</li>
+              <li>Return to Asset Oracle and open the wallet selector.</li>
+              <li>Approve only the connection request you initiated.</li>
             </ol>
-
-            <p style={{ marginBottom: 0 }}>
-              Asset Chain Testnet uses chain ID 42421. Connect first;
-              switch networks only when your wallet requests it.
+            <p>
+              Asset Chain Enugu Testnet uses Chain ID 42421. Never share your
+              recovery phrase or private keys.
             </p>
           </div>
         )}
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 9,
-            marginTop: 20,
-            paddingTop: 16,
-            borderTop: "1px solid rgba(29,102,117,0.45)",
-          }}
-        >
-          <span
-            style={{
-              color: "#00B8A9",
-              fontSize: 15,
-              lineHeight: 1.5,
-            }}
-          >
-            ●
-          </span>
-
-          <p
-            style={{
-              color: "#8DA9B3",
-              fontSize: 11,
-              lineHeight: 1.7,
-              margin: 0,
-            }}
-          >
-            Wallet links open official wallet websites. They do not
-            guarantee that the wallet app will open or that a connection
-            will succeed.
-          </p>
-        </div>
+        <p className="wallet-recommendation-disclaimer">
+          Wallet links lead to the providers' websites and do not guarantee
+          compatibility or a successful connection on every device.
+        </p>
       </section>
     </div>
   );
