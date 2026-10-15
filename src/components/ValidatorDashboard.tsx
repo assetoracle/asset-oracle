@@ -190,7 +190,7 @@ export default function ValidatorDashboard() {
             const matchingVotes = Number(voteCountReads.data?.[voteIndex]?.status === "success" ? voteCountReads.data[voteIndex].result ?? 0n : 0n);
             const evidence = market.evidenceSource.trim();
             return <article className="validator-market-card" key={id}>
-              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">{market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · needs closing"}</span></div>
+              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">{market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
               <h2>{market.question}</h2>
               <p>{market.resolutionRules}</p>
               <div className="validator-market-meta"><span>Closed {new Date(Number(market.closeTime) * 1000).toLocaleString()}</span><span>Pool: {(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span></div>
