@@ -146,7 +146,9 @@ function AccountPage({
       });
       const tokenAddress = coin[0] as Address;
       const tokenDecimals = Number(coin[1]);
-      if (!coin[2] || !isAddress(tokenAddress) || /^0x0{40}$/i.test(tokenAddress) ||
+      // A token may be disabled for new stakes after this position was created;
+      // that must not disable a user's claim from the original manager.
+      if (!isAddress(tokenAddress) || /^0x0{40}$/i.test(tokenAddress) ||
           tokenDecimals !== position.tokenDecimals) {
         throw new Error("The original market's settlement token configuration could not be verified.");
       }
