@@ -5910,3 +5910,28 @@ select:focus {
  .referral-rule{grid-template-columns:32px minmax(0,1fr);gap:9px}
  .referral-rule>span{width:30px;height:30px}
 }
+
+
+/* Wallet lookup and bounded leaderboard viewport. */
+.leaderboard-search{display:grid;grid-template-columns:20px auto minmax(0,1fr) auto;align-items:center;gap:10px;margin:16px 0 0;padding:10px 13px;border:1px solid rgba(99,243,255,.18);border-radius:13px;background:linear-gradient(135deg,rgba(18,217,245,.055),rgba(3,18,26,.45));color:var(--muted);min-width:0}
+.leaderboard-search>svg{color:#63dfe9}
+.leaderboard-search-label{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap}
+.leaderboard-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:4px 0}
+.leaderboard-search input::placeholder{color:var(--muted);opacity:.85}
+.leaderboard-search input:focus-visible{outline:2px solid rgba(99,243,255,.45);outline-offset:4px;border-radius:4px}
+.leaderboard-search-clear{border:1px solid rgba(99,243,255,.18);border-radius:8px;padding:6px 9px;background:rgba(18,217,245,.08);color:var(--text);font:inherit;font-size:11px;cursor:pointer}
+.leaderboard-search-hint{margin:7px 2px 10px;color:var(--muted);font-size:11px;line-height:1.5}
+.referral-leaderboard-card .referral-table-wrap{max-height:340px;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.referral-leaderboard-card .referral-table thead{position:sticky;top:0;z-index:2}
+.referral-leaderboard-card .referral-table th{position:sticky;top:0;z-index:2}
+.referral-leaderboard-card .referral-table{margin:0}
+.referral-leaderboard-card .referral-table-empty{min-height:130px}
+@media(max-width:560px){
+ .leaderboard-search{grid-template-columns:20px minmax(0,1fr) auto;gap:8px;padding:10px}
+ .leaderboard-search-label{grid-column:2/4;grid-row:1;white-space:normal}
+ .leaderboard-search>svg{grid-column:1;grid-row:2}
+ .leaderboard-search input{grid-column:2;grid-row:2;font-size:12px}
+ .leaderboard-search-clear{grid-column:3;grid-row:2}
+ .leaderboard-search-hint{margin-bottom:10px}
+ .referral-leaderboard-card .referral-table-wrap{max-height:300px}
+}
