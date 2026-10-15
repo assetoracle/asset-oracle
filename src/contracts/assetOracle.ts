@@ -1,4 +1,4 @@
-import { isAddress, type Address } from "viem";
+import type { Address } from "viem";
 
 export const ASSET_CHAIN_TESTNET_ID = 42421;
 export const ASSET_CHAIN_TESTNET_RPC = "https://enugu-rpc.assetchain.org";
@@ -9,18 +9,16 @@ export const TESTNET_USDC_ADDRESS = "0xc33741fddEBeA854d265db6F9707900Efb0211a2"
 export const TESTNET_USDC_DECIMALS = 6;
 
 /**
- * Set VITE_ASSET_ORACLE_MARKET_MANAGER only after the contract has been deployed
- * and its address verified on Enugu testnet. Never use a guessed address.
+ * Canonical Asset Oracle manager implementing the 2-of-3 human-validator flow.
+ * Asset Chain Enugu testnet only (chain ID 42421).
  */
-const configuredAddress = import.meta.env.VITE_ASSET_ORACLE_MARKET_MANAGER?.trim();
+export const CURRENT_ASSET_ORACLE_MARKET_MANAGER_ADDRESS =
+  "0x5fc327f55cf533ed5d05337f835be37ff1e0db1f" as Address;
 
-export const assetOracleMarketManagerAddress: Address | undefined =
-  configuredAddress && isAddress(configuredAddress)
-    ? (configuredAddress as Address)
-    : undefined;
+export const assetOracleMarketManagerAddress: Address =
+  CURRENT_ASSET_ORACLE_MARKET_MANAGER_ADDRESS;
 
-export const isAssetOracleContractConfigured =
-  assetOracleMarketManagerAddress !== undefined;
+export const isAssetOracleContractConfigured = true;
 
 // Previously deployed manager. Existing positions remain in this contract and
 // must be claimable here; never redirect legacy claims to the current manager.

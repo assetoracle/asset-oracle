@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
-import { MARKET_STATUS, assetOracleMarketManagerAbi } from "./contracts/assetOracle";
+import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
   ASSET_CHAIN_TESTNET_ID,
@@ -224,6 +224,34 @@ export default function App() {
 
   const { signMessageAsync } = useSignMessage();
   const isAdmin = useIsAdmin(address);
+
+  const validatorStatusReads = useReadContracts({
+    contracts: address && assetOracleMarketManagerAddress ? [
+      {
+        address: assetOracleMarketManagerAddress,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "isValidator" as const,
+        args: [address] as const,
+      },
+      {
+        address: assetOracleMarketManagerAddress,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "validatorRosterConfigured" as const,
+      },
+    ] : [],
+    query: {
+      enabled: Boolean(address && assetOracleMarketManagerAddress && networkState === "correct"),
+      refetchInterval: 30_000,
+    },
+  });
+  const onchainValidatorStatus =
+    validatorStatusReads.data?.[0]?.status === "success"
+      ? validatorStatusReads.data[0].result === true
+      : null;
+  const onchainValidatorRosterConfigured =
+    validatorStatusReads.data?.[1]?.status === "success"
+      ? validatorStatusReads.data[1].result === true
+      : null;
 
   useEffect(() => {
     if (!helpOpen) return;
@@ -833,6 +861,8 @@ useEffect(() => {
           onLoad={() => void handleLoadMyProposals()}
           walletRole={walletRole}
           roleError={roleError}
+          onchainValidatorStatus={onchainValidatorStatus}
+          onchainValidatorRosterConfigured={onchainValidatorRosterConfigured}
         />
       );
     }

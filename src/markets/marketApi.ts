@@ -236,16 +236,21 @@ export async function getMyProposals(address: string) {
   });
 }
 
-export type WalletRole = "OWNER" | "MARKET_CREATOR" | "USER";
+export type WalletRole = "OWNER" | "VALIDATOR_2" | "VALIDATOR_3" | "MARKET_CREATOR" | "USER";
 
 export type WalletRoleResponse = {
   address: string;
   role: WalletRole;
+  isOwner: boolean;
+  humanValidator: boolean;
+  validatorNumber: 1 | 2 | 3 | null;
   permissions: {
     createMarketProposal: boolean;
     viewOwnProposals: boolean;
     reviewAllProposals: boolean;
     approveOrRejectProposals: boolean;
+    isHumanValidator: boolean;
+    validatorNumber: 1 | 2 | 3 | null;
   };
 };
 

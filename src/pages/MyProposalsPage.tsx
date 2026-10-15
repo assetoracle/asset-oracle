@@ -11,6 +11,8 @@ type MyProposalsPageProps = {
   onLoad: () => void;
   walletRole: WalletRoleResponse | null;
   roleError: string;
+  onchainValidatorStatus: boolean | null;
+  onchainValidatorRosterConfigured: boolean | null;
 };
 
 export default function MyProposalsPage({
@@ -23,6 +25,8 @@ export default function MyProposalsPage({
   onLoad,
   walletRole,
   roleError,
+  onchainValidatorStatus,
+  onchainValidatorRosterConfigured,
 }: MyProposalsPageProps) {
   return (
     <section className="page-section account-page">
@@ -53,7 +57,11 @@ export default function MyProposalsPage({
           <div className="account-summary-grid">
             <article className="account-summary-card">
               <span>Wallet role</span>
-              <strong>{walletRole ? walletRole.role.replace(/_/g, " ") : "Not verified"}</strong>
+              <strong>{walletRole
+                ? walletRole.humanValidator
+                  ? (walletRole.isOwner ? "OWNER · HUMAN VALIDATOR 1" : `HUMAN VALIDATOR ${walletRole.validatorNumber}`)
+                  : walletRole.role.replace(/_/g, " ")
+                : "Not verified"}</strong>
             </article>
             <article className="account-summary-card">
               <span>Proposal review</span>
@@ -61,6 +69,18 @@ export default function MyProposalsPage({
                 {walletRole?.permissions.approveOrRejectProposals
                   ? "Can approve or reject"
                   : "Owner approval required"}
+              </strong>
+            </article>
+            <article className="account-summary-card">
+              <span>On-chain validator status</span>
+              <strong>
+                {onchainValidatorRosterConfigured === false
+                  ? "Roster not configured"
+                  : onchainValidatorStatus === true && onchainValidatorRosterConfigured === true
+                    ? "Authorized on active contract"
+                    : onchainValidatorStatus === false
+                      ? "Not authorized on active contract"
+                      : "Checking active contract"}
               </strong>
             </article>
           </div>
@@ -78,11 +98,13 @@ export default function MyProposalsPage({
 
           {walletRole && (
             <p className="wallet-message" role="status">
-              {walletRole.role === "OWNER"
-                ? "Owner permissions: review, approve, and reject proposals."
-                : walletRole.role === "MARKET_CREATOR"
-                  ? "Market creator permissions: submit proposals and track your own submissions. Approval and rejection remain owner-only."
-                  : "Standard wallet: submit proposals and track your own submissions. Approval and rejection remain owner-only."}
+              {walletRole.humanValidator
+                ? `Human validator ${walletRole.validatorNumber} recognized by the backend. ${onchainValidatorStatus === true && onchainValidatorRosterConfigured === true ? "The active 2-of-3 contract confirms this wallet is authorized." : onchainValidatorStatus === false || onchainValidatorRosterConfigured === false ? "The active contract does not currently confirm this validator; settlement voting remains unavailable." : "Checking the active contract before confirming settlement-voting access."}`
+                : walletRole.isOwner
+                  ? "Owner permissions: review, approve, and reject proposals."
+                  : walletRole.role === "MARKET_CREATOR"
+                    ? "Market creator permissions: submit proposals and track your own submissions. Approval and rejection remain owner-only."
+                    : "Standard wallet: submit proposals and track your own submissions. Approval and rejection remain owner-only."}
             </p>
           )}
 
