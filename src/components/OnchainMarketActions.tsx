@@ -204,7 +204,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
                     : Date.now() / 1000 >= closeTime
                       ? "The staking window has closed."
                       : !amount.trim()
-                        ? "Enter a USDC amount to enable staking."
+                        ? ""
                         : parsedAmount <= 0n
                           ? "Enter a valid amount greater than zero (up to 6 decimal places)."
                           : balance.data !== undefined && parsedAmount > balance.data
@@ -459,7 +459,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             <button className="primary-button" type="button" disabled={!canStake || isWalletPending || receipt.isLoading || referralPreparing || !amount.trim()} onClick={submitStake}>
               {referralPreparing ? "Confirm referral in wallet…" : isWalletPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : (allowance.data ?? 0n) < parsedAmount ? "Approve exact USDC amount" : `Stake ${amount || "USDC"} on ${yesSide ? "YES" : "NO"}`}
             </button>
-            {!canStake && !isWalletPending && !receipt.isLoading && <p className="stake-disabled-note" role="status">{stakeDisabledReason}</p>}
+            {!canStake && stakeDisabledReason && !isWalletPending && !receipt.isLoading && <p className="stake-disabled-note" role="status">{stakeDisabledReason}</p>}
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
