@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import BrandedSelect from "./BrandedSelect";
 import { encodeAbiParameters, keccak256, toBytes, type Address } from "viem";
 import { useAccount, useChainId, useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { ArrowUpRight, RefreshCw, ShieldCheck } from "lucide-react";
@@ -161,9 +162,15 @@ export default function ValidatorDashboard() {
                 {evidence ? <a href={/^https?:\/\//i.test(evidence) ? evidence : undefined} target="_blank" rel="noreferrer">{evidence}</a> : <strong>Missing evidence source — voting disabled</strong>}
               </div>
               <label htmlFor={`validator-outcome-${id}`}>Your decision</label>
-              <select className="brand-select" id={`validator-outcome-${id}`} value={selectedOutcome} onChange={(event) => setOutcomes((current) => ({ ...current, [id]: Number(event.target.value) as 1 | 2 }))} disabled={hasVoted || isPending || receipt.isLoading}>
-                <option value={1}>YES</option><option value={2}>NO</option>
-              </select>
+              <BrandedSelect
+                className="validator-outcome-select"
+                id={`validator-outcome-${id}`}
+                value={selectedOutcome}
+                options={[{ value: "1", label: "YES" }, { value: "2", label: "NO" }]}
+                onChange={(value) => setOutcomes((current) => ({ ...current, [id]: Number(value) as 1 | 2 }))}
+                disabled={hasVoted || isPending || receipt.isLoading}
+                ariaLabel="Your decision"
+              />
               <p className="validator-vote-count">Matching votes: {matchingVotes}/2</p>
               {hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending ? "Confirm vote in wallet…" : receipt.isLoading ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : "NO"}`}</button>}
             </article>;
