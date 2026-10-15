@@ -1,7 +1,7 @@
-import { ArrowLeft, ExternalLink, ShieldCheck, Clock3, FileCheck2, WalletCards } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShieldCheck, FileCheck2, WalletCards } from "lucide-react";
 import { useAccount, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
-import { assetOracleMarketManagerAbi, MARKET_OUTCOME, MARKET_STATUS, ASSET_CHAIN_TESTNET_EXPLORER, TESTNET_USDC_DECIMALS } from "../contracts/assetOracle";
+import { assetOracleMarketManagerAbi, MARKET_OUTCOME, ASSET_CHAIN_TESTNET_EXPLORER, TESTNET_USDC_DECIMALS } from "../contracts/assetOracle";
 import type { DisplayMarket } from "../pages/HomePage";
 
 type Props = {
@@ -89,7 +89,7 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
             <span className="verification-detail-label">On-chain proof</span>
             <strong>Asset Chain testnet</strong>
             {managerAddress && <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/address/${managerAddress}`} target="_blank" rel="noreferrer">View market contract <ExternalLink size={14} /></a>}
-            <p>Market creation transaction: <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${market.onchainTxHash ?? ""}`} target="_blank" rel="noreferrer">{market.onchainTxHash ? shortHash(market.onchainTxHash) : "Not recorded"}</a></p>
+            <p>Market creation transaction: {market.onchainTxHash ? <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${market.onchainTxHash}`} target="_blank" rel="noreferrer">{shortHash(market.onchainTxHash)} <ExternalLink size={13} /></a> : "Not recorded"}</p>
           </article>
         </div>
       </section>
