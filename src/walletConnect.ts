@@ -21,7 +21,7 @@ export const appKit = createAppKit({
   metadata: {
     name: "Asset Oracle",
     description: "Real-world prediction markets on Asset Chain",
-    url: "https://asset-oracle.onrender.com",
+    url: "https://assetoracleapp.xyz",
     icons: [],
   },
   // Keep the full wallet list available, including mobile wallet deep links.
