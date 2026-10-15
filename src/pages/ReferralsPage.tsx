@@ -62,7 +62,6 @@ export default function ReferralsPage({
   leaderboardLoading,
   leaderboardError,
   actionLoading,
-  onGetReferralLink,
   onAttributeReferral,
   onRetryLeaderboard,
 }: ReferralsPageProps) {
@@ -123,7 +122,7 @@ export default function ReferralsPage({
             </button>
           ) : (
             <span className="referral-link-status" role="status">
-              {!address ? "Connect wallet to prepare your link" : actionLoading ? "Preparing your link…" : "Preparing your link…"}
+              {!address ? "Connect wallet to prepare your link" : actionLoading ? "Preparing your link…" : "Your link is being prepared"}
             </span>
           )}
         </div>
