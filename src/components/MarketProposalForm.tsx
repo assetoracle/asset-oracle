@@ -1,5 +1,6 @@
 
 import { useState, type FormEvent } from "react";
+import BrandedSelect from "./BrandedSelect";
 import {
   validateMarketProposal,
   createMarketProposal,
@@ -255,21 +256,12 @@ export function MarketProposalForm({
 
           <label style={labelStyle}>
             Category
-            <select
+            <BrandedSelect
               value={category}
-              onChange={(event) =>
-                setCategory(
-                  event.target.value as MarketProposalInput["category"]
-                )
-              }
-              style={fieldStyle}
-            >
-              {categories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setCategory(value as MarketProposalInput["category"])}
+              options={categories.map((item) => ({ value: item, label: item }))}
+              ariaLabel="Market category"
+            />
           </label>
 
           <div style={{ display: "grid", gap: 14 }}>
