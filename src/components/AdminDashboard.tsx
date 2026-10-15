@@ -120,7 +120,7 @@ export default function AdminDashboard({
   );
 
   return (
-    <section className="page-section">
+    <section className="page-section admin-dashboard">
       <div className="section-heading">
         <div>
           <span className="eyebrow">RESTRICTED ACCESS</span>
@@ -130,7 +130,7 @@ export default function AdminDashboard({
         <ShieldCheck size={30} />
       </div>
 
-      <div className="account-summary-grid">
+      <div className="account-summary-grid admin-summary-grid">
         <article className="account-summary-card">
           <span>Total proposals loaded</span>
           <strong>{proposals.length}</strong>
@@ -174,7 +174,7 @@ export default function AdminDashboard({
         </div>
       )}
 
-      <div className="market-grid">
+      <div className="market-grid admin-proposal-grid">
         {proposals.map((proposal) => (
           <article className="market-card" key={proposal.id}>
             <div className="market-card-top">
