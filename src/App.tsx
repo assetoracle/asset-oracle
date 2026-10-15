@@ -544,6 +544,18 @@ useEffect(() => {
   }
 
   function openMarket(market: DisplayMarket) {
+    // Only markets verified as OPEN and still before their on-chain close time
+    // can be opened for participation. Block direct links and stale cards too.
+    const lifecycle = marketLifecycle.get(market.id);
+    if (
+      !lifecycle ||
+      lifecycle.status !== MARKET_STATUS.OPEN ||
+      lifecycle.closeTime <= Math.floor(Date.now() / 1000)
+    ) {
+      setSelectedMarketId(null);
+      window.location.hash = pathForPage("Markets");
+      return;
+    }
     window.location.hash = pathForPage("Markets", market.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -582,9 +594,9 @@ useEffect(() => {
     return lifecycle?.status === MARKET_STATUS.OPEN &&
       lifecycle.closeTime > Math.floor(Date.now() / 1000);
   });
-  const activeMarkets = publishedMarkets.filter(
-    (market) => marketLifecycle.get(market.id)?.status !== MARKET_STATUS.SETTLED,
-  );
+  // Keep closed, disputed, arbitration, refundable and settled markets visible
+  // in All Markets; participation is restricted separately to verified live markets.
+  const activeMarkets = publishedMarkets;
   const sourceMarkets =
     activeCategory === "Live" ? liveMarkets :
     activeCategory === "Settled Markets" ? settledMarkets :
@@ -624,15 +636,23 @@ useEffect(() => {
             ) : liveMarkets.some((item) => item.id === market.id) ? (
               <span className="market-status market-status-live"><span className="live-indicator" aria-hidden="true" />LIVE</span>
             ) : (
-              <span className="market-status">{market.status || "Published"}</span>
+              <span className="market-status">CLOSED</span>
             )}
           </div>
         </div>
         <h3>{market.question}</h3>
         <div className="market-card-bottom">
           <span className="market-status-note">Closes {market.closesAt ? formatDate(market.closesAt) : "date unavailable"}</span>
-          <button className="primary-button open-market-button" type="button" onClick={() => openMarket(market)}>
-            Open Market <ArrowUpRight size={15} />
+          <button
+            className="primary-button open-market-button"
+            type="button"
+            onClick={() => openMarket(market)}
+            disabled={!liveMarkets.some((item) => item.id === market.id)}
+            aria-disabled={!liveMarkets.some((item) => item.id === market.id)}
+            title={!liveMarkets.some((item) => item.id === market.id) ? "This market is closed to participation." : "Open live market"}
+          >
+            {liveMarkets.some((item) => item.id === market.id) ? "Open Market" : "Market Closed"}
+            {liveMarkets.some((item) => item.id === market.id) && <ArrowUpRight size={15} />}
           </button>
         </div>
       </article>
