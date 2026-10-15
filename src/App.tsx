@@ -811,6 +811,23 @@ useEffect(() => {
     }
 
     if (selectedMarket) {
+      const lifecycle = marketLifecycle.get(selectedMarket.id);
+      const canOpenSelectedMarket = Boolean(
+        lifecycle &&
+        lifecycle.status === MARKET_STATUS.OPEN &&
+        lifecycle.closeTime > Math.floor(Date.now() / 1000)
+      );
+      if (!canOpenSelectedMarket) {
+        return (
+          <div className="empty-state">
+            <h3>Market Closed</h3>
+            <p>This market is no longer open for participation. You can still find it in the market list and review its status.</p>
+            <button className="primary-button" type="button" onClick={goBackToMarkets}>
+              Back to markets
+            </button>
+          </div>
+        );
+      }
       return (
         <MarketDetailPage
           question={selectedMarket.question}
