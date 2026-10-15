@@ -14,10 +14,20 @@ const RULES: Array<[RegExp, string]> = [
   [/required|missing|must provide|cannot be empty/i, "Missing information."],
 ];
 
-export function friendlyError(error: unknown, fallback = "Something went wrong."): string {
+const MAX_ERROR_LENGTH = 40;
+const DEFAULT_ERROR = "Action failed.";
+
+export function friendlyError(error: unknown, fallback = DEFAULT_ERROR): string {
   const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
   for (const [pattern, friendly] of RULES) {
-    if (pattern.test(message)) return friendly;
+    if (pattern.test(message)) return friendly.slice(0, MAX_ERROR_LENGTH);
   }
-  return fallback;
+
+  // Never show raw provider, RPC, or backend error text in the UI.
+  // Unknown errors use a short safe fallback, regardless of input length.
+  const safeFallback = fallback.trim();
+  if (safeFallback.length > 0 && safeFallback.length <= MAX_ERROR_LENGTH) {
+    return safeFallback;
+  }
+  return DEFAULT_ERROR;
 }
