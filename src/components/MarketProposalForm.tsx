@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import {
   validateMarketProposal,
   createMarketProposal,
+  updateMarketProposal,
   type MarketProposalInput,
   type StoredMarketProposal,
 } from "../markets/marketApi";
@@ -12,6 +13,8 @@ type Props = {
   signMessage: (message: string) => Promise<string>;
   onClose: () => void;
   onCreated: (proposal: StoredMarketProposal) => void;
+  initialProposal?: StoredMarketProposal | null;
+  onUpdated?: (proposal: StoredMarketProposal) => void;
 };
 
 const categories = [
@@ -43,20 +46,29 @@ function toIsoDate(value: string): string {
   return new Date(value).toISOString();
 }
 
+function toLocalDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 export function MarketProposalForm({
   address,
   signMessage,
   onClose,
   onCreated,
+  initialProposal = null,
+  onUpdated,
 }: Props)
  {
-  const [question, setQuestion] = useState("");
-  const [description, setDescription] = useState("");
+  const [question, setQuestion] = useState(initialProposal?.question ?? "");
+  const [description, setDescription] = useState(initialProposal?.description ?? "");
   const [category, setCategory] =
-    useState<MarketProposalInput["category"]>("Crypto");
-  const [closesAt, setClosesAt] = useState("");
-  const [resolvesAt, setResolvesAt] = useState("");
-  const [resolutionCriteria, setResolutionCriteria] = useState("");
+    useState<MarketProposalInput["category"]>(initialProposal?.category ?? "Crypto");
+  const [closesAt, setClosesAt] = useState(initialProposal ? toLocalDateTime(initialProposal.closesAt) : "");
+  const [resolvesAt, setResolvesAt] = useState(initialProposal ? toLocalDateTime(initialProposal.resolvesAt) : "");
+  const [resolutionCriteria, setResolutionCriteria] = useState(initialProposal?.resolutionRule.description ?? "");
   const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -113,12 +125,13 @@ export function MarketProposalForm({
         return;
       }
 
-      const result = await createMarketProposal(
-  proposal,
-  address,
-  signMessage,
-);
-      onCreated(result.proposal);
+      if (initialProposal) {
+        const result = await updateMarketProposal(initialProposal.id, proposal, address, signMessage);
+        (onUpdated ?? onCreated)(result.proposal);
+      } else {
+        const result = await createMarketProposal(proposal, address, signMessage);
+        onCreated(result.proposal);
+      }
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -350,7 +363,7 @@ export function MarketProposalForm({
                 opacity: busy ? 0.65 : 1,
               }}
             >
-              {busy ? "Validating and submitting..." : "Submit proposal"}
+              {busy ? "Validating and submitting..." : initialProposal ? "Save changes and resubmit" : "Submit proposal"}
             </button>
 
             <button
@@ -372,7 +385,7 @@ export function MarketProposalForm({
 
           <p style={{ color: "#8DA9B3", fontSize: 12, lineHeight: 1.7 }}>
             Submissions are subject to review. Submitting a proposal
-            does not publish a market or guarantee approval.
+            does not publish a market or guarantee approval. {initialProposal ? "Saving changes returns it to pending approval." : ""}
           </p>
         </form>
       </section>
