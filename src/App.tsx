@@ -388,10 +388,25 @@ useEffect(() => {
     let active = true;
     setRoleError("");
     void ensureWalletSession(address, (message) => signMessageAsync({ message }))
-      .then(() => getWalletRole(address))
-      .then((role) => { if (active) setWalletRole(role); })
+      .then(async () => {
+        const role = await getWalletRole(address);
+        if (active) setWalletRole(role);
+        // Create or retrieve the wallet's stable referral code using the already
+        // established session. This requires no transaction or extra signature.
+        const { code } = await createReferralCode(address);
+        const stats = await getPersonalReferralStats(address);
+        if (!active || addressRef.current?.toLowerCase() !== address.toLowerCase()) return;
+        setPersonalReferralStats(stats);
+        const url = new URL(window.location.href);
+        url.searchParams.set("ref", code);
+        url.hash = "/referrals";
+        setReferralLink(url.toString());
+      })
       .catch((error) => {
-        if (active) setRoleError(error instanceof Error ? error.message : "Unable to verify wallet role.");
+        if (active) {
+          setRoleError(error instanceof Error ? error.message : "Unable to verify wallet role.");
+          setReferralMessage(error instanceof Error ? error.message : "Referral link is temporarily unavailable.");
+        }
       })
       .finally(() => { /* Session and role loading are reflected by the request lifecycle. */ });
     return () => { active = false; };
