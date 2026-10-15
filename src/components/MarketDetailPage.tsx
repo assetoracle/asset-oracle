@@ -121,7 +121,7 @@ function MarketDetailPage({
       <section className="resolution-preview">
         <span className="eyebrow">MARKET RULES</span>
         <h2>What decides YES or NO?</h2>
-        <p>{resolutionRule?.description || "Resolution criteria were not provided with this proposal. Validators must agree on a public evidence source before voting."}</p>
+        <p>{resolutionRule?.description || "Resolution criteria were not provided with this market."}</p>
       </section>
 
 
