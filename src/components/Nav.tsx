@@ -11,6 +11,7 @@ export type Page =
   | "History"
   | "Referrals"
   | "Admin"
+  | "Validators"
   | "Terms of Service";
 
 export type NavItem = {
