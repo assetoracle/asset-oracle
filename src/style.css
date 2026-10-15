@@ -7744,3 +7744,124 @@ svg {
     flex: 0 0 auto;
   }
 }
+
+
+/* Asset Oracle branded form controls and prominent on-chain market identity. */
+.onchain-market-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0 0 22px;
+  padding: 18px 20px;
+  border: 1px solid rgba(18, 217, 245, .28);
+  border-radius: 16px;
+  background: radial-gradient(ellipse at 0% 0%, rgba(18,217,245,.12), transparent 65%), linear-gradient(135deg, #102f3a, #0b2a35);
+}
+.onchain-market-title-row .eyebrow {
+  display: block;
+  margin-bottom: 7px;
+}
+.onchain-market-id {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.8px;
+}
+.onchain-market-asset {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(99,243,255,.22);
+  border-radius: 999px;
+  background: rgba(18,217,245,.08);
+  color: var(--highlight);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+.onchain-status select,
+select.brand-select,
+.market-detail-page select {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 8px 0 14px;
+  padding: 0 42px 0 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(99,243,255,.28);
+  border-radius: 12px;
+  background-color: #0b2a35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2363f3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.onchain-status select:focus,
+select.brand-select:focus,
+.market-detail-page select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(18,217,245,.13);
+}
+.onchain-status select:disabled,
+select.brand-select:disabled,
+.market-detail-page select:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.onchain-status select option,
+select.brand-select option,
+.market-detail-page select option {
+  background: #0b2a35;
+  color: #f2fcff;
+}
+.onchain-status input:not([type="checkbox"]),
+.onchain-status textarea {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 8px 0 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(99,243,255,.22);
+  border-radius: 12px;
+  background: #071a24;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+.onchain-status input:focus,
+.onchain-status textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(18,217,245,.12);
+}
+.validator-step-heading {
+  margin: 18px 0;
+  padding: 16px 18px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 12px 12px 0;
+  background: rgba(18,217,245,.055);
+}
+.validator-step-heading h4 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 16px;
+}
+.validator-step-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
