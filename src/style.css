@@ -7540,3 +7540,109 @@ svg {
     gap: 14px;
   }
 }
+
+
+/* Responsive market filters: status and subject category are distinct controls. */
+.market-filter-panel {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 24px;
+  min-width: 0;
+}
+.market-status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  min-width: 0;
+}
+.market-category-filter {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.market-category-filter > label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.market-category-select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #0b2a35;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+.market-category-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.category-list-desktop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0;
+}
+.my-proposal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  align-items: stretch;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+}
+.my-proposal-grid > .market-card {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  box-sizing: border-box;
+  transform: none;
+  overflow-wrap: anywhere;
+}
+.my-proposal-grid > .market-card:hover { transform: none; }
+.proposal-state { margin-top: 0; }
+@media (min-width: 761px) {
+  .market-filter-panel { grid-template-columns: 1fr; }
+  .market-category-filter { display: none; }
+}
+@media (max-width: 760px) {
+  .market-filter-panel { gap: 12px; }
+  .market-status-filters { gap: 8px; }
+  .market-status-filters .category-button { min-height: 40px; padding: 0 15px; }
+  .category-list-desktop { display: none; }
+  .my-proposal-grid { gap: 14px; }
+  .my-proposal-grid > .market-card { padding: 17px; }
+  .desktop-navigation { display: none !important; }
+  .mobile-navigation {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    width: min(320px, calc(100vw - 28px));
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+    display: grid;
+    gap: 5px;
+    padding: 12px;
+    border: 1px solid rgba(18, 217, 245, 0.2);
+    border-radius: 14px;
+    background: #0b2a35;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+  }
+  .header { position: relative; }
+}
+@media (max-width: 420px) {
+  .market-status-filters .category-button { padding: 0 12px; font-size: 11px; }
+}
