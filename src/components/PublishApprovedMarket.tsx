@@ -223,19 +223,6 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("Only owner-approved proposals can be published.");
       return;
     }
-    if (!address || !isConnected) {
-      setError("Connect the authorized market-creator wallet.");
-      return;
-    }
-    if (chainId !== ASSET_CHAIN_TESTNET_ID) {
-      setError("Switch your wallet to Asset Chain Enugu testnet (Chain ID 42421).");
-      return;
-    }
-    if (!manager || !contractVerified || !stablecoinReady ||
-        validatorRoster.data !== true || marketCreatorRole.data !== true) {
-      setError("Publishing is blocked until the current manager interface, configured validator roster, USDC token, and this wallet's on-chain market-creator permission are verified.");
-      return;
-    }
     if (!Number.isFinite(closeTimestamp) || closeTimestamp <= Math.floor(Date.now() / 1000)) {
       setError("The proposal closing time has passed. Edit or recreate the proposal before publishing.");
       return;
@@ -249,9 +236,44 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("A publication or transaction is already in progress or recorded. Check its status before trying again.");
       return;
     }
+    setError("");
+    if (!address || !isConnected) {
+      setPublishConfirmation(false);
+      setError("Connect the authorized market-creator wallet, then click Publish again.");
+      return;
+    }
+    if (chainId !== ASSET_CHAIN_TESTNET_ID) {
+      setPublishConfirmation(false);
+      setError("Switch your wallet to Asset Chain Enugu testnet (Chain ID 42421), then click Publish again.");
+      return;
+    }
+    if (checkingContract || !contractVerified) {
+      setPublishConfirmation(false);
+      setError("The configured market-manager contract has not been verified on this network. Wait for the contract check to finish, then retry.");
+      return;
+    }
+    if (tokenConfig.isLoading || validatorRoster.isLoading || marketCreatorRole.isLoading) {
+      setPublishConfirmation(false);
+      setError("The contract configuration is still loading. Wait a moment and click Publish again.");
+      return;
+    }
+    if (tokenConfig.isError || !stablecoinReady) {
+      setPublishConfirmation(false);
+      setError("Cannot publish: the configured manager does not confirm the approved USDC token and decimals. Check the canonical manager configuration.");
+      return;
+    }
+    if (validatorRoster.isError || validatorRoster.data !== true) {
+      setPublishConfirmation(false);
+      setError("Cannot publish: validator roster verification failed on the configured manager.");
+      return;
+    }
+    if (marketCreatorRole.isError || marketCreatorRole.data !== true) {
+      setPublishConfirmation(false);
+      setError("Cannot publish: the connected wallet does not have MARKET_CREATOR_ROLE on the canonical manager. This is an on-chain permission, not an admin dashboard permission.");
+      return;
+    }
     publishInFlight.current = true;
     setPublishConfirmation(false);
-    setError("");
     const rules = JSON.stringify({
       ...proposal.resolutionRule,
       resolvesAt: proposal.resolvesAt,
