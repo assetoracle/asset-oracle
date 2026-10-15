@@ -68,6 +68,7 @@ import {
   formatDate,
 } from "./utils/format";
 import type { MarketFilter } from "./types";
+import { friendlyError } from "./utils/friendlyError";
 import "./style.css";
 
 const categories: MarketFilter[] = [
@@ -346,9 +347,7 @@ const loadMarkets = useCallback(async () => {
     if (!isMountedRef.current) return;
 
     setMarketsError(
-      error instanceof Error
-        ? error.message
-        : "Unable to load published markets.",
+      friendlyError(error, "Markets unavailable."),
     );
   } finally {
     if (isMountedRef.current) {
@@ -448,7 +447,7 @@ useEffect(() => {
       })
       .catch((error) => {
         if (!active) return;
-        const message = error instanceof Error ? error.message : "Wallet session could not be established.";
+        const message = friendlyError(error, "Wallet setup failed.");
         // Keep the role preview visible if the user declines the one-time session signature.
         if (!getWalletSession(address)) setRoleError("");
         setReferralMessage(message);

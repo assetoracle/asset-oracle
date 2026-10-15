@@ -1,3 +1,4 @@
+import { friendlyError } from "../utils/friendlyError";
 
 import { useState, type FormEvent } from "react";
 import BrandedSelect from "./BrandedSelect";
@@ -135,9 +136,7 @@ export function MarketProposalForm({
       }
     } catch (error) {
       setMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to submit the proposal. Please try again."
+        friendlyError(error, "Proposal failed.")
       );
     } finally {
       setBusy(false);

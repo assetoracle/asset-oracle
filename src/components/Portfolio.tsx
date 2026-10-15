@@ -1,3 +1,4 @@
+import { friendlyError } from "../utils/friendlyError";
 
 import { useEffect, useState } from "react";
 import {
@@ -151,9 +152,7 @@ export default function Portfolio({
             balance: "",
             loading: false,
             error:
-              error instanceof Error
-                ? error.message
-                : "Unable to read the USDC contract.",
+              friendlyError(error, "Balance unavailable."),
           });
         }
       }

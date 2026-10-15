@@ -1,3 +1,4 @@
+import { friendlyError } from "../utils/friendlyError";
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useSignMessage } from "wagmi";
@@ -229,7 +230,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         setReferralAttributionReady(true);
         setMessage("Referral attribution confirmed. Continue with the stake transaction.");
       } catch (error) {
-        setMessage("Stake paused: " + (error instanceof Error ? error.message : "referral attribution failed. You can retry."));
+        setMessage("Stake paused: " + (friendlyError(error, "Referral check failed.")));
         setReferralPreparing(false);
         return;
       }
@@ -306,7 +307,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         if (!qualificationResponse.ok) throw new Error(qualificationData.error || "Referral qualification could not be verified.");
         setMessage("Stake confirmed on-chain. " + (qualificationData.message || "Referral qualification checked."));
       } catch (error) {
-        setMessage("Stake confirmed on-chain. Referral verification is pending: " + (error instanceof Error ? error.message : "try again from Referrals."));
+        setMessage("Stake confirmed on-chain. Referral verification is pending: " + (friendlyError(error, "Referral check pending.")));
       }
     })();
     

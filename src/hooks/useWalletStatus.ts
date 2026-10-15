@@ -1,3 +1,4 @@
+import { friendlyError } from "../utils/friendlyError";
 import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
@@ -245,9 +246,7 @@ export function useWalletStatus() {
       await open({ view: "Connect" });
     } catch (error) {
       setWalletMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to open the wallet selector.",
+        friendlyError(error, "Wallet unavailable."),
       );
     } finally {
       setWalletBusy(false);
@@ -259,9 +258,7 @@ export function useWalletStatus() {
       await open({ view: "Account" });
     } catch (error) {
       setWalletMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to open wallet account details.",
+        friendlyError(error, "Wallet unavailable."),
       );
     }
   }
