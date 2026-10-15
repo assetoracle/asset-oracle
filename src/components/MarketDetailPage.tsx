@@ -37,6 +37,7 @@ type MarketDetailPageProps = {
   onchainMarketId?: string | null;
   onchainManagerAddress?: string | null;
   onchainCloseTime?: number;
+  onchainTxHash?: string | null;
   onBack: () => void;
 };
 
@@ -50,6 +51,7 @@ function MarketDetailPage({
   onchainMarketId,
   onchainManagerAddress,
   onchainCloseTime,
+  onchainTxHash,
   onBack,
 }: MarketDetailPageProps) {
   return (
@@ -73,6 +75,15 @@ function MarketDetailPage({
 
       <h1>{question}</h1>
       <p className="market-detail-description">{description}</p>
+
+      {onchainTxHash && /^0x[0-9a-fA-F]{64}$/.test(onchainTxHash) && (
+        <p className="market-network-note">
+          Market creation transaction:{" "}
+          <a href={`https://scan-testnet.assetchain.org/tx/${onchainTxHash}`} target="_blank" rel="noreferrer">
+            {onchainTxHash.slice(0, 12)}…{onchainTxHash.slice(-8)} <ExternalLink size={13} />
+          </a>
+        </p>
+      )}
 
       <OnchainMarketStatus />
       {onchainMarketId && onchainCloseTime !== undefined && (
