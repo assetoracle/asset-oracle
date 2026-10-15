@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isAddress, type Address } from "viem";
 import { CircleHelp, History, WalletCards, ExternalLink, RefreshCw } from "lucide-react";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import {
@@ -6,6 +7,8 @@ import {
   ASSET_CHAIN_TESTNET_EXPLORER,
   assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
+  LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES,
+  erc20TestnetAbi,
 } from "../contracts/assetOracle";
 import type { WalletAccountData, WalletHistoryRecord, WalletPositionRecord } from "../markets/marketApi";
 
@@ -60,7 +63,7 @@ function AccountPage({
   const { chainId } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
-  const [busyMarketId, setBusyMarketId] = useState<number | null>(null);
+  const [busyMarketKey, setBusyMarketKey] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
 
@@ -82,7 +85,7 @@ function AccountPage({
       ];
 
   async function handleClaim(position: WalletPositionRecord) {
-    if (!assetOracleMarketManagerAddress || !address || !publicClient) {
+    if (!address || !publicClient) {
       setActionError("Verified market manager or wallet connection is unavailable.");
       return;
     }
@@ -90,13 +93,79 @@ function AccountPage({
       setActionError("Switch your wallet to Asset Chain Enugu Testnet before claiming.");
       return;
     }
-    setBusyMarketId(position.marketId);
+    const managerAddress = position.managerAddress;
+    const allowedManagers = [
+      assetOracleMarketManagerAddress,
+      ...LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES,
+    ].filter((value): value is Address => Boolean(value));
+    if (!managerAddress || !isAddress(managerAddress) ||
+        !allowedManagers.some((value) => value.toLowerCase() === managerAddress.toLowerCase())) {
+      setActionError("This position's manager is not on the verified manager allowlist. No transaction was sent.");
+      return;
+    }
+    const claimManager = managerAddress as Address;
+    const marketKey = `${claimManager.toLowerCase()}:${position.marketId}`;
+    setBusyMarketKey(marketKey);
     setActionError("");
     setActionMessage("");
     try {
+      // Re-read the original contract immediately before asking the wallet to
+      // sign. Never redirect a legacy claim to the newly deployed manager.
+      const managerCode = await publicClient.getBytecode({ address: claimManager });
+      if (!managerCode || managerCode === "0x") {
+        throw new Error("The original market manager has no verified contract code. No transaction was sent.");
+      }
+      const [market, onchainPosition] = await Promise.all([
+        publicClient.readContract({
+          address: claimManager,
+          abi: assetOracleMarketManagerAbi,
+          functionName: "getMarket",
+          args: [BigInt(position.marketId)],
+        }),
+        publicClient.readContract({
+          address: claimManager,
+          abi: assetOracleMarketManagerAbi,
+          functionName: "positions",
+          args: [BigInt(position.marketId), address as Address],
+        }),
+      ]);
+      if (Number(market.id) !== position.marketId || Number(market.status) !== position.status) {
+        throw new Error("The on-chain market status changed. Refresh account data before claiming.");
+      }
+      if (onchainPosition[2] || (onchainPosition[0] === 0n && onchainPosition[1] === 0n)) {
+        throw new Error("No unclaimed position exists at this manager for this wallet.");
+      }
+      if (![3, 4, 5].includes(Number(market.status))) {
+        throw new Error("This position is not currently claimable or refundable.");
+      }
+      const [coin, tokenCode] = await Promise.all([
+        publicClient.readContract({
+          address: claimManager,
+          abi: assetOracleMarketManagerAbi,
+          functionName: "stablecoins",
+          args: [market.stablecoin],
+        }),
+        Promise.resolve(null),
+      ]);
+      const tokenAddress = coin[0] as Address;
+      const tokenDecimals = Number(coin[1]);
+      if (!coin[2] || !isAddress(tokenAddress) || /^0x0{40}$/i.test(tokenAddress) ||
+          tokenDecimals !== position.tokenDecimals) {
+        throw new Error("The original market's settlement token configuration could not be verified.");
+      }
+      const verifiedTokenCode = await publicClient.getBytecode({ address: tokenAddress });
+      const verifiedDecimals = await publicClient.readContract({
+        address: tokenAddress,
+        abi: erc20TestnetAbi,
+        functionName: "decimals",
+      });
+      if (!verifiedTokenCode || verifiedTokenCode === "0x" || Number(verifiedDecimals) !== tokenDecimals) {
+        throw new Error("The original settlement token contract could not be verified. No transaction was sent.");
+      }
+
       const functionName = position.status === 3 ? "claim" : "refundCancelled";
       const hash = await writeContractAsync({
-        address: assetOracleMarketManagerAddress,
+        address: claimManager,
         abi: assetOracleMarketManagerAbi,
         functionName,
         args: [BigInt(position.marketId)],
@@ -110,7 +179,7 @@ function AccountPage({
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Unable to submit claim.");
     } finally {
-      setBusyMarketId(null);
+      setBusyMarketKey(null);
     }
   }
 
@@ -166,6 +235,7 @@ function AccountPage({
           </div>
 
           {error && <div className="empty-state" role="alert"><h3>Account data unavailable</h3><p>{error}</p></div>}
+          {accountData?.positionsStatus === "PARTIAL_ONCHAIN_POSITIONS" && <div className="empty-state" role="alert"><h3>Some manager data is unavailable</h3><p>At least one configured manager could not be read. Do not assume the list is complete; refresh and retry before taking action.</p></div>}
           {actionMessage && <p className="wallet-message" role="status">{actionMessage}</p>}
           {actionError && <p className="wallet-message" role="alert">{actionError}</p>}
 
@@ -176,19 +246,23 @@ function AccountPage({
                 <div className="empty-state"><h3>No claimable payouts found</h3><p>Claimable amounts appear after verified settlement or cancellation/refund status is available on-chain.</p></div>
               ) : (
                 <div className="market-grid">
-                  {claimable.map((item) => (
-                    <article className="market-card" key={item.marketId}>
+                  {claimable.map((item) => {
+                    const itemKey = `${item.managerAddress.toLowerCase()}:${item.marketId}`;
+                    return (
+                    <article className="market-card" key={itemKey}>
                       <span className="market-category">Market #{item.marketId} · {statusLabels[item.status] ?? "Status unavailable"}</span>
                       <h3>{item.question}</h3>
                       <p className="market-description">Verified available amount: <strong>{item.claimableAmount}</strong></p>
                       <div className="market-meta"><span>YES stake</span><span>{item.yesStake}</span></div>
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
-                      <button className="primary-button" type="button" disabled={busyMarketId !== null || !assetOracleMarketManagerAddress} onClick={() => void handleClaim(item)}>
-                        {busyMarketId === item.marketId ? "Confirming…" : item.status === 3 ? (item.claimableAmount === "0" ? "Finalize settlement" : "Claim payout") : "Claim refund"}
+                      <small>Original manager: {item.managerAddress.slice(0, 8)}…{item.managerAddress.slice(-6)}</small>
+                      <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
+                        {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? (item.claimableAmount === "0" ? "Finalize settlement" : "Claim payout") : "Claim refund"}
                       </button>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
               <h2>Completed claims and refunds</h2>
@@ -200,8 +274,9 @@ function AccountPage({
               {positions.length === 0 && !loading ? <div className="empty-state"><h3>No predictions found</h3><p>No positions were found for this wallet on the configured market manager.</p></div> : (
                 <div className="market-grid">
                   {positions.map((item) => (
-                    <article className="market-card" key={item.marketId}>
+                    <article className="market-card" key={item.managerAddress.toLowerCase() + ":" + item.marketId}>
                       <span className="market-category">Market #{item.marketId} · {statusLabels[item.status] ?? "Status unavailable"}</span>
+                      <small>Original manager: {item.managerAddress.slice(0, 8)}…{item.managerAddress.slice(-6)}</small>
                       <h3>{item.question}</h3>
                       <div className="market-meta"><span>YES stake</span><span>{item.yesStake}</span></div>
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
