@@ -9,11 +9,6 @@ import {
   MARKET_STATUS,
 } from "../contracts/assetOracle";
 
-const VALIDATOR_WALLET_ADDRESSES = (import.meta.env.VITE_VALIDATOR_WALLET_ADDRESSES ?? "")
-  .split(",")
-  .map((value: string) => value.trim().toLowerCase())
-  .filter(Boolean);
-
 type ChainMarket = {
   id: bigint;
   creator: Address;
@@ -46,7 +41,7 @@ function explorerTx(hash?: `0x${string}`) {
 export default function ValidatorDashboard() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const allowlisted = Boolean(address && VALIDATOR_WALLET_ADDRESSES.includes(address.toLowerCase()));
+  const authorizedValidator = Boolean(address && isValidator.data === true);
   const manager = assetOracleMarketManagerAddress;
   const isValidator = useReadContract({
     address: manager,
@@ -59,7 +54,7 @@ export default function ValidatorDashboard() {
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "marketCount",
-    query: { enabled: Boolean(allowlisted && isValidator.data === true && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
+    query: { enabled: Boolean(authorizedValidator && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
   });
   const count = Number(marketCount.data ?? 0n);
   const marketReads = useReadContracts({
@@ -69,7 +64,7 @@ export default function ValidatorDashboard() {
       functionName: "getMarket" as const,
       args: [BigInt(index + 1)] as const,
     })),
-    query: { enabled: Boolean(allowlisted && isValidator.data === true && chainId === ASSET_CHAIN_TESTNET_ID && count > 0), refetchInterval: 15_000 },
+    query: { enabled: Boolean(authorizedValidator && chainId === ASSET_CHAIN_TESTNET_ID && count > 0), refetchInterval: 15_000 },
   });
   const { writeContract, data: txHash, isPending, error, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
@@ -88,7 +83,7 @@ export default function ValidatorDashboard() {
       functionName: "hasVoted" as const,
       args: [market.id, address] as const,
     })) : [],
-    query: { enabled: Boolean(address && allowlisted && isValidator.data === true && markets.length > 0), refetchInterval: 10_000 },
+    query: { enabled: Boolean(address && authorizedValidator && markets.length > 0), refetchInterval: 10_000 },
   });
   const voteCountReads = useReadContracts({
     contracts: markets.flatMap((market) => {
@@ -101,11 +96,11 @@ export default function ValidatorDashboard() {
         args: [market.id, voteKey(outcome, evidenceHash)] as const,
       }));
     }),
-    query: { enabled: Boolean(allowlisted && isValidator.data === true && markets.length > 0), refetchInterval: 10_000 },
+    query: { enabled: Boolean(authorizedValidator && markets.length > 0), refetchInterval: 10_000 },
   });
 
   function submitVote(market: ChainMarket) {
-    if (!address || !allowlisted || isValidator.data !== true || chainId !== ASSET_CHAIN_TESTNET_ID) return;
+    if (!address || !authorizedValidator || chainId !== ASSET_CHAIN_TESTNET_ID) return;
     const evidence = market.evidenceSource.trim();
     if (!evidence) {
       setNotice(`Market #${market.id.toString()} cannot be voted on because its published evidence source is missing.`);
@@ -125,7 +120,7 @@ export default function ValidatorDashboard() {
 
   if (!isConnected) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Connect an authorized validator wallet to continue.</p></section>;
   if (chainId !== ASSET_CHAIN_TESTNET_ID) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Switch to Asset Chain Testnet (Chain ID 42421).</p></section>;
-  if (!allowlisted || isValidator.data !== true) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This dashboard is available only to the designated validator wallets. Connect one of the authorized validator wallets.</p></section>;
+  if (!authorizedValidator) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This dashboard is available only to the designated validator wallets. Connect one of the authorized validator wallets.</p></section>;
 
   return (
     <section className="validator-dashboard page-section">
