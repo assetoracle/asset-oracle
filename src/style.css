@@ -5839,3 +5839,74 @@ select:focus {
 .market-disclaimer{margin:0;padding:14px 16px;border-left:2px solid rgba(18,217,245,.42);border-radius:0 10px 10px 0;background:rgba(18,217,245,.045);line-height:1.65;overflow-wrap:anywhere}
 .stake-disabled-note{margin:10px 0 0;padding:10px 12px;border-radius:10px;overflow-wrap:anywhere;line-height:1.55}
 @media(max-width:640px){.market-detail-page{padding:12px;gap:14px}.market-detail-grid,.settlement-info-grid{grid-template-columns:minmax(0,1fr);gap:10px}.detail-info-card,.settlement-info-item{padding:15px}.resolution-preview{padding:17px;border-radius:16px}.market-status{max-width:100%;white-space:normal;overflow-wrap:anywhere}.settlement-rule{align-items:flex-start}.timeline-item{flex-wrap:wrap}.timeline-status{margin-left:30px}}
+
+
+/* Referral community rankings: clear hierarchy, separated cards, and stable mobile layout. */
+.referral-page{width:min(100%,1120px);margin-inline:auto;display:flex;flex-direction:column;gap:22px;min-width:0}
+.referral-page .section-heading{align-items:flex-start;text-align:left;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid rgba(99,243,255,.16)}
+.referral-page .section-heading>div:first-child{min-width:0;text-align:left}
+.referral-page .section-heading h1,.referral-page .section-heading p{text-align:left}
+.referral-page .section-heading h1{margin:7px 0 8px;line-height:1.15}
+.referral-page .section-heading p{max-width:66ch;line-height:1.65;margin:0}
+.referral-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+.referral-stat-card{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:20px;border:1px solid rgba(99,243,255,.16);border-radius:17px;background:linear-gradient(145deg,rgba(15,53,64,.88),rgba(7,29,39,.96));box-shadow:inset 0 1px 0 rgba(242,252,255,.04);text-align:left}
+.referral-stat-card>span:not(.referral-stat-icon){line-height:1.45}
+.referral-stat-card>strong{max-width:100%;font-size:clamp(1.25rem,2vw,1.7rem);line-height:1.2;overflow-wrap:anywhere}
+.referral-stat-card small{line-height:1.55;overflow-wrap:anywhere}
+.referral-link-card,.referral-leaderboard-card,.referral-rules-card{min-width:0;margin:0;padding:clamp(16px,2.5vw,26px);border:1px solid rgba(99,243,255,.17);border-radius:20px;background:radial-gradient(ellipse at 100% 0%,rgba(18,217,245,.07),transparent 52%),linear-gradient(145deg,rgba(13,47,58,.94),rgba(6,27,37,.98));box-shadow:inset 0 1px 0 rgba(242,252,255,.04),0 12px 32px rgba(0,0,0,.10)}
+.referral-link-heading{align-items:flex-start;gap:14px}
+.referral-link-heading>div:last-child{min-width:0}
+.referral-link-heading h2,.referral-table-heading h2,.referral-rules-heading h2{text-align:left;line-height:1.25}
+.referral-link-heading p{line-height:1.65;overflow-wrap:anywhere}
+.referral-link-field{display:flex;align-items:center;gap:12px;min-width:0;margin-top:16px;padding:10px 12px;border:1px solid rgba(99,243,255,.15);border-radius:13px;background:rgba(3,18,26,.42)}
+.referral-link-field>span{min-width:0;flex:1;overflow-wrap:anywhere;word-break:break-word}
+.referral-copy-button{flex:0 0 auto;white-space:nowrap}
+.referral-table-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;padding-bottom:15px;border-bottom:1px solid rgba(99,243,255,.16)}
+.referral-table-heading>div{min-width:0;text-align:left}
+.referral-table-heading .eyebrow{display:block;margin-bottom:6px}
+.referral-table-heading h2{margin:0}
+.referral-view-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:min(100%,520px);margin:16px 0;padding:5px;border:1px solid rgba(99,243,255,.16);border-radius:13px;background:rgba(3,18,26,.58)}
+.referral-view-tabs button{min-width:0;padding:11px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background 160ms ease,color 160ms ease,border-color 160ms ease}
+.referral-view-tabs button.active,.referral-view-tabs button[aria-selected="true"]{color:var(--text);background:linear-gradient(135deg,rgba(18,217,245,.17),rgba(0,184,169,.13));border-color:rgba(99,243,255,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.referral-table-wrap{width:100%;min-width:0;overflow-x:auto;border:1px solid rgba(99,243,255,.13);border-radius:13px;overscroll-behavior-x:contain}
+.referral-table{width:100%;min-width:560px;border-collapse:separate;border-spacing:0;background:rgba(3,18,26,.2)}
+.referral-table th{position:sticky;top:0;padding:12px 14px;background:rgba(10,47,57,.96);color:var(--text);text-align:left;white-space:nowrap;border-bottom:1px solid rgba(99,243,255,.17);font-size:12px}
+.referral-table td{padding:12px 14px;text-align:left;white-space:nowrap;border-bottom:1px solid rgba(99,243,255,.075);font-size:12px}
+.referral-table tbody tr:last-child td{border-bottom:0}
+.referral-table tbody tr:nth-child(even){background:rgba(99,243,255,.025)}
+.referral-table tbody tr:hover{background:rgba(18,217,245,.07)}
+.referral-table td:first-child{font-weight:750;color:#78eaf2}
+.referral-table-footer{display:flex;align-items:flex-start;gap:9px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(99,243,255,.12);font-size:11px;line-height:1.6;overflow-wrap:anywhere}
+.referral-table-footer svg{flex:0 0 auto;margin-top:1px}
+.referral-rules-card{display:flex;flex-direction:column;gap:10px}
+.referral-rules-heading{display:flex;align-items:center;gap:10px;margin:0;padding:12px 0 14px;border-bottom:1px solid rgba(99,243,255,.16)}
+.referral-rules-heading:not(:first-child){margin-top:14px}
+.referral-rules-heading h2{margin:0}
+.referral-rule{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:start;gap:13px;margin:0;padding:17px;border:1px solid rgba(99,243,255,.12);border-radius:15px;background:linear-gradient(120deg,rgba(18,217,245,.045),rgba(3,18,26,.2));min-width:0}
+.referral-rule>span{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,rgba(18,217,245,.13),rgba(0,184,169,.1));color:#63eaf2;font-size:12px;font-weight:800}
+.referral-rule>div{min-width:0}
+.referral-rule strong{display:block;margin:2px 0 6px;line-height:1.45;text-align:left}
+.referral-rule p{margin:0;line-height:1.65;overflow-wrap:anywhere;text-align:left}
+.referral-table-empty{padding:28px 18px}
+.referral-page .market-disclaimer{margin:0}
+@media(max-width:760px){
+ .referral-page{gap:15px}
+ .referral-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .referral-stat-card{padding:15px}
+ .referral-stat-card:last-child{grid-column:1/-1}
+ .referral-table-heading{align-items:flex-start}
+ .referral-view-tabs{width:100%;margin:14px 0}
+ .referral-table th,.referral-table td{padding:11px 12px}
+ .referral-rule{padding:14px;grid-template-columns:36px minmax(0,1fr);gap:11px}
+ .referral-rule>span{width:34px;height:34px}
+}
+@media(max-width:420px){
+ .referral-overview-grid{grid-template-columns:minmax(0,1fr)}
+ .referral-stat-card:last-child{grid-column:auto}
+ .referral-link-heading{gap:10px}
+ .referral-link-field{align-items:stretch;flex-direction:column}
+ .referral-copy-button{align-self:flex-start}
+ .referral-table-heading{flex-direction:column;align-items:flex-start}
+ .referral-rule{grid-template-columns:32px minmax(0,1fr);gap:9px}
+ .referral-rule>span{width:30px;height:30px}
+}
