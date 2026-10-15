@@ -796,6 +796,7 @@ useEffect(() => {
           onchainMarketId={selectedMarket.onchainMarketId}
           onchainManagerAddress={selectedMarket.onchainManagerAddress}
           onchainCloseTime={Math.floor(new Date(selectedMarket.closesAt).getTime() / 1000)}
+          onchainTxHash={selectedMarket.onchainTxHash}
           onBack={goBackToMarkets}
         />
       );
