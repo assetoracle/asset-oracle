@@ -93,7 +93,8 @@ function AccountPage({
       setActionError("Switch your wallet to Asset Chain Enugu Testnet before claiming.");
       return;
     }
-    const managerAddress = position.managerAddress;
+    // Backward-compatible during rollout: old API responses only describe the current manager.
+    const managerAddress = position.managerAddress ?? assetOracleMarketManagerAddress;
     const allowedManagers = [
       assetOracleMarketManagerAddress,
       ...LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES,
@@ -246,7 +247,8 @@ function AccountPage({
               ) : (
                 <div className="market-grid">
                   {claimable.map((item) => {
-                    const itemKey = `${item.managerAddress.toLowerCase()}:${item.marketId}`;
+                    const itemManagerAddress = item.managerAddress ?? assetOracleMarketManagerAddress ?? "unknown";
+                    const itemKey = `${itemManagerAddress.toLowerCase()}:${item.marketId}`;
                     return (
                     <article className="market-card" key={itemKey}>
                       <span className="market-category">Market #{item.marketId} · {statusLabels[item.status] ?? "Status unavailable"}</span>
@@ -255,7 +257,7 @@ function AccountPage({
                       <div className="market-meta"><span>YES stake</span><span>{item.yesStake}</span></div>
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
-                      <small>Original manager: {item.managerAddress.slice(0, 8)}…{item.managerAddress.slice(-6)}</small>
+                      <small>Original manager: {itemManagerAddress === "unknown" ? "Unavailable" : `${itemManagerAddress.slice(0, 8)}…${itemManagerAddress.slice(-6)}`}</small>
                       <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
                         {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? (item.claimableAmount === "0" ? "Finalize settlement" : "Claim payout") : "Claim refund"}
                       </button>
@@ -273,9 +275,9 @@ function AccountPage({
               {positions.length === 0 && !loading ? <div className="empty-state"><h3>No predictions found</h3><p>No positions were found for this wallet on the configured market manager.</p></div> : (
                 <div className="market-grid">
                   {positions.map((item) => (
-                    <article className="market-card" key={item.managerAddress.toLowerCase() + ":" + item.marketId}>
+                    <article className="market-card" key={(item.managerAddress ?? assetOracleMarketManagerAddress ?? "unknown").toLowerCase() + ":" + item.marketId}>
                       <span className="market-category">Market #{item.marketId} · {statusLabels[item.status] ?? "Status unavailable"}</span>
-                      <small>Original manager: {item.managerAddress.slice(0, 8)}…{item.managerAddress.slice(-6)}</small>
+                      <small>Original manager: {(item.managerAddress ?? assetOracleMarketManagerAddress) ? `${(item.managerAddress ?? assetOracleMarketManagerAddress)!.slice(0, 8)}…${(item.managerAddress ?? assetOracleMarketManagerAddress)!.slice(-6)}` : "Unavailable"}</small>
                       <h3>{item.question}</h3>
                       <div className="market-meta"><span>YES stake</span><span>{item.yesStake}</span></div>
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
