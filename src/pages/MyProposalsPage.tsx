@@ -11,6 +11,8 @@ type MyProposalsPageProps = {
   onLoad: () => void;
   walletRole: WalletRoleResponse | null;
   roleError: string;
+  onchainValidatorStatus: boolean | null;
+  onchainValidatorRosterConfigured: boolean | null;
 };
 
 export default function MyProposalsPage({
@@ -23,6 +25,8 @@ export default function MyProposalsPage({
   onLoad,
   walletRole,
   roleError,
+  onchainValidatorStatus,
+  onchainValidatorRosterConfigured,
 }: MyProposalsPageProps) {
   return (
     <section className="page-section account-page">
@@ -67,6 +71,18 @@ export default function MyProposalsPage({
                   : "Owner approval required"}
               </strong>
             </article>
+            <article className="account-summary-card">
+              <span>On-chain validator status</span>
+              <strong>
+                {onchainValidatorRosterConfigured === false
+                  ? "Roster not configured"
+                  : onchainValidatorStatus === true && onchainValidatorRosterConfigured === true
+                    ? "Authorized on active contract"
+                    : onchainValidatorStatus === false
+                      ? "Not authorized on active contract"
+                      : "Checking active contract"}
+              </strong>
+            </article>
           </div>
 
           <div className="proposal-actions">
@@ -83,7 +99,7 @@ export default function MyProposalsPage({
           {walletRole && (
             <p className="wallet-message" role="status">
               {walletRole.humanValidator
-                ? `Human validator ${walletRole.validatorNumber} recognized. Manual market resolution is enabled only when the deployed contract confirms this validator and the required two matching votes are reached.`
+                ? `Human validator ${walletRole.validatorNumber} recognized by the backend. ${onchainValidatorStatus === true && onchainValidatorRosterConfigured === true ? "The active 2-of-3 contract confirms this wallet is authorized." : onchainValidatorStatus === false || onchainValidatorRosterConfigured === false ? "The active contract does not currently confirm this validator; settlement voting remains unavailable." : "Checking the active contract before confirming settlement-voting access."}`
                 : walletRole.isOwner
                   ? "Owner permissions: review, approve, and reject proposals."
                   : walletRole.role === "MARKET_CREATOR"
