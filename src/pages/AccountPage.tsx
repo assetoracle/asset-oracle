@@ -136,8 +136,13 @@ function AccountPage({
       if (onchainPosition[2] || (onchainPosition[0] === 0n && onchainPosition[1] === 0n)) {
         throw new Error("No unclaimed position exists at this manager for this wallet.");
       }
-      if (![3, 4, 5].includes(Number(market.status))) {
-        throw new Error("This position is not currently claimable or refundable.");
+      const currentStatus = Number(market.status);
+      const canFinalize = currentStatus === 2 &&
+        BigInt(Math.floor(Date.now() / 1000)) >= market.resolvedAt + market.challengePeriod;
+      if (![3, 4, 5].includes(currentStatus) && !canFinalize) {
+        throw new Error(currentStatus === 2
+          ? "The challenge period is still active. This market cannot be finalized yet."
+          : "This position is not currently claimable or refundable.");
       }
       const coin = await publicClient.readContract({
         address: claimManager,
@@ -163,7 +168,22 @@ function AccountPage({
         throw new Error("The original settlement token contract could not be verified. No transaction was sent.");
       }
 
-      const functionName = position.status === 3 ? "claim" : "refundCancelled";
+      if (canFinalize) {
+        setActionMessage("Challenge period ended. Confirm market finalization in your wallet…");
+        const finalizeHash = await writeContractAsync({
+          address: claimManager,
+          abi: assetOracleMarketManagerAbi,
+          functionName: "finalizeMarket",
+          args: [BigInt(position.marketId)],
+          chainId: ASSET_CHAIN_TESTNET_ID,
+        });
+        const finalizeReceipt = await publicClient.waitForTransactionReceipt({ hash: finalizeHash });
+        if (finalizeReceipt.status !== "success") throw new Error("Market finalization failed on-chain.");
+        setActionMessage("Market finalized. Confirm the claim transaction in your wallet…");
+      } else {
+        setActionMessage("Transaction submitted. Waiting for network confirmation…");
+      }
+      const functionName = currentStatus === 4 || currentStatus === 5 ? "refundCancelled" : "claim";
       const hash = await writeContractAsync({
         address: claimManager,
         abi: assetOracleMarketManagerAbi,
@@ -171,7 +191,6 @@ function AccountPage({
         args: [BigInt(position.marketId)],
         chainId: ASSET_CHAIN_TESTNET_ID,
       });
-      setActionMessage("Transaction submitted. Waiting for network confirmation…");
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== "success") throw new Error("The claim transaction failed on-chain.");
       setActionMessage("Claim/refund confirmed. Updating your account records…");
@@ -260,7 +279,7 @@ function AccountPage({
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
                       <small>Original manager: {itemManagerAddress === "unknown" ? "Unavailable" : `${itemManagerAddress.slice(0, 8)}…${itemManagerAddress.slice(-6)}`}</small>
                       <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
-                        {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? (Number(item.claimableAmount) === 0 ? "Confirm zero-payout claim" : "Claim payout") : "Claim refund"}
+                        {busyMarketKey === itemKey ? "Confirming…" : item.status === 2 ? "Finalize & claim" : item.status === 3 ? (Number(item.claimableAmount) === 0 ? "Confirm zero-payout claim" : "Claim payout") : "Claim refund"}
                       </button>
                     </article>
                     );
