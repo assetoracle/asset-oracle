@@ -5,6 +5,7 @@ import {
   Gift,
   Link2,
   Medal,
+  Search,
   ShieldCheck,
   Trophy,
   Users,
@@ -66,6 +67,11 @@ export default function ReferralsPage({
   onRetryLeaderboard,
 }: ReferralsPageProps) {
   const [activeLeaderboard, setActiveLeaderboard] = useState<"referral" | "points" | "total">("referral");
+  const [walletSearch, setWalletSearch] = useState("");
+  const searchTerm = walletSearch.trim().toLowerCase();
+  const filteredReferrals = leaderboard.filter((entry) => entry.wallet.toLowerCase().includes(searchTerm));
+  const filteredPoints = pointsLeaderboard.filter((entry) => entry.wallet.toLowerCase().includes(searchTerm));
+  const filteredTotals = totalLeaderboard.filter((entry) => entry.wallet.toLowerCase().includes(searchTerm));
   const walletEntry = totalLeaderboard.find(
     (entry) => entry.wallet.toLowerCase() === address?.toLowerCase(),
   );
@@ -142,6 +148,21 @@ export default function ReferralsPage({
           <button type="button" role="tab" aria-selected={activeLeaderboard === "points"} className={activeLeaderboard === "points" ? "active" : ""} onClick={() => setActiveLeaderboard("points")}>Points</button>
           <button type="button" role="tab" aria-selected={activeLeaderboard === "total"} className={activeLeaderboard === "total" ? "active" : ""} onClick={() => setActiveLeaderboard("total")}>Total</button>
         </div>
+        <label className="leaderboard-search">
+          <Search size={17} aria-hidden="true" />
+          <span className="leaderboard-search-label">Find a wallet</span>
+          <input
+            type="search"
+            value={walletSearch}
+            onChange={(event) => setWalletSearch(event.target.value)}
+            placeholder="Type the first 4 characters of a wallet address"
+            aria-label="Search leaderboard by wallet address"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {walletSearch && <button type="button" className="leaderboard-search-clear" onClick={() => setWalletSearch("")} aria-label="Clear wallet search">Clear</button>}
+        </label>
+        <p className="leaderboard-search-hint">Search wallets in the selected leaderboard. Scroll within the list to browse more entries.</p>
         {leaderboardLoading ? (
           <div className="referral-table-empty" role="status"><Trophy size={30} /><h3>Loading leaderboard</h3><p>Retrieving verified activity and points.</p></div>
         ) : leaderboardError ? (
@@ -149,19 +170,19 @@ export default function ReferralsPage({
         ) : (
           <div className="referral-table-wrap">
             {activeLeaderboard === "referral" ? (
-              leaderboard.length === 0 ? <div className="referral-table-empty"><Users size={30} /><h3>No qualified referrals yet</h3><p>Qualified referrers will appear here after an invited wallet completes a qualifying prediction.</p></div> :
+              filteredReferrals.length === 0 ? <div className="referral-table-empty"><Users size={30} /><h3>{searchTerm ? "No matching wallet" : "No qualified referrals yet"}</h3><p>{searchTerm ? "Try another wallet prefix or clear your search." : "Qualified referrers will appear here after an invited wallet completes a qualifying prediction."}</p></div> :
               <table className="referral-table"><thead><tr><th>Rank</th><th>Wallet address</th><th>Total referrals</th><th>Points earned</th></tr></thead><tbody>
-                {leaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.referrals}</td><td>{entry.referralPoints}</td></tr>)}
+                {filteredReferrals.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.referrals}</td><td>{entry.referralPoints}</td></tr>)}
               </tbody></table>
             ) : activeLeaderboard === "points" ? (
-              pointsLeaderboard.length === 0 ? <div className="referral-table-empty"><Medal size={30} /><h3>No points earned yet</h3><p>Wallets appear here after recorded proposals or qualifying trades earn points.</p></div> :
+              filteredPoints.length === 0 ? <div className="referral-table-empty"><Medal size={30} /><h3>{searchTerm ? "No matching wallet" : "No points earned yet"}</h3><p>{searchTerm ? "Try another wallet prefix or clear your search." : "Wallets appear here after recorded proposals or qualifying trades earn points."}</p></div> :
               <table className="referral-table"><thead><tr><th>Rank</th><th>Wallet address</th><th>Points</th></tr></thead><tbody>
-                {pointsLeaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.points}</td></tr>)}
+                {filteredPoints.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.points}</td></tr>)}
               </tbody></table>
             ) : (
-              totalLeaderboard.length === 0 ? <div className="referral-table-empty"><Trophy size={30} /><h3>No leaderboard activity yet</h3><p>Combined totals will appear once wallets earn points or qualify referrals.</p></div> :
+              filteredTotals.length === 0 ? <div className="referral-table-empty"><Trophy size={30} /><h3>{searchTerm ? "No matching wallet" : "No leaderboard activity yet"}</h3><p>{searchTerm ? "Try another wallet prefix or clear your search." : "Combined totals will appear once wallets earn points or qualify referrals."}</p></div> :
               <table className="referral-table"><thead><tr><th>Rank</th><th>Wallet address</th><th>Referrals</th><th>Referral points</th><th>Activity points</th><th>Total points</th></tr></thead><tbody>
-                {totalLeaderboard.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.referrals}</td><td>{entry.referralPoints}</td><td>{entry.activityPoints}</td><td><strong>{entry.totalPoints}</strong></td></tr>)}
+                {filteredTotals.map((entry) => <tr key={entry.wallet}><td>#{entry.rank}</td><td>{entry.wallet.slice(0, 8)}…{entry.wallet.slice(-6)}{entry.wallet.toLowerCase() === address?.toLowerCase() ? " (You)" : ""}</td><td>{entry.referrals}</td><td>{entry.referralPoints}</td><td>{entry.activityPoints}</td><td><strong>{entry.totalPoints}</strong></td></tr>)}
               </tbody></table>
             )}
           </div>
