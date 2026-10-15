@@ -225,7 +225,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + 7 * 24 * 60 * 60;
 
   const isConfiguredValidator = validatorStatus.data === true && validatorRoster.data === true;
-  const evidenceHash = evidenceText.trim() ? keccak256(toBytes(evidenceText.trim())) : undefined;
+  const evidenceHash = keccak256(encodeAbiParameters([{ type: "uint256" }], [marketId]));
+  const disputeEvidenceHash = evidenceText.trim() ? keccak256(toBytes(evidenceText.trim())) : undefined;
   const emptyVoteKey = `0x${"0".repeat(64)}` as const;
   const voteKey = evidenceHash
     ? keccak256(encodeAbiParameters([{ type: "uint8" }, { type: "bytes32" }], [resolutionOutcome, evidenceHash]))
@@ -235,23 +236,24 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     abi: assetOracleMarketManagerAbi,
     functionName: "voteCountByKey",
     args: [marketId, voteKey],
-    query: { enabled: Boolean(manager && evidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
+    query: { enabled: Boolean(manager && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
+  const disputeVoteKey = disputeEvidenceHash ? keccak256(encodeAbiParameters([{ type: "uint8" }, { type: "bytes32" }], [resolutionOutcome, disputeEvidenceHash])) : emptyVoteKey;
   const disputeVoteCount = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
     functionName: "disputeVoteCountByKey",
-    args: [marketId, voteKey],
-    query: { enabled: Boolean(manager && evidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
+    args: [marketId, disputeVoteKey],
+    query: { enabled: Boolean(manager && disputeEvidenceHash && isCurrentManager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 10_000 },
   });
-  const canResolve = safe && isConnected && isConfiguredValidator && hasVoted.data === false && evidenceHash !== undefined &&
+  const canResolve = safe && isConnected && isConfiguredValidator && hasVoted.data === false &&
     Number(marketData?.status) === MARKET_STATUS.CLOSED;
   const canResolveDispute = safe && isConnected && isConfiguredValidator && hasVotedOnDispute.data === false &&
-    evidenceHash !== undefined && Number(marketData?.status) === MARKET_STATUS.ARBITRATION;
+    disputeEvidenceHash !== undefined && Number(marketData?.status) === MARKET_STATUS.ARBITRATION;
   const canFinalize = safe && isConnected &&
     Number(marketData?.status) === MARKET_STATUS.DISPUTED &&
     Date.now() / 1000 >= Number(marketData?.resolvedAt ?? 0n) + Number(marketData?.challengePeriod ?? 0n);
-  const canDispute = safe && isConnected && hasPosition && evidenceHash !== undefined &&
+  const canDispute = safe && isConnected && hasPosition && disputeEvidenceHash !== undefined &&
     Number(marketData?.status) === MARKET_STATUS.DISPUTED &&
     Date.now() / 1000 < Number(marketData?.resolvedAt ?? 0n) + Number(marketData?.challengePeriod ?? 0n);
 
@@ -345,10 +347,10 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
 
   function submitResolution(action: "resolve" | "resolveDispute" | "finalize" | "dispute") {
     if (!manager) return;
-    if (action === "resolve" && (!canResolve || !evidenceHash)) return;
-    if (action === "resolveDispute" && (!canResolveDispute || !evidenceHash)) return;
+    if (action === "resolve" && !canResolve) return;
+    if (action === "resolveDispute" && (!canResolveDispute || !disputeEvidenceHash)) return;
     if (action === "finalize" && !canFinalize) return;
-    if (action === "dispute" && (!canDispute || !evidenceHash)) return;
+    if (action === "dispute" && (!canDispute || !disputeEvidenceHash)) return;
     setMessage("");
     reset();
     setLastAction(action);
@@ -364,14 +366,14 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         address: manager,
         abi: assetOracleMarketManagerAbi,
         functionName: "resolveDispute",
-        args: [marketId, resolutionOutcome, evidenceHash!],
+        args: [marketId, resolutionOutcome, disputeEvidenceHash!],
       });
     } else if (action === "dispute") {
       writeContract({
         address: manager,
         abi: assetOracleMarketManagerAbi,
         functionName: "disputeResolution",
-        args: [marketId, evidenceHash!],
+        args: [marketId, disputeEvidenceHash!],
       });
     } else {
       writeContract({
@@ -463,8 +465,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
-          {(Number(marketData?.status) === MARKET_STATUS.CLOSED || Number(marketData?.status) === MARKET_STATUS.DISPUTED || Number(marketData?.status) === MARKET_STATUS.ARBITRATION) && <>
-            <label htmlFor={`onchain-evidence-${marketId}`}>Evidence reference or description</label>
+          {(Number(marketData?.status) === MARKET_STATUS.DISPUTED || Number(marketData?.status) === MARKET_STATUS.ARBITRATION) && <>
+            <label htmlFor={`onchain-evidence-${marketId}`}>Challenge evidence reference</label>
             <input id={`onchain-evidence-${marketId}`} value={evidenceText} onChange={(event) => setEvidenceText(event.target.value)} placeholder="Paste official source URL or evidence reference" autoComplete="off" />
             <p className="disabled-note">The evidence text is hashed locally and only its hash is submitted on-chain. Keep the original source available for public verification.</p>
           </>}
@@ -472,10 +474,10 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             {validatorRoster.data === true && isConnected && !isConfiguredValidator && <p>Connected wallet is not one of the three configured validators.</p>}
             {isConfiguredValidator && <>
               <label htmlFor={`onchain-outcome-${marketId}`}>Validator outcome vote</label>
-              <select id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2 | 3)}>
-                <option value={1}>YES</option><option value={2}>NO</option><option value={3}>INVALID</option>
+              <select id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2)}>
+                <option value={1}>YES</option><option value={2}>NO</option>
               </select>
-              <p>Matching votes: {evidenceHash ? Number(initialVoteCount.data ?? 0n) : 0}/2. Validators must match both outcome and evidence hash.</p>
+              <p>Matching votes: {evidenceHash ? Number(initialVoteCount.data ?? 0n) : 0}/2. Two matching votes from any two of the three authorized validators are required; votes are recorded on-chain.</p>
               {hasVoted.data && <p>You have already submitted your vote for this market.</p>}
               <button className="primary-button" type="button" disabled={!canResolve || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolve")}>Submit validator vote</button>
             </>}
