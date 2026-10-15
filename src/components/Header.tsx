@@ -59,11 +59,11 @@ export default function Header({
         <div className="header-actions">
           <a
             className="pumpflow-link"
-            href="https://www.pumpflow.meme/"
+            href="https://assetclaw.xyz/testnet"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Open PumpFlow"
-            title="PumpFlow"
+            aria-label="Open AssetClaw testnet"
+            title="AssetClaw Testnet"
             style={{
               display: "inline-flex",
               alignItems: "center",
