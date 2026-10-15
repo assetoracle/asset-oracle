@@ -93,8 +93,7 @@ export default function ValidatorDashboard() {
   const voteCountReads = useReadContracts({
     contracts: markets.flatMap((market) => {
       const evidence = market.evidenceSource.trim();
-      if (!evidence) return [];
-      const evidenceHash = keccak256(toBytes(evidence));
+      const evidenceHash = evidence ? keccak256(toBytes(evidence)) : ("0x" + "00".repeat(32)) as `0x${string}`;
       return [1, 2].map((outcome) => ({
         address: manager,
         abi: assetOracleMarketManagerAbi,
