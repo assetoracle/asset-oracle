@@ -1,3 +1,4 @@
+import { friendlyError } from "../utils/friendlyError";
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import {
@@ -109,7 +110,7 @@ export default function TestnetUsdcFaucet({ onConnect }: Props) {
   }, [receipt.isSuccess, receipt.isError, receipt.data?.status]);
 
   useEffect(() => {
-    if (walletError) setFaucetError(walletError.message);
+    if (walletError) setFaucetError(friendlyError(walletError, "Wallet error."));
   }, [walletError]);
 
   async function claim() {
@@ -127,7 +128,7 @@ export default function TestnetUsdcFaucet({ onConnect }: Props) {
       setTxHash(hash);
       setNotice("Transaction submitted. Waiting for testnet confirmation…");
     } catch (error) {
-      setFaucetError(error instanceof Error ? error.message : "The wallet could not submit the faucet transaction.");
+      setFaucetError(friendlyError(error, "Faucet failed."));
     }
   }
 
