@@ -260,7 +260,7 @@ function AccountPage({
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
                       <small>Original manager: {itemManagerAddress === "unknown" ? "Unavailable" : `${itemManagerAddress.slice(0, 8)}…${itemManagerAddress.slice(-6)}`}</small>
                       <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
-                        {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? (item.claimableAmount === "0" ? "Finalize settlement" : "Claim payout") : "Claim refund"}
+                        {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? (Number(item.claimableAmount) === 0 ? "Confirm zero-payout claim" : "Claim payout") : "Claim refund"}
                       </button>
                     </article>
                     );
