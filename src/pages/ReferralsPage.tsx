@@ -62,7 +62,6 @@ export default function ReferralsPage({
   leaderboardLoading,
   leaderboardError,
   actionLoading,
-  onGetReferralLink,
   onAttributeReferral,
   onRetryLeaderboard,
 }: ReferralsPageProps) {
@@ -112,7 +111,7 @@ export default function ReferralsPage({
           <div className="referral-link-icon"><Link2 size={21} /></div>
           <div>
             <h2>Your referral link</h2>
-            <p>Connect your wallet to request your unique referral link. New visitors can register attribution after connecting their wallet.</p>
+            <p>Your unique referral link is prepared automatically when your wallet connects. No transaction or separate signature is needed to create it.</p>
           </div>
         </div>
         <div className="referral-link-field">
@@ -122,9 +121,9 @@ export default function ReferralsPage({
               <Copy size={16} /><span>Copy link</span>
             </button>
           ) : (
-            <button className="referral-copy-button" type="button" onClick={onGetReferralLink} disabled={!address || actionLoading} aria-label="Get referral link">
-              <Copy size={16} /><span>{actionLoading ? "Working…" : "Get link"}</span>
-            </button>
+            <span className="referral-link-status" role="status">
+              {!address ? "Connect wallet to prepare your link" : actionLoading ? "Preparing your link…" : "Your link is being prepared"}
+            </span>
           )}
         </div>
         {referralCode && (
