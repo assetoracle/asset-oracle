@@ -39,7 +39,7 @@ export default function Header({
         >
           <img
             className="brand-logo"
-            src="/asset-oracle-logo.png"
+            src="/asset-oracle-logo-transparent.svg"
             alt="Asset Oracle"
           />
           <span>
