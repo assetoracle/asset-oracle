@@ -96,7 +96,7 @@ export default function ReferralsPage({
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Gift size={19} /></span>
           <span>Referral points</span>
-          <strong>5 points per qualifying referral</strong>
+          <strong>5 points per referral</strong>
           <small>Points are awarded once per verified referral. Market proposal and trading points are shown in the points schedule below.</small>
         </article>
       </div>
@@ -180,7 +180,7 @@ export default function ReferralsPage({
         </div>
         <div className="referral-rule">
           <span>05</span>
-          <div><strong>Refer a participant</strong><p>Earn 5 points when a referred wallet meets the referral qualification rules.</p></div>
+          <div><strong>Refer a participant</strong><p>5 points per referral.</p></div>
         </div>
         <div className="referral-rules-heading"><CheckCircle2 size={21} /><h2>When a referral counts</h2></div>
         <div className="referral-rule">
