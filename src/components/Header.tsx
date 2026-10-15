@@ -1,4 +1,4 @@
-import { Menu, X } from "lucide-react";
+import { Fuel, Menu, X } from "lucide-react";
 import type { Page, NavItem } from "./Nav";
 import { DesktopNav, MobileNav } from "./Nav";
 import type { WalletConnection } from "../hooks/useWalletStatus";
@@ -57,6 +57,16 @@ export default function Header({
         />
 
         <div className="header-actions">
+          <a
+            className="gas-link-button"
+            href="https://t.me/AssetClawBot"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Get gas with AssetClaw"
+            title="Get gas with AssetClaw"
+          >
+            <Fuel size={19} aria-hidden="true" />
+          </a>
           {wallet ? (
             <div className="wallet-header-actions">
               <button
