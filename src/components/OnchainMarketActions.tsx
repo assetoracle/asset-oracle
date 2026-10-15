@@ -423,7 +423,13 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   return (
     <section className="resolution-preview onchain-status" aria-live="polite">
       <span className="eyebrow">TESTNET PARTICIPATION</span>
-      <h3>Market #{marketId.toString()} · USDC</h3>
+      <div className="onchain-market-title-row">
+      <div>
+        <span className="eyebrow">ON-CHAIN MARKET ID</span>
+        <h3 className="onchain-market-id">#{marketId.toString()}</h3>
+      </div>
+      <span className="onchain-market-asset">USDC · TESTNET</span>
+    </div>
       {!manager ? <p>Transactions are disabled: no verified market-manager address is configured.</p>
       : chainId !== ASSET_CHAIN_TESTNET_ID ? <p>Switch to Asset Chain Testnet (Chain ID 42421).</p>
       : !codeCheckDone ? <p>Verifying deployed contract bytecode…</p>
@@ -483,7 +489,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
               <input id={`onchain-evidence-${marketId}`} value={evidenceText} onChange={(event) => setEvidenceText(event.target.value)} placeholder="Paste the source URL/reference all validators will use" autoComplete="off" />
               <p className="disabled-note">Use a stable, publicly accessible source and the exact same reference for each validator. Only its hash is stored on-chain; keep the source available for review.</p>
               <label htmlFor={`onchain-outcome-${marketId}`}>Your outcome decision</label>
-              <select id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2)}>
+              <select className="brand-select" id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2)}>
                 <option value={1}>YES</option><option value={2}>NO</option>
               </select>
               <p>Matching votes for this outcome and evidence: {evidenceHash ? Number(initialVoteCount.data ?? 0n) : 0}/2.</p>
@@ -496,7 +502,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
           {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <>
             {isConfiguredValidator && <>
               <label htmlFor={`onchain-arbitration-outcome-${marketId}`}>Arbitration outcome vote</label>
-              <select id={`onchain-arbitration-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2 | 3)}>
+              <select className="brand-select" id={`onchain-arbitration-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2 | 3)}>
                 <option value={1}>YES</option><option value={2}>NO</option><option value={3}>INVALID</option>
               </select>
               <p>Matching arbitration votes: {evidenceHash ? Number(disputeVoteCount.data ?? 0n) : 0}/2.</p>
