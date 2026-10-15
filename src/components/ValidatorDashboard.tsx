@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import BrandedSelect from "./BrandedSelect";
 import { encodeAbiParameters, keccak256, toBytes, type Address } from "viem";
 import { useAccount, useChainId, useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
@@ -72,6 +72,8 @@ export default function ValidatorDashboard() {
   const [outcomes, setOutcomes] = useState<Record<string, 1 | 2>>({});
   const [notice, setNotice] = useState("");
   const [actionType, setActionType] = useState<"close" | "vote" | null>(null);
+  const [pendingVote, setPendingVote] = useState<{ marketId: bigint; outcome: 1 | 2; evidenceHash: `0x${string}` } | null>(null);
+  const handledCloseHash = useRef<string | null>(null);
 
   const markets = useMemo(() => (marketReads.data ?? [])
     .map((read) => read.status === "success" ? read.result as unknown as ChainMarket : null)
@@ -106,6 +108,21 @@ export default function ValidatorDashboard() {
     query: { enabled: Boolean(authorizedValidator && markets.length > 0), refetchInterval: 10_000 },
   });
 
+  useEffect(() => {
+    if (!receipt.isSuccess || actionType !== "close" || !pendingVote || !txHash || handledCloseHash.current === txHash) return;
+    handledCloseHash.current = txHash;
+    reset();
+    setActionType("vote");
+    writeContract({
+      address: manager,
+      abi: assetOracleMarketManagerAbi,
+      functionName: "resolveMarket",
+      args: [pendingVote.marketId, pendingVote.outcome, pendingVote.evidenceHash],
+    });
+    setPendingVote(null);
+    setNotice("Market closed on-chain. Confirm the follow-up vote transaction in your wallet.");
+  }, [receipt.isSuccess, actionType, pendingVote, txHash, manager, reset, writeContract]);
+
   function closeExpiredMarket(market: ChainMarket) {
     if (chainId !== ASSET_CHAIN_TESTNET_ID || market.status !== MARKET_STATUS.OPEN || market.closeTime > BigInt(Math.floor(Date.now() / 1000))) return;
     setNotice("");
@@ -120,7 +137,7 @@ export default function ValidatorDashboard() {
   }
 
   function submitVote(market: ChainMarket) {
-    if (!address || !authorizedValidator || chainId !== ASSET_CHAIN_TESTNET_ID || market.status !== MARKET_STATUS.CLOSED) return;
+    if (!address || !authorizedValidator || chainId !== ASSET_CHAIN_TESTNET_ID) return;
     const evidence = market.evidenceSource.trim();
     if (!evidence) {
       setNotice(`Market #${market.id.toString()} cannot be voted on because its published evidence source is missing.`);
@@ -129,8 +146,21 @@ export default function ValidatorDashboard() {
     const outcome = outcomes[market.id.toString()] ?? 1;
     const evidenceHash = keccak256(toBytes(evidence));
     setNotice("");
-    setActionType("vote");
     reset();
+    if (market.status === MARKET_STATUS.OPEN && market.closeTime <= BigInt(Math.floor(Date.now() / 1000))) {
+      setPendingVote({ marketId: market.id, outcome, evidenceHash });
+      setActionType("close");
+      writeContract({
+        address: manager,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "closeMarket",
+        args: [market.id],
+      });
+      return;
+    }
+    if (market.status !== MARKET_STATUS.CLOSED) return;
+    setPendingVote(null);
+    setActionType("vote");
     writeContract({
       address: manager,
       abi: assetOracleMarketManagerAbi,
@@ -159,7 +189,7 @@ export default function ValidatorDashboard() {
         <span>2 of 3 votes required · Asset Chain Testnet</span>
       </div>
       {notice && <p role="status">{notice}</p>}
-      {error && <p role="alert">Vote transaction was not submitted: wallet rejected it or the contract returned an error.</p>}
+      {error && <p role="alert">Transaction was not submitted: the wallet rejected it or the contract returned an error. If the closing transaction failed, refresh the market list and try again.</p>}
       {receipt.isSuccess && txHash && <p className="wallet-message" role="status">{actionType === "close" ? "Market close transaction confirmed. Refresh the list to load it for voting." : "Vote transaction confirmed."} <a href={explorerTx(txHash)} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={13} /></a> <button type="button" className="secondary-button" onClick={() => { void marketCount.refetch(); void marketReads.refetch(); }}>Refresh list</button></p>}
       {marketCount.isPending || marketReads.isPending ? <p>Loading on-chain markets…</p>
         : marketCount.isError || marketReads.isError ? <p role="alert">Unable to load markets from the configured manager.</p>
@@ -181,7 +211,7 @@ export default function ValidatorDashboard() {
                 <span>Published evidence</span>
                 {evidence ? <a href={/^https?:\/\//i.test(evidence) ? evidence : undefined} target="_blank" rel="noreferrer">{evidence}</a> : <strong>Missing evidence source — voting disabled</strong>}
               </div>
-              {market.status === MARKET_STATUS.OPEN ? <button className="primary-button" type="button" disabled={isPending || receipt.isLoading} onClick={() => closeExpiredMarket(market)}>{isPending && actionType === "close" ? "Confirm close in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : "Close market for validation"}</button> : <><label htmlFor={`validator-outcome-${id}`}>Your decision</label>
+              <><label htmlFor={`validator-outcome-${id}`}>Your decision</label>
               <BrandedSelect
                 className="validator-outcome-select"
                 id={`validator-outcome-${id}`}
@@ -192,7 +222,7 @@ export default function ValidatorDashboard() {
                 ariaLabel="Your decision"
               />
               <p className="validator-vote-count">Matching votes: {matchingVotes}/2</p>
-              {hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : "NO"}`}</button>}</>}
+              {hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : "NO"}`}</button>}</>}
             </article>;
           })}
         </div>}
