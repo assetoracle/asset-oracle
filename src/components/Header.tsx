@@ -58,31 +58,26 @@ export default function Header({
 
         <div className="header-actions">
           <a
-            className="pumpflow-link"
+            className="connect-button pumpflow-link"
             href="https://assetclaw.xyz/testnet"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Open AssetClaw testnet"
-            title="AssetClaw Testnet"
+            aria-label="Get test tokens and gas on AssetClaw testnet"
+            title="Test Token / Gas"
             style={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 36,
-              height: 36,
+              minHeight: 40,
+              padding: "0 12px",
+              fontSize: 12,
+              lineHeight: 1.2,
+              whiteSpace: "nowrap",
+              textDecoration: "none",
               flexShrink: 0,
-              marginRight: 8,
-              borderRadius: 9,
-              overflow: "hidden",
             }}
           >
-            <img
-              src="https://www.google.com/s2/favicons?domain=pumpflow.meme&sz=128"
-              alt="PumpFlow"
-              width={32}
-              height={32}
-              style={{ display: "block", objectFit: "contain" }}
-            />
+            Test Token / Gas
           </a>
 
           {wallet ? (
