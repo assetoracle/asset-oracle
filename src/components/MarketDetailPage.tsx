@@ -7,9 +7,6 @@ import {
   CircleAlert,
   ExternalLink,
   FileCheck2,
-  Wallet,
-  History,
-  CheckCircle2,
   CircleHelp,
   LockKeyhole,
 } from "lucide-react";
