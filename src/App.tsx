@@ -594,7 +594,7 @@ useEffect(() => {
     const onchainMarket = read.result as unknown as {
       status?: bigint; closeTime?: bigint; outcome?: bigint; resolvedAt?: bigint;
       evidenceHash?: string; evidenceSource?: string;
-      6?: bigint; 8?: bigint; 12?: bigint; 13?: bigint; 14?: string;
+      5?: string; 6?: bigint; 8?: bigint; 12?: bigint; 13?: bigint; 14?: string;
     };
     const statusValue = onchainMarket.status ?? onchainMarket[13];
     const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[6];
@@ -605,7 +605,7 @@ useEffect(() => {
       outcome: Number(onchainMarket.outcome ?? onchainMarket[12] ?? 0n),
       resolvedAt: Number(onchainMarket.resolvedAt ?? onchainMarket[8] ?? 0n),
       evidenceHash: String(onchainMarket.evidenceHash ?? onchainMarket[14] ?? ""),
-      evidenceSource: String(onchainMarket.evidenceSource ?? ""),
+      evidenceSource: String(onchainMarket.evidenceSource ?? onchainMarket[5] ?? ""),
     });
   });
 
