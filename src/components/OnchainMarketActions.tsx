@@ -478,48 +478,10 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
-          {(Number(marketData?.status) === MARKET_STATUS.DISPUTED || Number(marketData?.status) === MARKET_STATUS.ARBITRATION) && <>
-            <label htmlFor={`onchain-evidence-${marketId}`}>Challenge evidence reference</label>
-            <input id={`onchain-evidence-${marketId}`} value={evidenceText} onChange={(event) => setEvidenceText(event.target.value)} placeholder="Paste official source URL or evidence reference" autoComplete="off" />
-            <p className="disabled-note">The evidence text is hashed locally and only its hash is submitted on-chain. Keep the original source available for public verification.</p>
-          </>}
-          {Number(marketData?.status) === MARKET_STATUS.CLOSED && <>
-            <div className="validator-step-heading">
-              <h4>Human validation · 2 of 3</h4>
-              <p>Review the market rules and public evidence. Each authorized validator votes once. Two votes must match on both outcome and evidence reference.</p>
-            </div>
-            {validatorRoster.data === true && isConnected && !isConfiguredValidator && <p role="status">This wallet is not one of the three authorized validators. You can review the market, but cannot submit a validator vote.</p>}
-            {isConfiguredValidator && <>
-              <p className="disabled-note">Both validators vote against the market's published evidence source, so the shared reference is identical for every validator. Review it before voting: <a href={marketEvidenceReference || undefined} target="_blank" rel="noreferrer">{marketEvidenceReference || "No evidence source was published for this market"}</a></p>
-              <label htmlFor={`onchain-outcome-${marketId}`}>Your outcome decision</label>
-              <select className="brand-select" id={`onchain-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2)}>
-                <option value={1}>YES</option><option value={2}>NO</option>
-              </select>
-              <p>Matching votes for this outcome and published evidence: {marketEvidenceHash ? Number(initialVoteCount.data ?? 0n) : 0}/2.</p>
-              {hasVoted.data && <p role="status">Your vote is already recorded. It cannot be changed.</p>}
-              <button className="primary-button" type="button" disabled={!canResolve || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolve")}>{isWalletPending ? "Confirm vote in wallet…" : receipt.isLoading ? "Confirming vote…" : "Submit human validator vote"}</button>
-              {!marketEvidenceHash && <p className="stake-disabled-note">Voting is blocked because this market has no published evidence source. The market listing must provide one before validators can vote.</p>}
-            </>}
-            {validatorRoster.data === false && <p role="alert">Human validation is unavailable: this contract does not have a configured validator roster.</p>}
-          </>}
-          {Number(marketData?.status) === MARKET_STATUS.ARBITRATION && <>
-            {isConfiguredValidator && <>
-              <label htmlFor={`onchain-arbitration-outcome-${marketId}`}>Arbitration outcome vote</label>
-              <select className="brand-select" id={`onchain-arbitration-outcome-${marketId}`} value={resolutionOutcome} onChange={(event) => setResolutionOutcome(Number(event.target.value) as 1 | 2 | 3)}>
-                <option value={1}>YES</option><option value={2}>NO</option><option value={3}>INVALID</option>
-              </select>
-              <p>Matching arbitration votes: {evidenceHash ? Number(disputeVoteCount.data ?? 0n) : 0}/2.</p>
-              {hasVotedOnDispute.data && <p>You have already submitted an arbitration vote for this market.</p>}
-              <button className="primary-button" type="button" disabled={!canResolveDispute || isWalletPending || receipt.isLoading} onClick={() => submitResolution("resolveDispute")}>Submit arbitration vote</button>
-            </>}
-            {validatorRoster.data === true && isConnected && !isConfiguredValidator && <p>Connected wallet is not one of the three configured validators.</p>}
-          </>}
-          {Number(marketData?.status) === MARKET_STATUS.DISPUTED && <>
-            <p>Outcome recorded. Eligible participants may challenge it before the challenge window closes.</p>
-            <button className="primary-button" type="button" disabled={!canDispute || isWalletPending || receipt.isLoading} onClick={() => submitResolution("dispute")}>Dispute outcome with evidence</button>
-            <button className="primary-button" type="button" disabled={!canFinalize || isWalletPending || receipt.isLoading} onClick={() => submitResolution("finalize")}>Finalize after challenge window</button>
-          </>}
-
+          {/* Validator evidence and arbitration controls are intentionally private to the validator dashboard. */}
+          {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p className="disabled-note">This market is closed. Settlement updates will appear here once the outcome is confirmed.</p>}
+          {/* Arbitration controls are intentionally omitted from the public market view. */}
+          {Number(marketData?.status) === MARKET_STATUS.DISPUTED && <p className="disabled-note">The market outcome is under review. Settlement actions are handled in the restricted validator workspace.</p>}
           {Number(marketData?.status) === MARKET_STATUS.SETTLED && <button className="primary-button" type="button" disabled={!canClaim || isWalletPending || receipt.isLoading} onClick={() => submitAction("claim")}>Claim settlement</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p>This market has closed but has not been resolved. After the contract timeout, an eligible participant can enable refunds.</p>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <button className="primary-button" type="button" disabled={!canStartTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("timeout")}>Enable timeout refunds</button>}
