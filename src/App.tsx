@@ -241,7 +241,6 @@ export default function App() {
   const { signMessageAsync } = useSignMessage();
   const isAdmin = useIsAdmin(address);
   const isDesignatedValidatorWallet = useIsValidatorWallet(address);
-  const canAccessValidatorDashboard = isDesignatedValidatorWallet && onchainValidatorStatus === true;
 
   const validatorStatusReads = useReadContracts({
     contracts: address && assetOracleMarketManagerAddress ? [
@@ -270,6 +269,7 @@ export default function App() {
     validatorStatusReads.data?.[1]?.status === "success"
       ? validatorStatusReads.data[1].result === true
       : null;
+  const canAccessValidatorDashboard = isDesignatedValidatorWallet && onchainValidatorStatus === true;
 
   useEffect(() => {
     if (!helpOpen) return;
