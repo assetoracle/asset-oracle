@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ShieldCheck } from "lucide-react";
 import {
   isAddress,
@@ -354,7 +355,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       )}
       {(error || walletError) && <p role="alert">{error || "Wallet transaction failed or was rejected."}</p>}
       <p className="disabled-note">Testnet only. The wallet must have the contract’s on-chain market-creator permission and the contract must be independently verified before use.</p>
-      {publishConfirmation && (
+      {publishConfirmation && createPortal((
         <div
           className="approval-modal-backdrop"
           onClick={() => setPublishConfirmation(false)}
@@ -400,7 +401,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
             </div>
           </section>
         </div>
-      )}
+      ), document.body)}
     </div>
   );
 }
