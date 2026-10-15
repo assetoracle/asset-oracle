@@ -20,6 +20,7 @@ import {
 } from "./contracts/assetOracle";
 
 import Header from "./components/Header";
+import WalletHelpPanel from "./components/WalletHelpPanel";
 import {
   BottomNav,
   type NavItem,
@@ -160,6 +161,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [walletHelpOpen, setWalletHelpOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
   const [proposalMessage, setProposalMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
@@ -235,6 +237,15 @@ export default function App() {
 
   const addressRef = useRef<string | undefined>(address);
   addressRef.current = address;
+
+  useEffect(() => {
+    if (!walletHelpOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setWalletHelpOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [walletHelpOpen]);
 
   const navItems = useMemo<NavItem[]>(() => {
     const items: NavItem[] = [
@@ -698,6 +709,15 @@ useEffect(() => {
     }
   }
 
+  function openWalletHelp() {
+    setWalletHelpOpen(true);
+  }
+
+  function openWalletSelector() {
+    setWalletHelpOpen(false);
+    void handleConnect();
+  }
+
   function renderContent() {
     if (selectedMarketId && marketsLoading) {
       return (
@@ -769,7 +789,7 @@ useEffect(() => {
           marketsError={marketsError}
           proposalMessage={proposalMessage}
           walletConnected={Boolean(wallet)}
-          onConnect={() => void handleConnect()}
+          onConnect={openWalletHelp}
           onCategoryChange={setActiveCategory}
           onSearchChange={setSearch}
           onPropose={() => {
@@ -791,7 +811,7 @@ useEffect(() => {
           loading={myProposalsLoading}
           loaded={myProposalsLoaded}
           error={myProposalsError}
-          onConnect={() => void handleConnect()}
+          onConnect={openWalletHelp}
           onLoad={() => void handleLoadMyProposals()}
           walletRole={walletRole}
           roleError={roleError}
@@ -803,7 +823,7 @@ useEffect(() => {
       return (
         <Portfolio
           address={address}
-          onConnect={() => void handleConnect()}
+          onConnect={openWalletHelp}
         />
       );
     }
@@ -871,7 +891,7 @@ useEffect(() => {
         loading={accountDataLoading}
         error={accountDataError}
         onRetry={loadWalletAccountData}
-        onConnect={() => void handleConnect()}
+        onConnect={openWalletHelp}
       />
     );
   }
@@ -885,7 +905,7 @@ useEffect(() => {
         walletBusy={walletBusy}
         mobileMenuOpen={mobileMenuOpen}
         onNavigate={navigateTo}
-        onConnect={() => void handleConnect()}
+        onConnect={openWalletHelp}
         onOpenAccount={() => void handleOpenAccount()}
         onDisconnect={() => void handleDisconnectWallet()}
         onToggleMobileMenu={() => setMobileMenuOpen((open) => !open)}
@@ -996,6 +1016,13 @@ useEffect(() => {
           </a>
         </div>
       </footer>
+
+      {walletHelpOpen && (
+        <WalletHelpPanel
+          onConnect={openWalletSelector}
+          onClose={() => setWalletHelpOpen(false)}
+        />
+      )}
 
       {helpOpen && (
         <div className="help-overlay" role="presentation" onClick={() => setHelpOpen(false)}>
