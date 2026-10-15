@@ -138,15 +138,12 @@ function AccountPage({
       if (![3, 4, 5].includes(Number(market.status))) {
         throw new Error("This position is not currently claimable or refundable.");
       }
-      const [coin, tokenCode] = await Promise.all([
-        publicClient.readContract({
-          address: claimManager,
-          abi: assetOracleMarketManagerAbi,
-          functionName: "stablecoins",
-          args: [market.stablecoin],
-        }),
-        Promise.resolve(null),
-      ]);
+      const coin = await publicClient.readContract({
+        address: claimManager,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "stablecoins",
+        args: [market.stablecoin],
+      });
       const tokenAddress = coin[0] as Address;
       const tokenDecimals = Number(coin[1]);
       if (!coin[2] || !isAddress(tokenAddress) || /^0x0{40}$/i.test(tokenAddress) ||
