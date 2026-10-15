@@ -22,6 +22,12 @@ export const assetOracleMarketManagerAddress: Address | undefined =
 export const isAssetOracleContractConfigured =
   assetOracleMarketManagerAddress !== undefined;
 
+// Previously deployed manager. Existing positions remain in this contract and
+// must be claimable here; never redirect legacy claims to the current manager.
+export const LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES: Address[] = [
+  "0xf41fc574765175A59a9d064F7F2719EB7380a452",
+];
+
 export const assetOracleMarketManagerAbi = [
   {
     type: "function",

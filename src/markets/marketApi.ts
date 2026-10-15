@@ -132,6 +132,7 @@ export function clearWalletSession(): void {
 
 
 export type WalletPositionRecord = {
+  managerAddress?: string;
   marketId: number;
   question: string;
   yesStake: string;
@@ -146,6 +147,7 @@ export type WalletPositionRecord = {
 
 export type WalletHistoryRecord = {
   type: "Staked" | "MarketFinalized" | "Claimed" | "Refunded";
+  managerAddress?: string;
   transactionHash: string;
   blockNumber: string;
   timestamp: string;
@@ -159,6 +161,7 @@ export type WalletAccountData = {
   chainId: number;
   positions: WalletPositionRecord[];
   claimable: WalletPositionRecord[];
+  positionsStatus: string;
   history: WalletHistoryRecord[];
   historyStatus: string;
 };
