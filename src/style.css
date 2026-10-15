@@ -7910,8 +7910,9 @@ select.brand-select option,
 /* Mobile navigation and market status filter spacing polish */
 @media (max-width: 650px) {
   .mobile-navigation {
-    top: calc(100% + 8px);
-    right: 0;
+    position: fixed;
+    top: 92px;
+    right: 14px;
     left: auto;
     width: min(320px, calc(100vw - 28px));
     max-height: min(70vh, 560px);
