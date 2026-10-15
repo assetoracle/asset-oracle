@@ -1,6 +1,7 @@
 import {
   ArrowUpRight,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import type { DisplayMarket } from "./HomePage";
 import type { MarketFilter } from "../types";
@@ -118,18 +119,24 @@ export default function MarketsPage({
 
         <div className="market-category-filter">
           <label htmlFor="market-category-select">Category</label>
-          <select
-            id="market-category-select"
-            className="market-category-select"
-            value={categories.includes(activeCategory) && !["All Markets", "Live", "Settled Markets"].includes(activeCategory) ? activeCategory : "All Markets"}
-            onChange={(event) => onCategoryChange(event.target.value as MarketFilter)}
-            aria-label="Filter markets by category"
-          >
-            <option value="All Markets">All categories</option>
-            {categories.filter((category) => !["All Markets", "Live", "Settled Markets"].includes(category)).map((category) => (
-              <option key={category} value={category}>{category === "RWA" ? "Real-World Assets (RWA)" : category}</option>
-            ))}
-          </select>
+          <div className="market-category-select-wrap">
+            <select
+              id="market-category-select"
+              className="market-category-select"
+              value={categories.includes(activeCategory) && !["All Markets", "Live", "Settled Markets"].includes(activeCategory) ? activeCategory : "All Markets"}
+              onChange={(event) => onCategoryChange(event.target.value as MarketFilter)}
+              aria-label="Filter markets by category"
+            >
+              <option value="All Markets">All categories</option>
+              {categories.filter((category) => !["All Markets", "Live", "Settled Markets"].includes(category)).map((category) => (
+                <option key={category} value={category}>{category === "RWA" ? "Real-World Assets (RWA)" : category}</option>
+              ))}
+            </select>
+            <span className="market-category-select-value" aria-hidden="true">
+              <span>{categories.includes(activeCategory) && !["All Markets", "Live", "Settled Markets"].includes(activeCategory) ? (activeCategory === "RWA" ? "Real-World Assets (RWA)" : activeCategory) : "All categories"}</span>
+              <span className="market-category-select-icon"><ChevronDown size={17} /></span>
+            </span>
+          </div>
         </div>
 
         <div className="category-list category-list-desktop" aria-label="Market categories">
