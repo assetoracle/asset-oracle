@@ -249,10 +249,17 @@ export type WalletRoleResponse = {
   };
 };
 
+export async function getPublicWalletRole(address: string) {
+  return request<WalletRoleResponse>("/api/markets/auth/role/public", {
+    method: "POST",
+    body: JSON.stringify({ address }),
+  });
+}
+
 export async function getWalletRole(address: string) {
   const session = getWalletSession(address);
   if (!session) {
-    throw new Error("Verify your wallet once to establish a secure session.");
+    throw new Error("Wallet session is not established.");
   }
   return request<WalletRoleResponse>("/api/markets/auth/role/session", {
     method: "POST",
