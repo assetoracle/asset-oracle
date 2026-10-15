@@ -67,15 +67,23 @@ export default function MarketsPage({
             ) : liveMarketIds.has(market.id) ? (
               <span className="market-status market-status-live"><span className="live-indicator" aria-hidden="true" />LIVE</span>
             ) : (
-              <span className="market-status">{market.status || "Published"}</span>
+              <span className="market-status">CLOSED</span>
             )}
           </div>
         </div>
         <h3>{market.question}</h3>
         <div className="market-card-bottom">
           <span className="market-status-note">Closes {market.closesAt || "date unavailable"}</span>
-          <button className="primary-button open-market-button" type="button" onClick={() => onOpenMarket(market)}>
-            Open Market <ArrowUpRight size={15} />
+          <button
+            className="primary-button open-market-button"
+            type="button"
+            onClick={() => onOpenMarket(market)}
+            disabled={!liveMarketIds.has(market.id)}
+            aria-disabled={!liveMarketIds.has(market.id)}
+            title={!liveMarketIds.has(market.id) ? "This market is closed to participation." : "Open live market"}
+          >
+            {liveMarketIds.has(market.id) ? "Open Market" : "Market Closed"}
+            {liveMarketIds.has(market.id) && <ArrowUpRight size={15} />}
           </button>
         </div>
       </article>
