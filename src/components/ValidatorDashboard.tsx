@@ -41,7 +41,6 @@ function explorerTx(hash?: `0x${string}`) {
 export default function ValidatorDashboard() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const authorizedValidator = Boolean(address && isValidator.data === true);
   const manager = assetOracleMarketManagerAddress;
   const isValidator = useReadContract({
     address: manager,
@@ -50,6 +49,7 @@ export default function ValidatorDashboard() {
     args: address ? [address] : undefined,
     query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
   });
+  const authorizedValidator = Boolean(address && isValidator.data === true);
   const marketCount = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
