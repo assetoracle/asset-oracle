@@ -3,11 +3,8 @@ import {
   ArrowLeft,
   ShieldCheck,
   Clock3,
-  Database,
   CircleAlert,
   ExternalLink,
-  FileCheck2,
-  CircleHelp,
   LockKeyhole,
 } from "lucide-react";
 
@@ -106,122 +103,37 @@ function MarketDetailPage({
       <div className="market-detail-grid">
         <article className="detail-info-card">
           <Clock3 size={22} />
-          <span>Market closing date</span>
+          <span>Market closes</span>
           <strong>{closesAt || "Not configured"}</strong>
         </article>
-
         <article className="detail-info-card">
           <Clock3 size={22} />
-          <span>Outcome resolution date</span>
+          <span>Resolution deadline</span>
           <strong>{endDate || "Not configured"}</strong>
         </article>
-
-        <article className="detail-info-card">
-          <Database size={22} />
-          <span>Resolution data source</span>
-          <strong>{resolutionRule?.sourceId || "Not configured"}</strong>
-        </article>
-
         <article className="detail-info-card">
           <ShieldCheck size={22} />
-          <span>Resolution rules</span>
-          <strong>{resolutionRule ? "Configured in proposal" : "Pending configuration"}</strong>
+          <span>Validation method</span>
+          <strong>2 of 3 human validators</strong>
         </article>
       </div>
 
       <section className="resolution-preview">
-        <span className="eyebrow">01 / RESOLUTION FRAMEWORK</span>
-        <h2>Rules must be clear before a market opens</h2>
-        <p>
-          The conditions below come from the submitted market proposal.
-          They describe the intended resolution criteria, but do not by
-          themselves mean the market has been deployed or verified.
-        </p>
-
-        <div className="settlement-rule-list">
-          <div className="settlement-rule">
-            <Database size={18} />
-            <div>
-              <strong>Data provider</strong>
-              <span>{resolutionRule?.sourceId || "Not specified in this proposal"}</span>
-            </div>
-            <CircleHelp size={16} />
-          </div>
-
-          <div className="settlement-rule">
-            <FileCheck2 size={18} />
-            <div>
-              <strong>Measurement and threshold</strong>
-              <span>
-                {resolutionRule
-                  ? `${resolutionRule.metric}: ${resolutionRule.comparison.toLowerCase()} ${resolutionRule.targetValue.toLocaleString()}${resolutionRule.currency ? ` ${resolutionRule.currency}` : ""}`
-                  : "Not specified in this proposal"}
-              </span>
-            </div>
-            <CircleHelp size={16} />
-          </div>
-
-          <div className="settlement-rule">
-            <Clock3 size={18} />
-            <div>
-              <strong>Observation time</strong>
-              <span>
-                {resolutionRule?.observationTime
-                  ? new Date(resolutionRule.observationTime).toLocaleString()
-                  : "Not specified in this proposal"}
-              </span>
-            </div>
-            <CircleHelp size={16} />
-          </div>
-
-          {resolutionRule?.description && (
-            <div className="settlement-rule">
-              <FileCheck2 size={18} />
-              <div>
-                <strong>Resolution instructions</strong>
-                <span>{resolutionRule.description}</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {!onchainMarketId && <>
-          <div className="outcome-preview">
-            <button type="button" disabled>
-              YES
-            </button>
-            <button type="button" disabled>
-              NO
-            </button>
-          </div>
-
-          <p className="disabled-note">
-            Prediction selection becomes available only when a valid market
-            is deployed and its trading conditions are confirmed.
-          </p>
-        </>}
+        <span className="eyebrow">MARKET RULES</span>
+        <h2>What decides YES or NO?</h2>
+        <p>{resolutionRule?.description || "Resolution criteria were not provided with this proposal. Validators must agree on a public evidence source before voting."}</p>
       </section>
 
       <section className="resolution-preview settlement-section">
         <span className="eyebrow">02 / HUMAN VALIDATION AND SETTLEMENT</span>
-        <h2>Two of three validators</h2>
-        <p>
-          After the market closes, any two of the three authorized human validators
-          must submit matching YES or NO votes directly to the market contract.
-          The contract records each vote and recognizes consensus only after two
-          matching votes are confirmed on-chain.
-        </p>
+        <h2>Human validation</h2>
+        <p>When the market is CLOSED, three authorized validators review the public evidence. Any two must submit the same YES or NO outcome and the same evidence reference. Votes are recorded on-chain.</p>
         <ol>
-          <li>Close the expired market on-chain.</li>
-          <li>Two authorized validators independently submit the same outcome.</li>
-          <li>The contract records the consensus and starts its configured challenge period.</li>
-          <li>After the challenge period, a finalization transaction is required before eligible users can claim payouts.</li>
+          <li>Review the market question and resolution rules.</li>
+          <li>Agree on a public evidence URL or reference.</li>
+          <li>Two authorized validators submit matching votes.</li>
+          <li>The contract enters its challenge period. Finalization and claims follow the contract rules.</li>
         </ol>
-        <p className="disabled-note">
-          Important: the currently deployed contract does not automatically transfer every user's payout immediately after the second vote.
-          It moves the market to a challenge state; finalization and individual claims are separate on-chain transactions.
-          Automatic payout would require a contract upgrade or a new deployment and migration plan.
-        </p>
         <p className="settlement-network-note">
           Network: Asset Chain Testnet ·{" "}
           <a href="https://scan-testnet.assetchain.org" target="_blank" rel="noreferrer">
