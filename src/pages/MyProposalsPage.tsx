@@ -9,6 +9,7 @@ type MyProposalsPageProps = {
   error: string;
   onConnect: () => void;
   onLoad: () => void;
+  onEdit: (proposal: StoredMarketProposal) => void;
   walletRole: WalletRoleResponse | null;
   roleError: string;
   onchainValidatorStatus: boolean | null;
@@ -23,6 +24,7 @@ export default function MyProposalsPage({
   error,
   onConnect,
   onLoad,
+  onEdit,
   walletRole,
   roleError,
   onchainValidatorStatus,
@@ -146,6 +148,23 @@ export default function MyProposalsPage({
                     {proposal.status.replace(/_/g, " ")}
                   </span>
                 </div>
+
+                {!proposal.onchainMarketId && !proposal.onchainTxHash && (
+                  <div className="proposal-edit-actions">
+                    {Date.parse(proposal.closesAt) <= Date.now() && (
+                      <p className="disabled-note" role="status">
+                        This proposal's closing time has passed. Edit it with a future closing time and resubmit for approval.
+                      </p>
+                    )}
+                    <button
+                      className="primary-button"
+                      type="button"
+                      onClick={() => onEdit(proposal)}
+                    >
+                      Edit proposal and resubmit
+                    </button>
+                  </div>
+                )}
 
                 <h3>{proposal.question}</h3>
                 <p className="market-description">

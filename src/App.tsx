@@ -162,6 +162,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
+  const [proposalBeingEdited, setProposalBeingEdited] = useState<StoredMarketProposal | null>(null);
   const [proposalMessage, setProposalMessage] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
   const [referralLink, setReferralLink] = useState("");
@@ -679,10 +680,19 @@ useEffect(() => {
 
   function handleProposalCreated(proposal: StoredMarketProposal) {
     setProposalFormOpen(false);
+    setProposalBeingEdited(null);
     setProposalMessage(
       `Proposal submitted successfully. Status: ${proposal.status}. Reference: ${proposal.id}`,
     );
     setMyProposalsLoaded(false);
+  }
+
+  function handleProposalUpdated(proposal: StoredMarketProposal) {
+    setProposalFormOpen(false);
+    setProposalBeingEdited(null);
+    setMyProposals((current) => current.map((item) => item.id === proposal.id ? proposal : item));
+    setMyProposalsLoaded(true);
+    setProposalMessage(`Proposal updated and resubmitted for approval. Status: ${proposal.status}. Reference: ${proposal.id}`);
   }
 
   async function handleGetReferralLink() {
@@ -840,6 +850,7 @@ useEffect(() => {
           onSearchChange={setSearch}
           onPropose={() => {
             setProposalMessage("");
+            setProposalBeingEdited(null);
             setProposalFormOpen(true);
           }}
           onTrackProposal={() => navigateTo("My Proposals")}
@@ -859,6 +870,7 @@ useEffect(() => {
           error={myProposalsError}
           onConnect={openWalletHelp}
           onLoad={() => void handleLoadMyProposals()}
+          onEdit={(proposal) => { setProposalBeingEdited(proposal); setProposalFormOpen(true); }}
           walletRole={walletRole}
           roleError={roleError}
           onchainValidatorStatus={onchainValidatorStatus}
@@ -1150,6 +1162,8 @@ useEffect(() => {
           signMessage={(message: string) => signMessageAsync({ message })}
           onClose={() => setProposalFormOpen(false)}
           onCreated={handleProposalCreated}
+          initialProposal={proposalBeingEdited}
+          onUpdated={handleProposalUpdated}
         />
       )}
     </div>

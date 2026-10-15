@@ -211,6 +211,22 @@ export async function createMarketProposal(
   });
 }
 
+export async function updateMarketProposal(
+  id: string,
+  proposal: MarketProposalInput,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  await ensureWalletSession(address, signMessage);
+  return request<{
+    message: string;
+    proposal: StoredMarketProposal;
+  }>(`/api/markets/proposals/${encodeURIComponent(id)}/session`, {
+    method: "PUT",
+    body: JSON.stringify({ proposal, address }),
+  });
+}
+
 export async function getMarketProposal(id: string) {
   return request<{
     proposal: StoredMarketProposal;
