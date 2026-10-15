@@ -88,24 +88,12 @@ const categories: MarketFilter[] = [
  * Configure VITE_ADMIN_WALLET_ADDRESSES as a comma-separated list of
  * designated public wallet addresses in the frontend deployment settings.
  */
-const VALIDATOR_WALLET_ADDRESSES = (
-  import.meta.env.VITE_VALIDATOR_WALLET_ADDRESSES ?? ""
-)
-  .split(",")
-  .map((value: string) => value.trim().toLowerCase())
-  .filter(Boolean);
-
 const ADMIN_WALLET_ADDRESSES = (
   import.meta.env.VITE_ADMIN_WALLET_ADDRESSES ?? ""
 )
   .split(",")
   .map((value: string) => value.trim().toLowerCase())
   .filter(Boolean);
-
-function useIsValidatorWallet(address: string | undefined): boolean {
-  if (!address) return false;
-  return VALIDATOR_WALLET_ADDRESSES.includes(address.toLowerCase());
-}
 
 function useIsAdmin(address: string | undefined): boolean {
   if (!address) return false;
@@ -240,7 +228,6 @@ export default function App() {
 
   const { signMessageAsync } = useSignMessage();
   const isAdmin = useIsAdmin(address);
-  const isDesignatedValidatorWallet = useIsValidatorWallet(address);
 
   const validatorStatusReads = useReadContracts({
     contracts: address && assetOracleMarketManagerAddress ? [
@@ -269,7 +256,7 @@ export default function App() {
     validatorStatusReads.data?.[1]?.status === "success"
       ? validatorStatusReads.data[1].result === true
       : null;
-  const canAccessValidatorDashboard = isDesignatedValidatorWallet && onchainValidatorStatus === true;
+  const canAccessValidatorDashboard = onchainValidatorStatus === true;
 
   useEffect(() => {
     if (!helpOpen) return;
