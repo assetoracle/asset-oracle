@@ -938,6 +938,19 @@ useEffect(() => {
           liveMarketIds={new Set(liveMarkets.map((market) => market.id))}
           settledMarketIds={new Set(settledMarkets.map((market) => market.id))}
           marketOutcomes={new Map(settledMarkets.map((market) => [market.id, marketLifecycle.get(market.id)?.outcome ?? 0]))}
+          marketStakeDistribution={new Map(publishedMarkets.map((market) => {
+            const lifecycle = marketLifecycle.get(market.id);
+            const totalYes = lifecycle?.totalYes ?? 0n;
+            const totalNo = lifecycle?.totalNo ?? 0n;
+            const total = totalYes + totalNo;
+            const hasSideStake = total > 0n;
+            const yesPercent = hasSideStake ? Number((totalYes * 10000n) / total) / 100 : 0;
+            return [market.id, {
+              yesPercent,
+              noPercent: hasSideStake ? 100 - yesPercent : 0,
+              hasSideStake,
+            }] as const;
+          }))}
           onVerify={openVerification}
           marketsLoading={marketsLoading}
           marketsError={marketsError}
