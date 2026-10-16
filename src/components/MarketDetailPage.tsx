@@ -32,6 +32,7 @@ type MarketDetailPageProps = {
   onchainManagerAddress?: string | null;
   onchainCloseTime?: number;
   onchainTxHash?: string | null;
+  marketClosed?: boolean;
   onBack: () => void;
 };
 
@@ -46,6 +47,7 @@ function MarketDetailPage({
   onchainManagerAddress,
   onchainCloseTime,
   onchainTxHash,
+  marketClosed = false,
   onBack,
 }: MarketDetailPageProps) {
   return (
@@ -58,6 +60,16 @@ function MarketDetailPage({
         <ArrowLeft size={17} />
         Back to markets
       </button>
+
+      {marketClosed && (
+        <div className="market-detail-status" role="status">
+          <CircleAlert size={20} />
+          <div>
+            <strong>Market Closed</strong>
+            <p>This market is no longer open for participation. You can review its question, description, schedule, and resolution rules below. Staking is unavailable.</p>
+          </div>
+        </div>
+      )}
 
       <div className="market-detail-heading">
         <span className="eyebrow">{category}</span>
