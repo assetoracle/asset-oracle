@@ -110,9 +110,13 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets, onOpe
               <h3>{market.question}</h3>
               <div className="market-card-bottom">
                 <span className="market-status-note">{market.outcome} · Closes {market.closeTime ? new Date(market.closeTime * 1000).toLocaleDateString() : "date unavailable"}</span>
-                <button className="primary-button open-market-button" type="button" onClick={() => onOpenMarket(market.publishedMarket)}>
-                  Open Market <span aria-hidden="true">↗</span>
-                </button>
+                {market.status === "Open" && market.closeTime > Math.floor(Date.now() / 1000) ? (
+                  <button className="primary-button open-market-button" type="button" onClick={() => onOpenMarket(market.publishedMarket)}>
+                    Open Market <span aria-hidden="true">↗</span>
+                  </button>
+                ) : (
+                  <span className="market-status-note" role="status">Entry closed — staking unavailable</span>
+                )}
               </div>
             </article>
           ))}
