@@ -16,6 +16,7 @@ type MarketsPageProps = {
   liveMarketIds: Set<string>;
   settledMarketIds: Set<string>;
   marketOutcomes: Map<string, number>;
+  marketStakeDistribution: Map<string, { yesPercent: number; noPercent: number; hasSideStake: boolean }>;
   onVerify: (market: DisplayMarket) => void;
   marketsLoading: boolean;
   marketsError: string;
@@ -38,6 +39,7 @@ export default function MarketsPage({
   liveMarketIds,
   settledMarketIds,
   marketOutcomes,
+  marketStakeDistribution,
   onVerify,
   marketsLoading,
   marketsError,
@@ -80,6 +82,24 @@ export default function MarketsPage({
           </div>
         </div>
         <h3>{market.question}</h3>
+        {liveMarketIds.has(market.id) && (() => {
+          const distribution = marketStakeDistribution.get(market.id);
+          const yesPercent = distribution?.yesPercent ?? 0;
+          const noPercent = distribution?.noPercent ?? 0;
+          const hasSideStake = distribution?.hasSideStake ?? false;
+          return (
+            <div className="market-sentiment" aria-label={hasSideStake ? `YES stake ${yesPercent}%, NO stake ${noPercent}%` : "No stakes placed yet"}>
+              <div className={`market-sentiment-track${hasSideStake ? "" : " market-sentiment-empty"}`} role="img" aria-label={hasSideStake ? `YES ${yesPercent}%, NO ${noPercent}%` : "Stake distribution unavailable"}>
+                <span className="market-sentiment-yes" style={{ width: `${hasSideStake ? yesPercent : 50}%` }} />
+                <span className="market-sentiment-no" style={{ width: `${hasSideStake ? noPercent : 50}%` }} />
+              </div>
+              <div className="market-sentiment-labels">
+                <span className="market-sentiment-label-yes">YES {hasSideStake ? `${yesPercent.toFixed(2)}%` : "—"}</span>
+                <span className="market-sentiment-label-no">NO {hasSideStake ? `${noPercent.toFixed(2)}%` : "—"}</span>
+              </div>
+            </div>
+          );
+        })()}
         {settledMarketIds.has(market.id) && (() => {
           const outcome = marketOutcomes.get(market.id);
           const label = outcome === 1 ? "YES" : outcome === 2 ? "NO" : outcome === 3 ? "INVALID" : "Outcome pending";
