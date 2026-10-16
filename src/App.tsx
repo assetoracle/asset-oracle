@@ -578,14 +578,14 @@ useEffect(() => {
 
   const query = search.trim().toLowerCase();
 
-  const marketLifecycle = new Map<string, { status: number; closeTime: number; outcome: number; resolvedAt: number; evidenceHash: string; evidenceSource: string }>();
+  const marketLifecycle = new Map<string, { status: number; closeTime: number; outcome: number; resolvedAt: number; evidenceHash: string; evidenceSource: string; totalYes: bigint; totalNo: bigint }>();
   onchainPublishedMarkets.forEach((market, index) => {
     const read = marketStatusReads.data?.[index];
     if (read?.status !== "success" || !read.result) return;
     const onchainMarket = read.result as unknown as {
       status?: bigint; closeTime?: bigint; outcome?: bigint; resolvedAt?: bigint;
-      evidenceHash?: string; evidenceSource?: string;
-      5?: string; 6?: bigint; 8?: bigint; 12?: bigint; 13?: bigint; 14?: string;
+      evidenceHash?: string; evidenceSource?: string; totalYes?: bigint; totalNo?: bigint;
+      5?: string; 6?: bigint; 8?: bigint; 9?: bigint; 10?: bigint; 12?: bigint; 13?: bigint; 14?: string;
     };
     const statusValue = onchainMarket.status ?? onchainMarket[13];
     const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[6];
@@ -597,6 +597,8 @@ useEffect(() => {
       resolvedAt: Number(onchainMarket.resolvedAt ?? onchainMarket[8] ?? 0n),
       evidenceHash: String(onchainMarket.evidenceHash ?? onchainMarket[14] ?? ""),
       evidenceSource: String(onchainMarket.evidenceSource ?? onchainMarket[5] ?? ""),
+      totalYes: BigInt(onchainMarket.totalYes ?? onchainMarket[9] ?? 0n),
+      totalNo: BigInt(onchainMarket.totalNo ?? onchainMarket[10] ?? 0n),
     });
   });
 
@@ -642,6 +644,13 @@ useEffect(() => {
     const lifecycle = marketLifecycle.get(market.id);
     const isSettled = lifecycle?.status === MARKET_STATUS.SETTLED;
     const outcomeLabel = lifecycle?.outcome === MARKET_OUTCOME.YES ? "YES" : lifecycle?.outcome === MARKET_OUTCOME.NO ? "NO" : lifecycle?.outcome === MARKET_OUTCOME.INVALID ? "INVALID" : "Outcome pending";
+    const totalYes = lifecycle?.totalYes ?? 0n;
+    const totalNo = lifecycle?.totalNo ?? 0n;
+    const totalSideStake = totalYes + totalNo;
+    const hasSideStake = totalSideStake > 0n;
+    const yesPercent = hasSideStake ? Number((totalYes * 10000n) / totalSideStake) / 100 : 0;
+    const noPercent = hasSideStake ? 100 - yesPercent : 0;
+    const isLive = liveMarkets.some((item) => item.id === market.id);
     return (
       <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
@@ -658,6 +667,18 @@ useEffect(() => {
           </div>
         </div>
         <h3>{market.question}</h3>
+        {isLive && (
+          <div className="market-sentiment" aria-label={`Current stake distribution: YES ${yesPercent.toFixed(1)} percent, NO ${noPercent.toFixed(1)} percent`}>
+            <div className={`market-sentiment-track${hasSideStake ? "" : " market-sentiment-empty"}`} role="img" aria-label={hasSideStake ? `YES ${yesPercent.toFixed(1)}%, NO ${noPercent.toFixed(1)}%` : "No stakes yet"}>
+              <div className="market-sentiment-yes" style={{ width: `${yesPercent}%` }} />
+              <div className="market-sentiment-no" style={{ width: `${noPercent}%` }} />
+            </div>
+            <div className="market-sentiment-labels">
+              <span className="market-sentiment-yes-label">YES {hasSideStake ? `${yesPercent.toFixed(1)}%` : "—"}</span>
+              <span className="market-sentiment-no-label">NO {hasSideStake ? `${noPercent.toFixed(1)}%` : "—"}</span>
+            </div>
+          </div>
+        )}
         {isSettled && (
           <div className="settled-outcome-preview">
             <span>Final outcome</span>
