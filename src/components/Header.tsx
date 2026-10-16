@@ -77,7 +77,7 @@ export default function Header({
               flexShrink: 0,
             }}
           >
-            Test Token / Gas
+            Test USDC / Gas
           </a>
 
           {wallet ? (
