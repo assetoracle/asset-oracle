@@ -35,7 +35,7 @@ function displayResolutionRules(value: string) {
   // Some markets store JSON-encoded rules as a JSON string, so decode up to twice.
   for (let attempt = 0; attempt < 2 && typeof parsed === "string"; attempt += 1) {
     const candidate = parsed.trim();
-    if (!candidate.startsWith("{") && !candidate.startsWith("\\\"")) break;
+    if (!candidate.startsWith("{") && !candidate.startsWith('"')) break;
     try {
       parsed = JSON.parse(candidate);
     } catch {
