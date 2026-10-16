@@ -8694,3 +8694,5 @@ select.brand-select option,
 .market-sentiment-labels { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; font-weight:700; letter-spacing:0.02em; }
 .market-sentiment-yes-label { color:#36d98b; }
 .market-sentiment-no-label { color:#ff707c; }
+
+.market-sentiment-track.market-sentiment-empty { background: #34414a; }
