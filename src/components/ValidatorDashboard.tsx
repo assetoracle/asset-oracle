@@ -70,6 +70,14 @@ export default function ValidatorDashboard() {
   const [pendingVote, setPendingVote] = useState<{ managerAddress: Address; marketId: bigint; outcome: 1 | 2; evidenceHash: `0x${string}` } | null>(null);
   const handledCloseHash = useRef<string | null>(null);
 
+  const managerDiagnostics = managers.map((managerAddress, index) => {
+    const read = managerCountReads.data?.[index];
+    const count = read?.status === "success" ? Number(read.result ?? 0n) : null;
+    const failedMarketReads = marketContracts.reduce((total, contract, readIndex) =>
+      contract.address.toLowerCase() === managerAddress.toLowerCase() &&
+      marketReads.data?.[readIndex]?.status === "failure" ? total + 1 : total, 0);
+    return { managerAddress, count, readStatus: !read ? "pending" : read.status, failedMarketReads };
+  });
   const markets = useMemo(() => (marketReads.data ?? [])
     .map((read, index) => read.status === "success"
       ? { ...(read.result as unknown as ChainMarket), managerAddress: marketContracts[index].address }
@@ -178,7 +186,7 @@ export default function ValidatorDashboard() {
       {receipt.isSuccess && txHash && <p className="wallet-message" role="status">{actionType === "close" ? "Market close transaction confirmed. Refresh the list to load it for voting." : "Vote transaction confirmed."} <a href={explorerTx(txHash)} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={13} /></a> <button type="button" className="secondary-button" onClick={() => { void validatorReads.refetch(); void managerCountReads.refetch(); void marketReads.refetch(); }}>Refresh list</button></p>}
       {managerCountReads.isPending || marketReads.isPending ? <p>Loading on-chain markets…</p>
         : managerCountReads.isError || marketReads.isError ? <p role="alert">Unable to load markets from the configured manager(s).</p>
-        : markets.length === 0 ? <div className="empty-state"><h3>No markets awaiting settlement</h3><p>Closed markets will appear here when they are ready for validator review.</p></div>
+        : markets.length === 0 ? <div className="empty-state"><h3>No markets awaiting settlement</h3><p>Closed markets will appear here when they are ready for validator review.</p><div className="validator-market-meta" style={{ display: "grid", gap: "8px", marginTop: "16px", textAlign: "left" }}><strong>Market loading diagnostics</strong>{managerDiagnostics.map((item) => <div key={item.managerAddress}><span>{item.managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase() ? "Main manager" : "Legacy manager"}: </span><span>{item.count === null ? `marketCount read ${item.readStatus}` : `${item.count} markets returned`}</span><span>{item.failedMarketReads > 0 ? ` · ${item.failedMarketReads} market reads failed` : ""}</span></div>)}</div></div>
         : <div className="validator-market-list">
           {markets.map((market, index) => {
             const id = market.id.toString();
