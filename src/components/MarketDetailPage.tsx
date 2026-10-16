@@ -79,6 +79,14 @@ function MarketDetailPage({
         </span>
       </div>
 
+      {onchainMarketId && (
+        <div className="market-id-panel" aria-label={`Market ID ${onchainMarketId}`}>
+          <span>Market ID</span>
+          <strong>{onchainMarketId}</strong>
+          <p>Use this exact ID when checking this market on the blockchain.</p>
+        </div>
+      )}
+
       <h1>{question}</h1>
       <p className="market-detail-description">{description}</p>
 
