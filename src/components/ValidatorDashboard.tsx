@@ -86,10 +86,10 @@ export default function ValidatorDashboard() {
   });
   const { writeContract, data: txHash, isPending, error, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
-  const [outcomes, setOutcomes] = useState<Record<string, 1 | 2>>({});
+  const [outcomes, setOutcomes] = useState<Record<string, 1 | 2 | 3>>({});
   const [notice, setNotice] = useState("");
   const [actionType, setActionType] = useState<"close" | "vote" | "finalize" | null>(null);
-  const [pendingVote, setPendingVote] = useState<{ managerAddress: Address; marketId: bigint; outcome: 1 | 2; evidenceHash: `0x${string}` } | null>(null);
+  const [pendingVote, setPendingVote] = useState<{ managerAddress: Address; marketId: bigint; outcome: 1 | 2 | 3; evidenceHash: `0x${string}` } | null>(null);
   const handledCloseHash = useRef<string | null>(null);
 
   const managerDiagnostics = managers.map((managerAddress, index) => {
@@ -126,7 +126,7 @@ export default function ValidatorDashboard() {
     contracts: markets.flatMap((market) => {
       const evidence = market.evidenceSource.trim();
       const evidenceHash = evidence ? keccak256(toBytes(evidence)) : ("0x" + "00".repeat(32)) as `0x${string}`;
-      return [1, 2].map((outcome) => ({
+      return [1, 2, 3].map((outcome) => ({
         address: market.managerAddress,
         abi: assetOracleMarketManagerAbi,
         functionName: "voteCountByKey" as const,
@@ -231,7 +231,7 @@ export default function ValidatorDashboard() {
             const challengeEndsAt = market.resolvedAt + market.challengePeriod;
             const canFinalize = market.status === MARKET_STATUS.DISPUTED && BigInt(Math.floor(Date.now() / 1000)) >= challengeEndsAt;
             const selectedOutcome = outcomes[`${market.managerAddress.toLowerCase()}-${id}`] ?? 1;
-            const voteIndex = index * 2 + (selectedOutcome === 1 ? 0 : 1);
+            const voteIndex = index * 3 + (selectedOutcome === 1 ? 0 : selectedOutcome === 2 ? 1 : 2);
             const matchingVotes = Number(voteCountReads.data?.[voteIndex]?.status === "success" ? voteCountReads.data[voteIndex].result ?? 0n : 0n);
             const evidence = market.evidenceSource.trim();
             return <article className="validator-market-card" key={`${market.managerAddress.toLowerCase()}-${id}`}>
@@ -248,13 +248,13 @@ export default function ValidatorDashboard() {
                 className="validator-outcome-select"
                 id={`validator-outcome-${id}`}
                 value={selectedOutcome}
-                options={[{ value: "1", label: "YES" }, { value: "2", label: "NO" }]}
-                onChange={(value) => setOutcomes((current) => ({ ...current, [`${market.managerAddress.toLowerCase()}-${id}`]: Number(value) as 1 | 2 }))}
+                options={[{ value: "1", label: "YES" }, { value: "2", label: "NO" }, { value: "3", label: "INVALID" }]}
+                onChange={(value) => setOutcomes((current) => ({ ...current, [`${market.managerAddress.toLowerCase()}-${id}`]: Number(value) as 1 | 2 | 3 }))}
                 disabled={hasVoted || isPending || receipt.isLoading}
                 ariaLabel="Your decision"
               />
               <p className="validator-vote-count">{market.status === MARKET_STATUS.DISPUTED ? `Challenge period ends ${new Date(Number(challengeEndsAt) * 1000).toLocaleString()}` : `Matching votes: ${matchingVotes}/2`}</p>
-              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : "NO"}`}</button>}
+              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
             </article>;
           })}
         </div>}
