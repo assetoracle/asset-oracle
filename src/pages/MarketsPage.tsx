@@ -16,7 +16,8 @@ type MarketsPageProps = {
   liveMarketIds: Set<string>;
   settledMarketIds: Set<string>;
   marketOutcomes: Map<string, number>;
-  onVerify: (market: DisplayMarket) => void;
+  marketStakeDistribution: Map<string, { yesPercent: number; noPercent: number; hasSideStake: boolean }>;
+  onVerify, (market: DisplayMarket) => void;
   marketsLoading: boolean;
   marketsError: string;
   proposalMessage: string;
@@ -38,6 +39,7 @@ export default function MarketsPage({
   liveMarketIds,
   settledMarketIds,
   marketOutcomes,
+  marketStakeDistribution,
   onVerify,
   marketsLoading,
   marketsError,
