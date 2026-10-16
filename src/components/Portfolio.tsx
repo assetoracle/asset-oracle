@@ -1,4 +1,5 @@
 import { friendlyError } from "../utils/friendlyError";
+import { getWalletAccountData, type WalletAccountData } from "../markets/marketApi";
 
 import { useEffect, useState } from "react";
 import {
@@ -85,6 +86,28 @@ export default function Portfolio({
     error: "",
   });
   const [refreshKey, setRefreshKey] = useState(0);
+  const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountError, setAccountError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    if (!address || !isAddress(address)) {
+      setAccountData(null);
+      setAccountError("");
+      setAccountLoading(false);
+      return () => { active = false; };
+    }
+    setAccountLoading(true);
+    setAccountError("");
+    void getWalletAccountData(address)
+      .then((result) => { if (active) setAccountData(result); })
+      .catch((error) => {
+        if (active) setAccountError(friendlyError(error, "Unable to load your market positions."));
+      })
+      .finally(() => { if (active) setAccountLoading(false); });
+    return () => { active = false; };
+  }, [address, refreshKey]);
 
   useEffect(() => {
     let active = true;
@@ -313,6 +336,35 @@ export default function Portfolio({
               </a>
             </article>
           </div>
+
+          <section className="account-record-section portfolio-positions-section">
+            <div className="section-heading">
+              <div><h2>Your market positions</h2><p>Stakes, settlement outcomes, and payout status for this wallet.</p></div>
+              <button className="portfolio-refresh-button" type="button" disabled={accountLoading || data.loading} onClick={() => setRefreshKey((value) => value + 1)}><RefreshCw size={15} /> Refresh</button>
+            </div>
+            {accountLoading ? <div className="empty-state"><h3>Loading positions</h3><p>Reading your market records.</p></div>
+              : accountError ? <div className="empty-state" role="alert"><h3>Positions unavailable</h3><p>{accountError}</p></div>
+              : !accountData || accountData.positions.length === 0 ? <div className="empty-state"><h3>No market positions found</h3><p>Predictions placed by this wallet will appear here once found by the account data service.</p></div>
+              : <div className="market-grid">{accountData.positions.map((position) => {
+                  const stake = Number(position.yesStake || 0) + Number(position.noStake || 0);
+                  const payout = Number(position.claimableAmount || 0);
+                  const settled = [3, 4, 5].includes(position.status);
+                  const profit = payout - stake;
+                  const outcome = position.outcome === 1 ? "YES" : position.outcome === 2 ? "NO" : position.outcome === 3 ? "INVALID / REFUND" : "Pending";
+                  return <article className="market-card" key={(position.managerAddress ?? "unknown").toLowerCase() + ":" + position.marketId}>
+                    <span className="market-category">Market #{position.marketId} · {settled ? "Settled" : position.status === 0 ? "Open" : "In progress"}</span>
+                    <h3>{position.question}</h3>
+                    <div className="market-meta"><span>YES stake</span><span>{position.yesStake}</span></div>
+                    <div className="market-meta"><span>NO stake</span><span>{position.noStake}</span></div>
+                    <div className="market-meta"><span>Final outcome</span><span>{outcome}</span></div>
+                    <div className="market-meta"><span>Total payout available</span><strong>{settled ? position.claimableAmount : "Pending settlement"}</strong></div>
+                    {settled && <div className="market-meta"><span>Net profit / loss*</span><strong>{profit.toLocaleString(undefined, {maximumFractionDigits: 6})}</strong></div>}
+                    <div className="market-meta"><span>Claim status</span><span>{position.claimed ? "Claimed" : settled && payout > 0 ? "Claim available — open Claims" : settled ? "No payout available" : "Not settled"}</span></div>
+                  </article>;
+                })}</div>}
+            {accountData?.positionsStatus === "PARTIAL_ONCHAIN_POSITIONS" && <p className="portfolio-token-error" role="status">Some manager data could not be read. Refresh before relying on this list.</p>}
+            <p className="portfolio-disclaimer">*Profit/loss is shown as available payout minus recorded YES/NO stake. Token amounts follow the original market's settlement token units. Testnet tokens may have no monetary value.</p>
+          </section>
 
           <p className="portfolio-disclaimer">
             Balance is read from Asset Chain Testnet. Testnet tokens
