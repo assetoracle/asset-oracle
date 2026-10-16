@@ -584,7 +584,7 @@ useEffect(() => {
     if (read?.status !== "success" || !read.result) return;
     const onchainMarket = read.result as unknown as {
       status?: bigint; closeTime?: bigint; outcome?: bigint; resolvedAt?: bigint;
-      evidenceHash?: string; evidenceSource?: string;
+      evidenceHash?: string; evidenceSource?: string; totalYes?: bigint; totalNo?: bigint;
       5?: string; 6?: bigint; 8?: bigint; 9?: bigint; 10?: bigint; 12?: bigint; 13?: bigint; 14?: string;
     };
     const statusValue = onchainMarket.status ?? onchainMarket[13];
@@ -647,8 +647,9 @@ useEffect(() => {
     const totalYes = lifecycle?.totalYes ?? 0n;
     const totalNo = lifecycle?.totalNo ?? 0n;
     const totalSideStake = totalYes + totalNo;
-    const yesPercent = totalSideStake > 0n ? Number((totalYes * 10000n) / totalSideStake) / 100 : 50;
-    const noPercent = totalSideStake > 0n ? 100 - yesPercent : 50;
+    const hasSideStake = totalSideStake > 0n;
+    const yesPercent = hasSideStake ? Number((totalYes * 10000n) / totalSideStake) / 100 : 0;
+    const noPercent = hasSideStake ? 100 - yesPercent : 0;
     const isLive = liveMarkets.some((item) => item.id === market.id);
     return (
       <article className="market-card market-card-compact" key={market.id}>
@@ -668,13 +669,13 @@ useEffect(() => {
         <h3>{market.question}</h3>
         {isLive && (
           <div className="market-sentiment" aria-label={`Current stake distribution: YES ${yesPercent.toFixed(1)} percent, NO ${noPercent.toFixed(1)} percent`}>
-            <div className="market-sentiment-track" role="img" aria-label={`YES ${yesPercent.toFixed(1)}%, NO ${noPercent.toFixed(1)}%`}>
+            <div className={`market-sentiment-track${hasSideStake ? "" : " market-sentiment-empty"}`} role="img" aria-label={hasSideStake ? `YES ${yesPercent.toFixed(1)}%, NO ${noPercent.toFixed(1)}%` : "No stakes yet"}>
               <div className="market-sentiment-yes" style={{ width: `${yesPercent}%` }} />
               <div className="market-sentiment-no" style={{ width: `${noPercent}%` }} />
             </div>
             <div className="market-sentiment-labels">
-              <span className="market-sentiment-yes-label">YES {totalSideStake > 0n ? `${yesPercent.toFixed(1)}%` : "—"}</span>
-              <span className="market-sentiment-no-label">NO {totalSideStake > 0n ? `${noPercent.toFixed(1)}%` : "—"}</span>
+              <span className="market-sentiment-yes-label">YES {hasSideStake ? `${yesPercent.toFixed(1)}%` : "—"}</span>
+              <span className="market-sentiment-no-label">NO {hasSideStake ? `${noPercent.toFixed(1)}%` : "—"}</span>
             </div>
           </div>
         )}
