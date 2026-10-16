@@ -565,7 +565,8 @@ useEffect(() => {
   }
 
   function goBackToMarkets() {
-    setActiveCategory("Settled Markets");
+    // Preserve the market-list context (status tab, subject category, and search)
+    // from before the user opened details or verification.
     window.location.hash = pathForPage("Markets");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
