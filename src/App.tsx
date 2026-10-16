@@ -558,18 +558,8 @@ useEffect(() => {
   }
 
   function openMarket(market: DisplayMarket) {
-    // Only markets verified as OPEN and still before their on-chain close time
-    // can be opened for participation. Block direct links and stale cards too.
-    const lifecycle = marketLifecycle.get(market.id);
-    if (
-      !lifecycle ||
-      lifecycle.status !== MARKET_STATUS.OPEN ||
-      lifecycle.closeTime <= Math.floor(Date.now() / 1000)
-    ) {
-      setSelectedMarketId(null);
-      window.location.hash = pathForPage("Markets");
-      return;
-    }
+    // Open details for published markets regardless of lifecycle status.
+    // On-chain status and deadline checks still disable staking on closed markets.
     window.location.hash = pathForPage("Markets", market.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -914,7 +904,7 @@ useEffect(() => {
     if (page === "Home") {
       return (
         <HomePage
-          markets={publishedMarkets}
+          markets={liveMarkets}
           marketsLoading={marketsLoading}
           marketsError={marketsError}
           onExploreMarkets={() => navigateTo("Markets")}
