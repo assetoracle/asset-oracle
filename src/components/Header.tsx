@@ -63,7 +63,7 @@ export default function Header({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Get test tokens and gas on AssetClaw testnet"
-            title="Test Token / Gas"
+            title="Test USDC / Gas"
             style={{
               display: "inline-flex",
               alignItems: "center",
