@@ -82,6 +82,23 @@ export default function MarketsPage({
           </div>
         </div>
         <h3>{market.question}</h3>
+        {liveMarketIds.has(market.id) && (() => {
+          const distribution = marketStakeDistribution.get(market.id);
+          if (!distribution) return null;
+          const { yesPercent, noPercent, hasSideStake } = distribution;
+          return (
+            <div className="market-sentiment" aria-label={`Current stake distribution: YES ${hasSideStake ? yesPercent.toFixed(1) + "%" : "no stakes"}, NO ${hasSideStake ? noPercent.toFixed(1) + "%" : "no stakes"}`}>
+              <div className={`market-sentiment-track${hasSideStake ? "" : " market-sentiment-empty"}`} role="img" aria-label={hasSideStake ? `YES ${yesPercent.toFixed(1)}%, NO ${noPercent.toFixed(1)}%` : "No stakes yet"}>
+                <div className="market-sentiment-yes" style={{ width: `${yesPercent}%` }} />
+                <div className="market-sentiment-no" style={{ width: `${noPercent}%` }} />
+              </div>
+              <div className="market-sentiment-labels">
+                <span className="market-sentiment-yes-label">YES {hasSideStake ? `${yesPercent.toFixed(1)}%` : "—"}</span>
+                <span className="market-sentiment-no-label">NO {hasSideStake ? `${noPercent.toFixed(1)}%` : "—"}</span>
+              </div>
+            </div>
+          );
+        })()}
         {settledMarketIds.has(market.id) && (() => {
           const outcome = marketOutcomes.get(market.id);
           const label = outcome === 1 ? "YES" : outcome === 2 ? "NO" : outcome === 3 ? "INVALID" : "Outcome pending";
