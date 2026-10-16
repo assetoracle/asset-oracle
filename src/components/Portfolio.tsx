@@ -345,7 +345,13 @@ export default function Portfolio({
             {accountLoading ? <div className="empty-state"><h3>Loading positions</h3><p>Reading your market records.</p></div>
               : accountError ? <div className="empty-state" role="alert"><h3>Positions unavailable</h3><p>{accountError}</p></div>
               : !accountData || accountData.positions.length === 0 ? <div className="empty-state"><h3>No market positions found</h3><p>Predictions placed by this wallet will appear here once found by the account data service.</p></div>
-              : <div className="market-grid">{accountData.positions.map((position) => {
+              : <div className="market-grid">{[...accountData.positions].sort((a, b) => {
+                  const aTime = a.timestamp ? Date.parse(a.timestamp) : Number.NEGATIVE_INFINITY;
+                  const bTime = b.timestamp ? Date.parse(b.timestamp) : Number.NEGATIVE_INFINITY;
+                  const validATime = Number.isFinite(aTime) ? aTime : Number.NEGATIVE_INFINITY;
+                  const validBTime = Number.isFinite(bTime) ? bTime : Number.NEGATIVE_INFINITY;
+                  return validBTime - validATime;
+                }).map((position) => {
                   const stake = Number(position.yesStake || 0) + Number(position.noStake || 0);
                   const payout = Number(position.claimableAmount || 0);
                   const settled = [3, 4, 5].includes(position.status);
