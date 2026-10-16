@@ -278,9 +278,21 @@ function AccountPage({
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
                       <small>Original manager: {itemManagerAddress === "unknown" ? "Unavailable" : `${itemManagerAddress.slice(0, 8)}…${itemManagerAddress.slice(-6)}`}</small>
-                      <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
-                        {busyMarketKey === itemKey ? "Confirming…" : item.status === 2 ? "Finalize & claim" : item.status === 3 ? (Number(item.claimableAmount) === 0 ? "Confirm zero-payout claim" : "Claim payout") : "Claim refund"}
-                      </button>
+                      {(() => {
+                        const hasYesStake = Number(item.yesStake) > 0;
+                        const hasNoStake = Number(item.noStake) > 0;
+                        const winningPosition =
+                          (item.outcome === 1 && hasYesStake) ||
+                          (item.outcome === 2 && hasNoStake);
+                        const isRefund = item.status === 4 || item.status === 5;
+                        const canClaim = isRefund || winningPosition;
+                        if (!canClaim) return null;
+                        return (
+                          <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
+                            {busyMarketKey === itemKey ? "Confirming…" : isRefund ? "Claim refund" : item.status === 2 ? "Finalize & claim" : "Claim payout"}
+                          </button>
+                        );
+                      })()}
                     </article>
                     );
                   })}
