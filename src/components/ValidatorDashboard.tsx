@@ -71,8 +71,16 @@ export default function ValidatorDashboard() {
   const handledCloseHash = useRef<string | null>(null);
 
   const markets = useMemo(() => (marketReads.data ?? [])
-    .map((read, index) => read.status === "success" ? { ...(read.result as unknown as ChainMarket), managerAddress: marketContracts[index].address } : null)
-    .filter((market): market is ChainMarket => Boolean(market && market.id > 0n && (market.status === MARKET_STATUS.CLOSED || (market.status === MARKET_STATUS.OPEN && market.closeTime <= BigInt(Math.floor(Date.now() / 1000)))))
+    .map((read, index) => read.status === "success"
+      ? { ...(read.result as unknown as ChainMarket), managerAddress: marketContracts[index].address }
+      : null)
+    .filter((market): market is ChainMarket => {
+      if (!market || market.id <= 0n) return false;
+      const isClosed = market.status === MARKET_STATUS.CLOSED;
+      const isExpiredOpen = market.status === MARKET_STATUS.OPEN &&
+        market.closeTime <= BigInt(Math.floor(Date.now() / 1000));
+      return isClosed || isExpiredOpen;
+    })
     .sort((a, b) => Number(a.closeTime - b.closeTime)), [marketReads.data, marketContracts]);
 
   const votedReads = useReadContracts({
