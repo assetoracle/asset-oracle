@@ -128,7 +128,7 @@ export default function ValidatorDashboard() {
       setNotice(`Market #${market.id.toString()} cannot be voted on because its published evidence source is missing.`);
       return;
     }
-    const outcome = outcomes[market.id.toString()] ?? 1;
+    const outcome = outcomes[`${market.managerAddress.toLowerCase()}-${market.id.toString()}`] ?? 1;
     const evidenceHash = keccak256(toBytes(evidence));
     setNotice("");
     reset();
