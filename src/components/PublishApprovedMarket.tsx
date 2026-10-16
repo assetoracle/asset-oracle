@@ -292,7 +292,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
           rules,
           proposal.resolutionRule.sourceId,
           BigInt(closeTimestamp),
-          86400n,
+          3600n, // 1-hour challenge period; minimum accepted by the deployed contract.
         ],
       });
       setTxHash(hash);
