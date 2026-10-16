@@ -60,6 +60,12 @@ export default function MarketsPage({
     (category) => !["All Markets", "Live", "Settled Markets"].includes(category),
   );
 
+  // Keep the Published Markets list focused on markets users can still enter.
+  // Settled markets remain available only in the dedicated Settled filter.
+  const visibleMarkets = activeCategory === "Settled Markets"
+    ? markets.filter((market) => settledMarketIds.has(market.id))
+    : markets.filter((market) => liveMarketIds.has(market.id));
+
   function renderMarketCard(market: DisplayMarket, categoryIndex: number) {
     return (
       <article className="market-card market-card-compact" key={market.id}>
@@ -221,10 +227,10 @@ export default function MarketsPage({
           <h3>Unable to load markets</h3><p>{marketsError}</p>
           <button className="primary-button" type="button" onClick={onRetryMarkets}>Try again</button>
         </div>
-      ) : markets.length === 0 ? (
+      ) : visibleMarkets.length === 0 ? (
         <div className="empty-state"><h3>{activeCategory === "Live" ? "No live markets right now" : activeCategory === "Settled Markets" ? "No settled markets yet" : "No published markets in this category"}</h3><p>{activeCategory === "Live" ? "Markets appear here only while on-chain status is open and the participation deadline has not passed." : activeCategory === "Settled Markets" ? "Markets move here after their on-chain settlement status is confirmed." : "Markets appear here after publication and are filtered by the selected category."}</p></div>
       ) : (
-        <div className="market-grid">{markets.map((market, index) => renderMarketCard(market, index))}</div>
+        <div className="market-grid">{visibleMarkets.map((market, index) => renderMarketCard(market, index))}</div>
       )}
 
       <p className="market-disclaimer">
