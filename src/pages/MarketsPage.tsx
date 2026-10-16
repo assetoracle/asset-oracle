@@ -91,12 +91,10 @@ export default function MarketsPage({
               className="primary-button open-market-button"
               type="button"
               onClick={() => onOpenMarket(market)}
-              disabled={!liveMarketIds.has(market.id)}
-              aria-disabled={!liveMarketIds.has(market.id)}
-              title={!liveMarketIds.has(market.id) ? "This market is closed to participation." : "Open live market"}
+              title={liveMarketIds.has(market.id) ? "Open market details and participate while open." : "View closed market details; staking is unavailable."}
             >
-              {liveMarketIds.has(market.id) ? "Open Market" : "Market Closed"}
-              {liveMarketIds.has(market.id) && <ArrowUpRight size={15} />}
+              {liveMarketIds.has(market.id) ? "Open Market" : "View Details"}
+              <ArrowUpRight size={15} />
             </button>
           )}
         </div>
