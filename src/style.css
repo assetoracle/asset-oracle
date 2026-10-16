@@ -8247,3 +8247,135 @@ select.brand-select option,
   font-size: 12px;
   line-height: 1.5;
 }
+
+
+/* Responsive wallet header: preserve desktop styling and give narrow screens room to breathe. */
+@media (max-width: 650px) {
+  .header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    padding: 14px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .header > .brand {
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .header > .desktop-navigation {
+    display: none;
+  }
+
+  .header > .header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+    grid-template-rows: auto auto;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .header-actions > .pumpflow-link {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px !important;
+    padding: 8px !important;
+    white-space: normal !important;
+    text-align: center;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+  }
+
+  .header-actions > .wallet-header-actions {
+    display: contents;
+  }
+
+  .header-actions > .wallet-header-actions > .connect-button {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
+  .header-actions > .wallet-header-actions > .disconnect-button {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 9px 12px;
+    box-sizing: border-box;
+  }
+
+  .header-actions > .connect-button:not(.pumpflow-link) {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .header-actions > .mobile-menu-button {
+    grid-column: 3;
+    grid-row: 1;
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    justify-self: end;
+  }
+
+  .header-actions .connect-button,
+  .header-actions .disconnect-button {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .header > .brand .brand-name,
+  .header > .brand .brand-tagline {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 380px) {
+  .header {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .header > .header-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+    gap: 6px;
+  }
+
+  .header-actions > .mobile-menu-button {
+    width: 40px;
+    min-width: 40px;
+    min-height: 44px;
+  }
+
+  .header-actions > .pumpflow-link,
+  .header-actions > .wallet-header-actions > .connect-button {
+    font-size: 12px;
+    padding: 7px 5px;
+  }
+}
