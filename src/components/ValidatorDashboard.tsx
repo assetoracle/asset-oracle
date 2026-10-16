@@ -30,6 +30,28 @@ type ChainMarket = {
   managerAddress: Address;
 };
 
+function displayResolutionRules(value: string) {
+  let parsed: unknown = value;
+  // Some markets store JSON-encoded rules as a JSON string, so decode up to twice.
+  for (let attempt = 0; attempt < 2 && typeof parsed === "string"; attempt += 1) {
+    const candidate = parsed.trim();
+    if (!candidate.startsWith("{") && !candidate.startsWith("\\\"")) break;
+    try {
+      parsed = JSON.parse(candidate);
+    } catch {
+      break;
+    }
+  }
+
+  if (parsed && typeof parsed === "object" && "description" in parsed) {
+    const description = (parsed as { description?: unknown }).description;
+    if (typeof description === "string" && description.trim()) return description.trim();
+  }
+
+  if (typeof parsed === "string") return parsed;
+  return value;
+}
+
 function voteKey(outcome: number, evidenceHash: `0x${string}`) {
   return keccak256(encodeAbiParameters(
     [{ type: "uint8" }, { type: "bytes32" }],
@@ -215,7 +237,7 @@ export default function ValidatorDashboard() {
             return <article className="validator-market-card" key={`${market.managerAddress.toLowerCase()}-${id}`}>
               <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">{market.managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase() ? "Main manager" : "Legacy manager"}</span><span className="validator-status-pill">{market.status === MARKET_STATUS.DISPUTED ? (canFinalize ? "Challenge period ended · ready to finalize" : "In challenge period") : market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
               <h2>{market.question}</h2>
-              <p>{market.resolutionRules}</p>
+              <p>{displayResolutionRules(market.resolutionRules)}</p>
               <div className="validator-market-meta"><span>Closed {new Date(Number(market.closeTime) * 1000).toLocaleString()}</span><span>Pool: {(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span></div>
               <div className="validator-evidence">
                 <span>Published evidence</span>
