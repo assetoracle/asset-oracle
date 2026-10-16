@@ -60,11 +60,8 @@ export default function MarketsPage({
     (category) => !["All Markets", "Live", "Settled Markets"].includes(category),
   );
 
-  // Keep the Published Markets list focused on markets users can still enter.
-  // Settled markets remain available only in the dedicated Settled filter.
-  const visibleMarkets = activeCategory === "Settled Markets"
-    ? markets.filter((market) => settledMarketIds.has(market.id))
-    : markets.filter((market) => liveMarketIds.has(market.id));
+  // Keep all published markets visible here; closed markets belong on this page too.
+  const visibleMarkets = markets;
 
   function renderMarketCard(market: DisplayMarket, categoryIndex: number) {
     return (
