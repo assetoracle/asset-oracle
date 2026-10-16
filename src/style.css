@@ -8213,3 +8213,37 @@ select.brand-select option,
   .verification-detail-grid, .verification-position-grid { grid-template-columns: 1fr; }
   .verification-details-heading h1 { font-size: 27px; }
 }
+
+
+/* Make the on-chain market identifier explicit and easy to find. */
+.market-id-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 14px 0 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  background: linear-gradient(115deg, rgba(18, 217, 245, .09), rgba(0, 184, 169, .06));
+}
+.market-id-panel > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.market-id-panel > strong {
+  color: var(--text, inherit);
+  font-size: 28px;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.market-id-panel > p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
