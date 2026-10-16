@@ -8440,3 +8440,72 @@ select.brand-select option,
     min-width: 40px;
   }
 }
+
+
+/* Final mobile header balance: compact Disconnect beside the menu. */
+@media (max-width: 650px) {
+  .header > .header-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 44px 44px;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .header-actions > .pumpflow-link {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+  }
+
+  .header-actions > .wallet-header-actions > .connect-button {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+  }
+
+  .header-actions > .wallet-header-actions > .disconnect-button {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    align-self: center;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 9px 18px;
+    white-space: nowrap;
+  }
+
+  .header-actions > .mobile-menu-button {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    align-self: stretch;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .header-actions > .connect-button:not(.pumpflow-link) {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .header > .header-actions {
+    gap: 6px;
+  }
+
+  .header-actions > .wallet-header-actions > .disconnect-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .header-actions > .mobile-menu-button {
+    width: 40px;
+    min-width: 40px;
+  }
+}
