@@ -17,7 +17,7 @@ type MarketsPageProps = {
   settledMarketIds: Set<string>;
   marketOutcomes: Map<string, number>;
   marketStakeDistribution: Map<string, { yesPercent: number; noPercent: number; hasSideStake: boolean }>;
-  onVerify, (market: DisplayMarket) => void;
+  onVerify: (market: DisplayMarket) => void;
   marketsLoading: boolean;
   marketsError: string;
   proposalMessage: string;
