@@ -8,91 +8,37 @@ type SportIconProps = {
   className?: string;
 };
 
-const iconStyle: CSSProperties = { display: "block", flexShrink: 0 };
+const icons: Record<SportKind, string> = {
+  football: "UklGRoYEAABXRUJQVlA4IHoEAADwGQCdASpgAGAAPt1cpUyopSOiMBOeMRAbiWgAwcQcW1PFPqH0/Td/mMRr04tQ1z7d0Ssh757zQb/rodJIkvcGBygs0AAH2TMXIbFVszIo/3h1E2bwM4Wpd6v+YbZxkbPI1/qaEVEv+5lj2GsGy1hmtH+ll1KPD4lKH1yL+A61YvS+Aof1agowmmDB6SK32EAcuC4eSxj9Ad0cHay7jneEDrvrf9B+WBEc5ExKFlfl5UTMZwD7HP/fikE2riosZQVVQ97/s4F1fSH2kE2RkBHeMOtZQGfuzbAA/vrsFkVAA5xj4ckvb0PXSvcvGQyBQ6W+I889Vr7a0KmI3HcfBw8UvCAe1gPL+J/lCendatqHDvVtDeU6p9WC6ASTmhZlJ9IR37dbwR43NiyzbtXLS1nfHtR8+7ddGZ+tHGtbvc+j8cTcanLzBhJchoRUbetfFq5AbYNfDT1Spyvu34Fn+GPSpCYDV59EQd9EdvsKL0UqA09L5UgTN+qOqm5kRxqUI+b2v1v/AUMHsACVyDUYJE0aJxzSLlGC0a/U/sWVjKYDgV6cCcOLcHeB7j9yFPC2aLclB71JQD9Ar6SDaFocAcxQhUUZj1DOgJRJCEZuIDTa+XYvfKtp7hqdPLzIwtwo5MoC2ZdJWNfbF+WQdPvXe1NNLoOrOIahOwXo7R+6A16C/EAbLyEN5PWqeVg/l4CCnwDo5Q0x38kDd+VzzKUt1zXf8JrDyOnB7Dyzj0CtRJ/YZAxBHyhBBYcBzZ79Y9JyCgvQuueiMdafSBzjCpeHnV7jBRlJKnApqI0JLuVhAYJ+5fgSeK/lP5ejriYN/oxQPoVRyuCZWRUl21bNBYpp/mKE/G3ENNUZui3L12EydrWjTDXYqfpKxYIoB18kYuTtYMkwXL420aXQ5BfaOpSrWo2hnMWLb/C4l4XL2ZRIqDL2yDShv4wY8KtCKaaiMP/rxOswOPTHFB2GjW7PV2/yvMNdvF8EYSq93rrNBiwSpS3E0PqpTS0IkUe5Mt3IJEgwYBOcEu74Jij6E0dIjAUmt07cWb1hLEbEdcnFMr7Ipj7/X52XQnEiZPrxRluBTU4WV7UpnWZE9LVIARkGE6viehNQLDGjDYrqIgcb/NS9o5Spwr++YpZnhAVKfheGSh4gBM+qO/uoDmCMEHAe5iPGyBYEu5TR2gTyuQzUv8VMK8R/CBzR+0D7SYinaNLA0DmlHBtm7LUbLCls2hJWCV5ukKhxclDEdePROwBdWccJag2PkEMrY/mxQj/djbhaxrynDWjgljrtgk9w/STjXrP2/2Yt1INPpidqh6b/tIdg7pfE7p7mLub+u6bcupMVvpiiSJtZfY9oF+5RRYUWbdwR51O0+2oZURNrSQOP+3t/u2rIO00vxy1mNiJSiMyP3WkLsOcDQG+lE2obljweHOOJM90g7DP3Gx2ezY6KjoKIevfx31z6HpD2KYrjd5WEailKxqaE+/aP6L3zB+nkOmeI+HdpdMNLACJ6oopegUtgAYFuaTOvY0Dk+TiFlAA=",
+  basketball: "UklGRvgEAABXRUJQVlA4IOwEAACQGwCdASpgAGAAPt1gpk+opSMiKdi8KRAbiWwAvrfakFyfLY26Q6Nsn0vbffzG+cp6Sf8zvre9BMDTerLz07rUSlHtjbc68UFfbRGNkZS1sreA+iWtBHLR96D7JhxgZ8zho93+sU9r13WSW9dVy45zL0XM52Y5CetrgLRlmN6JzqleJSu36UB9Q3nocxnxtbfIZwDAGD5O/9YoJAXNqOVCZ4ySfjCjSwfWDS8Cda9Cc3MsH6xCuHz1Ohn79iFlNtfcCy3dg6B73YSgqImOJBhUgpNw8YDF9NhGEBrRN42a0LmFaDyoAP79At6r8cVyntg/Z/LMtIVtskik+IkcK8GbKGumhdopWCMBleRzAcdYWUJzw0L9xB5p4J7xkp5qgcDd6l2lJUkIhZODptILGVBX6NgChD7iRPEfj47NTrLqfGOMAbvy0/dO3157Uqga7cJpuCrWjeZF00vUb5FQIA99rHEsAZxVm/QPENTPHeSLT1PEwRUNMtDkqRxiK9tiwaCXnO0c+98Qh4BNQVb1K3vNPl1iiu/hosnu4qlMI+wc5Ja5lP6qg7unDHhPFeoDswmOkrLDR5uriX4sS5oWF8FM0INLe59haSebWFWzAa9RtfRRwKpmVwWIe9qIfc+e7bRTm8bW7odbut0glfqCjwgV5ZqBTHB9gJS4Nl1m7LhLgyrZu1OZSamTh88QLUFt0pJNudPLoW7+9Ky/pYeKc4NMhxh5S5AK50HEg1qZqAR6/oh2c0wxq35Tpbsh3eoEUHCqpG6WZOB3HWC2CnVG8JJEsnf4vg7RSFXk5G9OGqiXKdyS10HnCZZTZnE9M28MBcyOZ/rLhMxvtNVRqPAHwnHQTuZyYmuwaoCF4CFDVjvWWX+3s9U2CVlrguwLM4iMG+7IfPIz5CaqXv3hRkR1O9GPpPY2PVr5G1hPgb/TewneosxKRunW6O96ScC346lFrL14wyO3akSXmnXQUQspIX0WTQLm0Ob6bemiEjf9YT6H90aBSHEOxLjs9LFsbNLlPAbg6apwpGGZgEKD3uhGX//kQLghz7Thm+pkwX5WdM/fAwMe4bd5mjWe3NDBYvB+Fk9XZwffFB9zxyUaXW8OOYf7MtVrV/0bSXYC5gMaNNBN8AeoxZ9UvKbI2ktdi2/xsqcbZf3kPcrnKCaoXoLSmE0S4soPmol4M9W1F8VrLOGSSBA+cVRxqlCLNZmLzFMcFf81U7rOOeF8I6kBLmc/95UhdWMCm3B27XkPD0Ey8+Jn4XGV7C2UfZNJr1f25ZrM4u9LVw3iGsJOGIFEI8mXYmUWnrEDPl4SpwaoPLemJkYDbo+s9SM3JHVBk5Sqh9dwUsdtlviPMcH/l9PFEwmyupJDHmA4+w3TU5PlEkClxPtRCnTV9pD9aIsIACzB3i6gg7mfZnQ82I5yws8uPdPORZbB4Pz+bVqg1OU8aYpABr8J1XPac8TUfZ+DQR+ocT+RcdaQxvd+tV+LPEly4uIYQNVLdXpe5jlsFFWkUn8q7gFWz9ZxIZkbFqYXAVmU9jL+xrVJ1pq5l+0dRsumBvwFpV4JVeDGK/RH8JUTeyIFkZO1ohAadLpKnLmYbsXnmZBbY7fa/dJeF7e1VkBG1Nz7y8ASPQJIGzpMXcsafi1Ndfrmi4cHW4nLwTcOmwYXw9wIijAeA/Kuxev1SjucYAA=",
+  tennis: "UklGRkYEAABXRUJQVlA4IDoEAACwGQCdASpgAGAAPt1cpUyopSOiLVd+cRAbiWwAwFvkE2ygbQ3FhDltT08bhPnivRvvTG9AhCes3/a5ZhIpAlyiyEDttmiumRTqKP7LcNXJXZzow8VOOuyn/qi37cIFid0tnybmBxqm6Q80kcGpaKjKklg0tNRieUP2mutkfJp7r7hitJGFlWoPR7HWYsjfMMSqz/rtkz4//+RVsyW/cZIHv1ZeI8sTQy83s+Hnn63pc9SViqdsQbDX9SmOJgkMRHlE4rJcCKrGojfeV88aMJdD4Fwr6+5YAP767BZFwi+lYBNzwBzN2YtrnYdZ7l2yaAdYyIVirS+WlYLdIsstlstTf4Ifa/xvxzLMivsT5UmdGynPvzMCYBuIIWwuy+zJi+ICKmPO3RZebYerm5PG6B4wqvM7UTcqOmgnbdk1jUKa1EFQ/M5lbXuESYFR7tSXJlfAMDAfOcrJGQTedX7BNTA7o3crcWPjNs3TBzm5eJsPjFJFXEQjzAnwCZOvzKQQHpIssRZLY5gPhVFl1B1Jj6hz4hEm7P/F9EdIhvMN8lu0+bYq0Ccs4irUMrPz4uhd0Ygdw8mGrbXpSjL9mA+S/HEH8GU/fudk3HZpgS56kBi2enmmQ9pLDU1yJt4vedmroO8mdnpVAQ/0/nB/By1yzRkiTM0GgeCG1BH+84shEmTLsfhzyRg8L1VVWSnZFSEILs3udELG6CdkYhtDiCUg6ncGqfCbrVt01hiomWCr7vm34FQHFu1Mcqh6mGsSMGFYHrNaoKlHfUy+phXAyFbtnbUDcvWEMlMfes0HQD2fUtmB3oBOoQIK/+XS7qEwMrRsJ33+uIgsNRz4y4BCg052HTu1XSW2Tt689Cx4sl6SPiI2ZYDEDUZNQNaC8sAPh+AGWyjckAv3vCNToc8towv8M1HX2sgnTHDKzdciYiWxKwzOrEKAucMOvzpUj5GeC0QA3kKHHnKDNEfXwLhSMQ4ph2aBEpUdUXxEGoixRk2id4ddVVNGIKU0yOtxQIHKB3azBBjE/CER3gYCrbJbR0i9SOCp2n84tfjzw+Azw27MUQAt7f4oB6chtnolm3vKoYZl/rFV9CkZtofe4zVKDzn9aHmxuC9M5Mr+rToILLVsvJYQbdtOTsAwR0ZtXu1QstVKNNW2ecHc30UwIlxHCqvyEzam1P6RHtI0DppNe5nM9fpzuEimjiX5V2fZ08DMo/VM1v2ZWA3OGW4NkwZUPd2zmNuXUSkzPqRvQdkOEZnNK0JwO5BfOg/PyQPJsvmoVV7aALpgHFagMm4CqzxDQzMq8pEeXeAXZqNDxHRNSzz+hyXum2FvoSNU7SIiQHBT9AApji/OqPgJwQU9a8+U48Kk1M0ldQVZ5eoWBs+6wFiN4rQFU3jp8D0K1hVsiV3wi09ZZP4mSTL78lixYZEdDJYlaZ3ysOyj9u7y3rYAAA==",
+};
+
+const labels: Record<SportKind, string> = {
+  football: "Football",
+  basketball: "Basketball",
+  tennis: "Tennis",
+};
 
 export default function SportIcon({ sport, size = 28, className }: SportIconProps) {
-  const common = {
+  const style: CSSProperties = {
+    display: "block",
+    flexShrink: 0,
     width: size,
     height: size,
-    viewBox: "0 0 100 100",
-    role: "img",
-    "aria-label": sport === "football" ? "Soccer ball" : sport === "basketball" ? "Basketball" : "Tennis ball",
-    className,
-    style: iconStyle,
-  } as const;
-  const gradientId = `ball-shade-${sport}`;
-  const clipId = `ball-clip-${sport}`;
-
-  if (sport === "football") {
-    return (
-      <svg {...common}>
-        <defs>
-          <radialGradient id={gradientId} cx="29%" cy="20%" r="82%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="48%" stopColor="#F7F8F8" />
-            <stop offset="82%" stopColor="#D6DCE0" />
-            <stop offset="100%" stopColor="#87939B" />
-          </radialGradient>
-          <radialGradient id="football-gloss" cx="25%" cy="16%" r="70%">
-            <stop offset="0%" stopColor="#FFFFFF" stopOpacity=".78" />
-            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-          </radialGradient>
-          <clipPath id={clipId}><circle cx="50" cy="47" r="41" /></clipPath>
-          <filter id="football-shadow" x="-30%" y="-30%" width="160%" height="180%">
-            <feGaussianBlur stdDeviation="3" />
-          </filter>
-        </defs>
-        <ellipse cx="52" cy="91" rx="29" ry="5" fill="#000" opacity=".28" filter="url(#football-shadow)" />
-        <circle cx="50" cy="47" r="41" fill={`url(#${gradientId})`} stroke="#77848D" strokeWidth="1.4" />
-        <g clipPath={`url(#${clipId})`} stroke="#18242D" strokeLinejoin="round" strokeLinecap="round">
-          <path d="M50 30 36 40 41 56 59 56 64 40Z" fill="#151E26" strokeWidth="1.8" />
-          <path d="M50 30 49 8 64 12 72 25 64 40M36 40 18 31 12 44 20 60 41 56M41 56 31 75 43 87 57 87 69 75 59 56M64 40 82 31 89 44 80 60 59 56M36 40 27 22 18 31M64 40 73 22 82 31M31 75 18 79 10 65 20 60M69 75 82 79 90 65 80 60" fill="none" strokeWidth="2.4" />
-          <path d="M50 30 49 8M36 40 18 31M64 40 82 31M41 56 31 75M59 56 69 75" fill="none" stroke="#FFFFFF" strokeOpacity=".38" strokeWidth="1.1" />
-        </g>
-        <circle cx="50" cy="47" r="41" fill="url(#football-gloss)" />
-        <path d="M20 23c7-9 18-14 28-15" fill="none" stroke="#FFF" strokeWidth="3" strokeLinecap="round" opacity=".75" />
-      </svg>
-    );
-  }
-
-  if (sport === "basketball") {
-    return (
-      <svg {...common}>
-        <defs>
-          <radialGradient id={gradientId} cx="28%" cy="18%" r="82%">
-            <stop offset="0%" stopColor="#FFC078" />
-            <stop offset="48%" stopColor="#F47724" />
-            <stop offset="100%" stopColor="#A93412" />
-          </radialGradient>
-          <clipPath id={clipId}><circle cx="50" cy="47" r="41" /></clipPath>
-        </defs>
-        <ellipse cx="52" cy="91" rx="29" ry="5" fill="#000" opacity=".24" />
-        <circle cx="50" cy="47" r="41" fill={`url(#${gradientId})`} stroke="#7D2C12" strokeWidth="1.4" />
-        <g clipPath={`url(#${clipId})`} fill="none" stroke="#321B16" strokeWidth="2.7">
-          <path d="M50 5C31 20 31 74 50 89M50 5C69 20 69 74 50 89M8 36C28 36 39 48 39 88M92 36C72 36 61 48 61 88M12 20C32 32 68 32 88 20M12 74C32 62 68 62 88 74" />
-        </g>
-        <ellipse cx="34" cy="21" rx="13" ry="5" fill="#FFD3A4" opacity=".42" transform="rotate(-35 34 21)" />
-      </svg>
-    );
-  }
+    objectFit: "contain",
+    borderRadius: Math.max(4, size * 0.12),
+  };
 
   return (
-    <svg {...common}>
-      <defs>
-        <radialGradient id={gradientId} cx="28%" cy="18%" r="82%">
-          <stop offset="0%" stopColor="#F3FF9B" />
-          <stop offset="55%" stopColor="#D5F044" />
-          <stop offset="100%" stopColor="#8AAE1D" />
-        </radialGradient>
-        <clipPath id={clipId}><circle cx="50" cy="47" r="41" /></clipPath>
-      </defs>
-      <ellipse cx="52" cy="91" rx="29" ry="5" fill="#000" opacity=".22" />
-      <circle cx="50" cy="47" r="41" fill={`url(#${gradientId})`} stroke="#718D20" strokeWidth="1.4" />
-      <g clipPath={`url(#${clipId})`} fill="none" strokeLinecap="round">
-        <path d="M19 10C40 25 55 51 67 84M81 10C60 25 45 51 33 84" stroke="#F8FFD8" strokeWidth="7" />
-        <path d="M19 10C40 25 55 51 67 84M81 10C60 25 45 51 33 84" stroke="#A4C52B" strokeWidth="1.4" />
-      </g>
-      <ellipse cx="34" cy="21" rx="13" ry="5" fill="#FFFFFF" opacity=".42" transform="rotate(-35 34 21)" />
-    </svg>
+    <img
+      src={`data:image/webp;base64,${icons[sport]}`}
+      alt={labels[sport]}
+      width={size}
+      height={size}
+      className={className}
+      style={style}
+      loading="eager"
+    />
   );
 }
