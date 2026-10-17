@@ -111,6 +111,8 @@ export default function BrandedSelect({
             aria-label={ariaLabel}
             style={{
               position: "fixed",
+              zIndex: 1201,
+              pointerEvents: "auto",
               top: menuPosition.top,
               left: menuPosition.left,
               width: menuPosition.width,
