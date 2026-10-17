@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import { getBitcoinPrice, type CryptoPriceResult } from "../data/cryptoPrices";
 
 export default function BitcoinPriceCard() {
@@ -63,12 +64,12 @@ export default function BitcoinPriceCard() {
       )}
 
       <button
-        className="price-refresh-button"
+        className="refresh-action-button price-refresh-button"
         type="button"
         onClick={() => void loadPrice()}
         disabled={loading}
       >
-        {loading ? "Loading..." : "Refresh price"}
+        <RefreshCw size={15} className={loading ? "refresh-action-spinning" : ""} />\n        {loading ? "Refreshing price..." : "Refresh price"}
       </button>
 
       <p className="price-disclaimer">

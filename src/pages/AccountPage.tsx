@@ -249,8 +249,8 @@ function AccountPage({
           </div>
 
           <div className="proposal-actions">
-            <button className="primary-button" type="button" onClick={onRetry} disabled={loading}>
-              <RefreshCw size={16} /> {loading ? "Refreshing…" : "Refresh account data"}
+            <button className="primary-button refresh-action-button" type="button" onClick={() => { void onRetry(); }} disabled={loading}>
+              <RefreshCw size={16} className={loading ? "refresh-action-spinning" : ""} /> {loading ? "Refreshing account data…" : "Refresh account data"}
             </button>
           </div>
 

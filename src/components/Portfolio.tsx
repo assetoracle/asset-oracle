@@ -251,16 +251,16 @@ export default function Portfolio({
               <p>Read directly from the token contract.</p>
             </div>
             <button
-              className="portfolio-refresh-button"
+              className="refresh-action-button portfolio-refresh-button"
               type="button"
               onClick={() => setRefreshKey((value) => value + 1)}
-              disabled={data.loading}
+              disabled={data.loading || accountLoading}
             >
               <RefreshCw
                 size={16}
-                className={data.loading ? "portfolio-spinning" : ""}
+                className={data.loading || accountLoading ? "refresh-action-spinning" : ""}
               />
-              {data.loading ? "Loading..." : "Refresh"}
+              {data.loading || accountLoading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
 
