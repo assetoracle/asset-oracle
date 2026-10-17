@@ -342,6 +342,7 @@ const loadMarkets = useCallback(async () => {
         question: market.question,
         description: market.description,
         category: market.category,
+        sport: market.sport,
         closesAt: market.closesAt,
         resolvesAt: market.resolvesAt,
         status: market.status,

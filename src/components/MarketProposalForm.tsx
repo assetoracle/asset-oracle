@@ -69,6 +69,7 @@ export function MarketProposalForm({
   const [description, setDescription] = useState(initialProposal?.description ?? "");
   const [category, setCategory] =
     useState<MarketProposalInput["category"]>(initialProposal?.category ?? "Crypto");
+  const [sport, setSport] = useState<NonNullable<MarketProposalInput["sport"]> | "">(initialProposal?.sport ?? "");
   const [closesAt, setClosesAt] = useState(initialProposal ? toLocalDateTime(initialProposal.closesAt) : "");
   const [resolvesAt, setResolvesAt] = useState(initialProposal ? toLocalDateTime(initialProposal.resolvesAt) : "");
   const [resolutionCriteria, setResolutionCriteria] = useState(initialProposal?.resolutionRule.description ?? "");
@@ -82,6 +83,11 @@ export function MarketProposalForm({
     setMessage("");
 
     const dates = [closesAt, resolvesAt];
+
+    if (category === "Sports" && !sport) {
+      setErrors(["Choose Football, Basketball, or Tennis for this sports market."]);
+      return;
+    }
 
     if (dates.some((value) => !value || Number.isNaN(new Date(value).getTime()))) {
       setErrors(["Enter valid closing and resolution dates."]);
@@ -102,6 +108,7 @@ export function MarketProposalForm({
       question: question.trim(),
       description: description.trim(),
       category,
+      ...(category === "Sports" && sport ? { sport } : {}),
       closesAt: toIsoDate(closesAt),
       resolvesAt: toIsoDate(resolvesAt),
       resolutionRule: {
@@ -258,15 +265,19 @@ export function MarketProposalForm({
             Category
             <BrandedSelect
               value={category}
-              onChange={(value) => setCategory(value as MarketProposalInput["category"])}
+              onChange={(value) => {
+                const nextCategory = value as MarketProposalInput["category"];
+                setCategory(nextCategory);
+                if (nextCategory !== "Sports") setSport("");
+              }}
               options={categories.map((item) => ({ value: item, label: item }))}
               ariaLabel="Market category"
             />
           </label>
 
           {category === "Sports" && (
-            <div
-              aria-label="Available sports visual styles"
+            <fieldset
+              aria-label="Choose sport"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -275,22 +286,52 @@ export function MarketProposalForm({
                 border: "1px solid #1D6675",
                 borderRadius: 12,
                 background: "linear-gradient(145deg, #102F3A, #0B2A35)",
+                minWidth: 0,
               }}
             >
+              <legend style={{ padding: "0 6px", color: "#8DA9B3", fontSize: 13 }}>Choose sport</legend>
               {([
                 { sport: "football", label: "Football" },
                 { sport: "basketball", label: "Basketball" },
                 { sport: "tennis", label: "Tennis" },
-              ] as const).map((item) => (
-                <div key={item.sport} style={{ display: "grid", justifyItems: "center", gap: 8, padding: "10px 4px", color: "#F2FCFF", fontSize: 12, fontWeight: 700 }}>
-                  <SportIcon sport={item.sport} size={34} />
-                  {item.label}
-                </div>
-              ))}
+              ] as const).map((item) => {
+                const selected = sport === item.sport;
+                return (
+                  <button
+                    key={item.sport}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setSport(item.sport);
+                      setErrors([]);
+                    }}
+                    style={{
+                      display: "grid",
+                      justifyItems: "center",
+                      alignContent: "center",
+                      gap: 8,
+                      minHeight: 88,
+                      padding: 10,
+                      border: selected ? "2px solid #12D9F5" : "1px solid #1D6675",
+                      borderRadius: 10,
+                      background: selected ? "#123E49" : "#071A24",
+                      color: "#F2FCFF",
+                      font: "inherit",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <SportIcon sport={item.sport} size={38} />
+                    {item.label}
+                    {selected && <span style={{ color: "#12D9F5", fontSize: 10 }}>SELECTED</span>}
+                  </button>
+                );
+              })}
               <p style={{ gridColumn: "1 / -1", margin: "2px 0 0", color: "#8DA9B3", fontSize: 11, lineHeight: 1.6 }}>
-                Sports markets use built-in sport icons. No team logos, image downloads, or sports-image API required.
+                The selected sport is saved with your proposal and determines the ball shown on the published market.
               </p>
-            </div>
+            </fieldset>
           )}
 
           <div style={{ display: "grid", gap: 14 }}>

@@ -22,6 +22,7 @@ export type DisplayMarket = {
   question: string;
   description: string;
   category: "Crypto" | "Sports" | "Economics" | "RWA" | "Regional";
+  sport?: "football" | "basketball" | "tennis";
   closesAt: string;
   resolvesAt: string;
   status: string;

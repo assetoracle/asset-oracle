@@ -5,6 +5,7 @@ export type MarketProposalInput = {
   question: string;
   description: string;
   category: "Crypto" | "Sports" | "Economics" | "RWA" | "Regional";
+  sport?: "football" | "basketball" | "tennis";
   closesAt: string;
   resolvesAt: string;
   resolutionRule: {
