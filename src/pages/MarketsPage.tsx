@@ -9,6 +9,22 @@ import type { DisplayMarket } from "./HomePage";
 import type { MarketFilter } from "../types";
 import SportIcon, { type SportKind } from "../components/SportIcon";
 
+function formatMarketTime(value: string | undefined): string {
+  if (!value) return "date unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "date unavailable";
+  return new Intl.DateTimeFormat("en-NG", {
+    timeZone: "Africa/Lagos",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  }).format(date).replace("GMT+1", "WAT");
+}
+
 type MarketsPageProps = {
   categories: MarketFilter[];
   activeCategory: MarketFilter;
@@ -113,7 +129,7 @@ export default function MarketsPage({
           return <div className="settled-outcome-preview"><span>Final outcome</span><strong className={label === "YES" ? "outcome-yes" : label === "NO" ? "outcome-no" : ""}>{label}</strong></div>;
         })()}
         <div className="market-card-bottom">
-          <span className="market-status-note">{settledMarketIds.has(market.id) ? "Resolution confirmed on-chain" : `Closes ${market.closesAt || "date unavailable"}`}</span>
+          <span className="market-status-note">{settledMarketIds.has(market.id) ? "Resolution confirmed on-chain" : `Closes ${formatMarketTime(market.closesAt)}`}</span>
           {settledMarketIds.has(market.id) ? (
             <button className="primary-button open-market-button verify-market-button" type="button" onClick={() => onVerify(market)}><ShieldCheck size={15} /> Verify</button>
           ) : (
