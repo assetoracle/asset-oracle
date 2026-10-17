@@ -2,6 +2,7 @@ import { friendlyError } from "../utils/friendlyError";
 
 import { useState, type FormEvent } from "react";
 import BrandedSelect from "./BrandedSelect";
+import SportIcon from "./SportIcon";
 import {
   validateMarketProposal,
   createMarketProposal,
@@ -262,6 +263,35 @@ export function MarketProposalForm({
               ariaLabel="Market category"
             />
           </label>
+
+          {category === "Sports" && (
+            <div
+              aria-label="Available sports visual styles"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: 10,
+                padding: 14,
+                border: "1px solid #1D6675",
+                borderRadius: 12,
+                background: "linear-gradient(145deg, #102F3A, #0B2A35)",
+              }}
+            >
+              {([
+                { sport: "football", label: "Football" },
+                { sport: "basketball", label: "Basketball" },
+                { sport: "tennis", label: "Tennis" },
+              ] as const).map((item) => (
+                <div key={item.sport} style={{ display: "grid", justifyItems: "center", gap: 8, padding: "10px 4px", color: "#F2FCFF", fontSize: 12, fontWeight: 700 }}>
+                  <SportIcon sport={item.sport} size={34} />
+                  {item.label}
+                </div>
+              ))}
+              <p style={{ gridColumn: "1 / -1", margin: "2px 0 0", color: "#8DA9B3", fontSize: 11, lineHeight: 1.6 }}>
+                Sports markets use built-in sport icons. No team logos, image downloads, or sports-image API required.
+              </p>
+            </div>
+          )}
 
           <div style={{ display: "grid", gap: 14 }}>
             <label style={labelStyle}>
