@@ -340,7 +340,7 @@ export default function Portfolio({
           <section className="account-record-section portfolio-positions-section">
             <div className="section-heading">
               <div><h2>Your market positions</h2><p>Stakes, settlement outcomes, and payout status for this wallet.</p></div>
-              <button className="portfolio-refresh-button" type="button" disabled={accountLoading || data.loading} onClick={() => setRefreshKey((value) => value + 1)}><RefreshCw size={15} /> Refresh</button>
+              <button className="refresh-action-button portfolio-refresh-button" type="button" disabled={accountLoading || data.loading} onClick={() => setRefreshKey((value) => value + 1)}><RefreshCw size={15} className={accountLoading || data.loading ? "refresh-action-spinning" : ""} /> {accountLoading || data.loading ? "Refreshing..." : "Refresh"}</button>
             </div>
             {accountLoading ? <div className="empty-state"><h3>Loading positions</h3><p>Reading your market records.</p></div>
               : accountError ? <div className="empty-state" role="alert"><h3>Positions unavailable</h3><p>{accountError}</p></div>
