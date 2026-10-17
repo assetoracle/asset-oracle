@@ -8,38 +8,40 @@ type SportIconProps = {
   className?: string;
 };
 
-const iconStyle: CSSProperties = {
-  display: "block",
-  flexShrink: 0,
-};
+const iconStyle: CSSProperties = { display: "block", flexShrink: 0 };
 
-export default function SportIcon({
-  sport,
-  size = 28,
-  className,
-}: SportIconProps) {
+export default function SportIcon({ sport, size = 28, className }: SportIconProps) {
   const common = {
     width: size,
     height: size,
-    viewBox: "0 0 48 48",
+    viewBox: "0 0 64 64",
     role: "img",
-    "aria-label":
-      sport === "football"
-        ? "Football"
-        : sport === "basketball"
-          ? "Basketball"
-          : "Tennis",
+    "aria-label": sport === "football" ? "Soccer ball" : sport === "basketball" ? "Basketball" : "Tennis ball",
     className,
     style: iconStyle,
   } as const;
+  const gradientId = `ball-shade-${sport}`;
+  const clipId = `ball-clip-${sport}`;
 
   if (sport === "football") {
     return (
       <svg {...common}>
-        <circle cx="24" cy="24" r="20" fill="#F4F8FA" stroke="#102F3A" strokeWidth="1.8" />
-        <path d="M24 14 15.5 20.2 18.7 30h10.6l3.2-9.8L24 14Z" fill="#152B35" />
-        <path d="m24 14 .2-8M15.5 20.2 7 17.5M18.7 30l-5.4 7M29.3 30l5.4 7M33.3 20.2 41 17.5" fill="none" stroke="#152B35" strokeWidth="2.8" strokeLinejoin="round" />
-        <path d="m15.5 20.2-5.1-5.6M18.7 30l-1.2 8.2M29.3 30l1.2 8.2M33.3 20.2l5.1-5.6" fill="none" stroke="#152B35" strokeWidth="1.5" />
+        <defs>
+          <radialGradient id={gradientId} cx="30%" cy="22%" r="78%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="62%" stopColor="#F2F5F6" />
+            <stop offset="100%" stopColor="#AAB7BE" />
+          </radialGradient>
+          <clipPath id={clipId}><circle cx="32" cy="32" r="27" /></clipPath>
+        </defs>
+        <ellipse cx="33" cy="58" rx="19" ry="3.5" fill="#000000" opacity=".22" />
+        <circle cx="32" cy="31" r="27" fill={`url(#${gradientId})`} stroke="#87959D" strokeWidth="1.2" />
+        <g clipPath={`url(#${clipId})`} stroke="#172A35" strokeLinejoin="round" strokeWidth="1.7">
+          <path d="M32 19 21 27l4 13h14l4-13-11-8Z" fill="#172A35" />
+          <path d="m32 19 1-14M21 27 7 23M25 40l-7 12M39 40l7 12M43 27l14-4" fill="none" />
+          <path d="m21 27-8-9M25 40l-2 14M39 40l2 14M43 27l8-9" fill="none" />
+        </g>
+        <ellipse cx="22" cy="14" rx="9" ry="4" fill="#FFFFFF" opacity=".48" transform="rotate(-35 22 14)" />
       </svg>
     );
   }
@@ -47,17 +49,42 @@ export default function SportIcon({
   if (sport === "basketball") {
     return (
       <svg {...common}>
-        <circle cx="24" cy="24" r="20" fill="#F0442F" stroke="#101D25" strokeWidth="1.8" />
-        <path d="M4.7 20.8c8.4 1 15.1 10.1 15.1 22M43.3 20.8c-8.4 1-15.1 10.1-15.1 22M24 4c-7 8-7 32 0 40M24 4c7 8 7 32 0 40M5.8 13.2c10.8 5.6 25.6 5.6 36.4 0M5.8 34.8c10.8-5.6 25.6-5.6 36.4 0" fill="none" stroke="#17232B" strokeWidth="2.2" />
+        <defs>
+          <radialGradient id={gradientId} cx="28%" cy="20%" r="82%">
+            <stop offset="0%" stopColor="#FFB05C" />
+            <stop offset="45%" stopColor="#F47724" />
+            <stop offset="100%" stopColor="#A93412" />
+          </radialGradient>
+          <clipPath id={clipId}><circle cx="32" cy="31" r="27" /></clipPath>
+        </defs>
+        <ellipse cx="33" cy="58" rx="19" ry="3.5" fill="#000000" opacity=".22" />
+        <circle cx="32" cy="31" r="27" fill={`url(#${gradientId})`} stroke="#7D2C12" strokeWidth="1.2" />
+        <g clipPath={`url(#${clipId})`} fill="none" stroke="#321B16" strokeWidth="2.2">
+          <path d="M32 3c-11 11-11 45 0 56M32 3c11 11 11 45 0 56M4 24c11 0 19 8 19 32M60 24C49 24 41 32 41 56M6 15c14 8 38 8 52 0M6 47c14-8 38-8 52 0" />
+        </g>
+        <ellipse cx="22" cy="13" rx="10" ry="4" fill="#FFD3A4" opacity=".45" transform="rotate(-35 22 13)" />
       </svg>
     );
   }
 
   return (
     <svg {...common}>
-      <circle cx="24" cy="24" r="20" fill="#D7F34B" stroke="#102F3A" strokeWidth="1.8" />
-      <path d="M11 8.8c8.8 5.4 15.8 16.1 19.5 30.1M37 8.8C28.2 14.2 21.2 24.9 17.5 38.9" fill="none" stroke="#F8FFE0" strokeWidth="4.4" strokeLinecap="round" />
-      <path d="M11 8.8c8.8 5.4 15.8 16.1 19.5 30.1M37 8.8C28.2 14.2 21.2 24.9 17.5 38.9" fill="none" stroke="#91B52B" strokeWidth="1.1" strokeLinecap="round" />
+      <defs>
+        <radialGradient id={gradientId} cx="28%" cy="20%" r="82%">
+          <stop offset="0%" stopColor="#F3FF9B" />
+          <stop offset="55%" stopColor="#D5F044" />
+          <stop offset="100%" stopColor="#8AAE1D" />
+        </radialGradient>
+        <clipPath id={clipId}><circle cx="32" cy="31" r="27" /></clipPath>
+      </defs>
+      <ellipse cx="33" cy="58" rx="19" ry="3.5" fill="#000000" opacity=".22" />
+      <circle cx="32" cy="31" r="27" fill={`url(#${gradientId})`} stroke="#718D20" strokeWidth="1.2" />
+      <g clipPath={`url(#${clipId})`} fill="none" strokeLinecap="round">
+        <path d="M12 7c13 8 23 24 29 48" stroke="#F8FFD8" strokeWidth="5.2" />
+        <path d="M52 7C39 15 29 31 23 55" stroke="#F8FFD8" strokeWidth="5.2" />
+        <path d="M12 7c13 8 23 24 29 48M52 7C39 15 29 31 23 55" stroke="#A4C52B" strokeWidth="1.1" />
+      </g>
+      <ellipse cx="22" cy="13" rx="10" ry="4" fill="#FFFFFF" opacity=".42" transform="rotate(-35 22 13)" />
     </svg>
   );
 }
