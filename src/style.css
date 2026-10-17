@@ -8120,7 +8120,8 @@ select.brand-select option,
 .branded-select-trigger[aria-expanded="true"] .branded-select-icon { transform: rotate(180deg); }
 .branded-select-backdrop {
   position: fixed;
-  z-index: 1090;
+  /* Render above the proposal dialog (z-index: 1100), which contains this portal's trigger. */
+  z-index: 1200;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -8130,7 +8131,7 @@ select.brand-select option,
 }
 .branded-select-options {
   position: absolute;
-  z-index: 1091;
+  z-index: 1201;
   top: calc(100% + 7px);
   right: 0;
   left: 0;
