@@ -69,11 +69,11 @@ export default function MarketsPage({
   function renderMarketCard(market: DisplayMarket, categoryIndex: number) {
     const sportsMarket = market.label.trim().toLowerCase() === "sports";
     const marketText = `${market.question} ${"description" in market ? String(market.description ?? "") : ""}`.toLowerCase();
-    const sportKind: SportKind = /\b(nba|basketball|court|three[- ]pointer|dunk)\b/.test(marketText)
+    const sportKind: SportKind = market.sport ?? (/\b(nba|basketball|court|three[- ]pointer|dunk)\b/.test(marketText)
       ? "basketball"
       : /\b(tennis|wimbledon|atp|wta|grand slam|set point)\b/.test(marketText)
         ? "tennis"
-        : "football";
+        : "football")
     return (
       <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
