@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { DisplayMarket } from "./HomePage";
 import type { MarketFilter } from "../types";
+import SportIcon, { type SportKind } from "../components/SportIcon";
 
 type MarketsPageProps = {
   categories: MarketFilter[];
@@ -66,10 +67,17 @@ export default function MarketsPage({
   const visibleMarkets = markets;
 
   function renderMarketCard(market: DisplayMarket, categoryIndex: number) {
+    const sportsMarket = market.label.trim().toLowerCase() === "sports";
+    const marketText = `${market.question} ${"description" in market ? String(market.description ?? "") : ""}`.toLowerCase();
+    const sportKind: SportKind = /\b(nba|basketball|court|three[- ]pointer|dunk)\b/.test(marketText)
+      ? "basketball"
+      : /\b(tennis|wimbledon|atp|wta|grand slam|set point)\b/.test(marketText)
+        ? "tennis"
+        : "football";
     return (
       <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
-          <span className="market-symbol">#{categoryIndex + 1}</span>
+          <span className="market-symbol">{sportsMarket ? <SportIcon sport={sportKind} size={25} /> : `#${categoryIndex + 1}`}</span>
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
             {settledMarketIds.has(market.id) ? (
