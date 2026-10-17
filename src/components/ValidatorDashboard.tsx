@@ -211,7 +211,17 @@ export default function ValidatorDashboard() {
           <h1>Validator settlement</h1>
           <p>Vote on closed markets, then finalize matching consensus after the challenge period ends. Payouts remain claim-based.</p>
         </div>
-        <button className="secondary-button" type="button" onClick={() => { void validatorReads.refetch(); void managerCountReads.refetch(); void marketReads.refetch(); }}><RefreshCw size={16} /> Refresh</button>
+        <button className="secondary-button refresh-action-button" type="button" onClick={async (event) => {
+          const button = event.currentTarget;
+          button.disabled = true;
+          try {
+            await validatorReads.refetch();
+            await managerCountReads.refetch();
+            await marketReads.refetch();
+          } finally {
+            button.disabled = false;
+          }
+        }}><RefreshCw size={16} /> Refresh</button>
       </header>
       <div className="validator-access-card">
         <span>Authorized validator</span>
@@ -220,7 +230,17 @@ export default function ValidatorDashboard() {
       </div>
       {notice && <p role="status">{notice}</p>}
       {error && <p role="alert">Transaction was not submitted: the wallet rejected it or the contract returned an error. If the closing transaction failed, refresh the market list and try again.</p>}
-      {receipt.isSuccess && txHash && <p className="wallet-message" role="status">{actionType === "close" ? "Market close transaction confirmed. Refresh the list to load it for voting." : actionType === "finalize" ? "Market finalized on-chain. Participants can now claim eligible payouts." : "Vote transaction confirmed."} <a href={explorerTx(txHash)} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={13} /></a> <button type="button" className="secondary-button" onClick={() => { void validatorReads.refetch(); void managerCountReads.refetch(); void marketReads.refetch(); }}>Refresh list</button></p>}
+      {receipt.isSuccess && txHash && <p className="wallet-message" role="status">{actionType === "close" ? "Market close transaction confirmed. Refresh the list to load it for voting." : actionType === "finalize" ? "Market finalized on-chain. Participants can now claim eligible payouts." : "Vote transaction confirmed."} <a href={explorerTx(txHash)} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={13} /></a> <button type="button" className="secondary-button refresh-action-button" onClick={async (event) => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+              await validatorReads.refetch();
+              await managerCountReads.refetch();
+              await marketReads.refetch();
+            } finally {
+              button.disabled = false;
+            }
+          }}>Refresh list</button></p>}
       {managerCountReads.isPending || marketReads.isPending ? <p>Loading on-chain markets…</p>
         : managerCountReads.isError || marketReads.isError ? <p role="alert">Unable to load markets from the configured manager(s).</p>
         : markets.length === 0 ? <div className="empty-state"><h3>No markets awaiting settlement</h3><p>Closed markets will appear here when they are ready for validator review.</p><div className="validator-market-meta" style={{ display: "grid", gap: "8px", marginTop: "16px", textAlign: "left" }}><strong>Market loading diagnostics</strong>{managerDiagnostics.map((item) => <div key={item.managerAddress}><span>{item.managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase() ? "Main manager" : "Legacy manager"}: </span><span>{item.count === null ? `marketCount read ${item.readStatus}` : `${item.count} markets returned`}</span><span>{item.failedMarketReads > 0 ? ` · ${item.failedMarketReads} market reads failed` : ""}</span></div>)}</div></div>
