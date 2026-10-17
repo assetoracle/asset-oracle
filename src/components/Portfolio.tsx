@@ -85,7 +85,8 @@ export default function Portfolio({
     loading: false,
     error: "",
   });
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+  const [positionsRefreshKey, setPositionsRefreshKey] = useState(0);
   const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountError, setAccountError] = useState("");
@@ -107,7 +108,7 @@ export default function Portfolio({
       })
       .finally(() => { if (active) setAccountLoading(false); });
     return () => { active = false; };
-  }, [address, refreshKey]);
+  }, [address, positionsRefreshKey]);
 
   useEffect(() => {
     let active = true;
@@ -186,7 +187,7 @@ export default function Portfolio({
     return () => {
       active = false;
     };
-  }, [address, refreshKey]);
+  }, [address, balanceRefreshKey]);
 
   return (
     <section className="page-section account-page">
@@ -253,14 +254,14 @@ export default function Portfolio({
             <button
               className="refresh-action-button portfolio-refresh-button"
               type="button"
-              onClick={() => setRefreshKey((value) => value + 1)}
-              disabled={data.loading || accountLoading}
+              onClick={() => setBalanceRefreshKey((value) => value + 1)}
+              disabled={data.loading}
             >
               <RefreshCw
                 size={16}
-                className={data.loading || accountLoading ? "refresh-action-spinning" : ""}
+                className={data.loading ? "refresh-action-spinning" : ""}
               />
-              {data.loading || accountLoading ? "Refreshing..." : "Refresh"}
+              {data.loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
 
@@ -340,7 +341,7 @@ export default function Portfolio({
           <section className="account-record-section portfolio-positions-section">
             <div className="section-heading">
               <div><h2>Your market positions</h2><p>Stakes, settlement outcomes, and payout status for this wallet.</p></div>
-              <button className="refresh-action-button portfolio-refresh-button" type="button" disabled={accountLoading || data.loading} onClick={() => setRefreshKey((value) => value + 1)}><RefreshCw size={15} className={accountLoading || data.loading ? "refresh-action-spinning" : ""} /> {accountLoading || data.loading ? "Refreshing..." : "Refresh"}</button>
+              <button className="refresh-action-button portfolio-refresh-button" type="button" disabled={accountLoading} onClick={() => setPositionsRefreshKey((value) => value + 1)}><RefreshCw size={15} className={accountLoading ? "refresh-action-spinning" : ""} /> {accountLoading ? "Refreshing..." : "Refresh"}</button>
             </div>
             {accountLoading ? <div className="empty-state"><h3>Loading positions</h3><p>Reading your market records.</p></div>
               : accountError ? <div className="empty-state" role="alert"><h3>Positions unavailable</h3><p>{accountError}</p></div>
