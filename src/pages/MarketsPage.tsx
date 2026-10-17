@@ -73,7 +73,7 @@ export default function MarketsPage({
       ? "basketball"
       : /\b(tennis|wimbledon|atp|wta|grand slam|set point)\b/.test(marketText)
         ? "tennis"
-        : "football")
+        : "football");
     return (
       <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
