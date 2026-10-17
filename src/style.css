@@ -8697,3 +8697,63 @@ select.brand-select option,
 .market-sentiment-no-label { color:#ff707c; }
 
 .market-sentiment-track.market-sentiment-empty { background: #34414a; }
+
+
+/* Consistent Asset Oracle refresh controls: cyan-to-teal brand treatment and clear busy state. */
+.refresh-action-button,
+.price-refresh-button,
+.portfolio-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid rgba(18, 217, 245, 0.48);
+  border-radius: 11px;
+  background: linear-gradient(115deg, rgba(18, 217, 245, 0.16), rgba(0, 184, 169, 0.18));
+  color: var(--highlight, #63F3FF);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.refresh-action-button:hover:not(:disabled),
+.price-refresh-button:hover:not(:disabled),
+.portfolio-refresh-button:hover:not(:disabled) {
+  border-color: #63F3FF;
+  background: linear-gradient(115deg, rgba(18, 217, 245, 0.25), rgba(0, 184, 169, 0.27));
+  box-shadow: 0 0 20px rgba(18, 217, 245, 0.12);
+  transform: translateY(-1px);
+}
+
+.refresh-action-button:focus-visible,
+.price-refresh-button:focus-visible,
+.portfolio-refresh-button:focus-visible {
+  outline: 2px solid #63F3FF;
+  outline-offset: 3px;
+}
+
+.refresh-action-button:disabled,
+.price-refresh-button:disabled,
+.portfolio-refresh-button:disabled {
+  cursor: progress;
+  opacity: 0.68;
+  transform: none;
+  box-shadow: none;
+}
+
+.refresh-action-spinning {
+  animation: refresh-action-rotate 900ms linear infinite;
+}
+
+@keyframes refresh-action-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refresh-action-spinning { animation: none; }
+}
