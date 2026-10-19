@@ -158,12 +158,26 @@ export default function HomePage({
   const [typedCharacters, setTypedCharacters] = useState(0);
 
   useEffect(() => {
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let typingTimer: number | undefined;
     let restartTimer: number | undefined;
     let cancelled = false;
 
+    const stopTimers = () => {
+      if (typingTimer !== undefined) window.clearInterval(typingTimer);
+      if (restartTimer !== undefined) window.clearTimeout(restartTimer);
+      typingTimer = undefined;
+      restartTimer = undefined;
+    };
+
     const typeCycle = () => {
       if (cancelled) return;
+      stopTimers();
+      if (motionPreference.matches) {
+        setTypedCharacters(typewriterText.length);
+        return;
+      }
+
       setTypedCharacters(0);
       let cursor = 0;
       typingTimer = window.setInterval(() => {
@@ -177,11 +191,21 @@ export default function HomePage({
       }, 42);
     };
 
+    const handleMotionPreference = () => {
+      if (motionPreference.matches) {
+        stopTimers();
+        setTypedCharacters(typewriterText.length);
+      } else {
+        typeCycle();
+      }
+    };
+
     typeCycle();
+    motionPreference.addEventListener("change", handleMotionPreference);
     return () => {
       cancelled = true;
-      if (typingTimer !== undefined) window.clearInterval(typingTimer);
-      if (restartTimer !== undefined) window.clearTimeout(restartTimer);
+      stopTimers();
+      motionPreference.removeEventListener("change", handleMotionPreference);
     };
   }, [typewriterText.length]);
 
