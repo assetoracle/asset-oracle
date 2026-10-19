@@ -8963,7 +8963,8 @@ select.brand-select option,
 .hero-motion-line { animation: ao-hero-enter 800ms 360ms cubic-bezier(.2,.7,.2,1) both; }
 .hero-actions { animation: ao-hero-enter 800ms 470ms cubic-bezier(.2,.7,.2,1) both; }
 .hero-footnote { animation: ao-hero-enter 800ms 560ms cubic-bezier(.2,.7,.2,1) both; }
-.hero-globe { animation: ao-hero-enter 1000ms 220ms cubic-bezier(.2,.7,.2,1) both, ao-globe-drift 7s 1.2s ease-in-out infinite; }
+.hero-globe { animation: ao-hero-enter 1000ms 220ms cubic-bezier(.2,.7,.2,1) both; }
+.globe-stage { animation: ao-globe-drift 7s 1.2s ease-in-out infinite; }
 .globe-halo { animation: oracle-breathe 5s ease-in-out infinite; }
 .oracle-globe-svg { transform-origin: 50% 50%; animation: ao-orbit-turn 100s linear infinite; }
 .globe-node { animation: ao-node-pulse 3.4s ease-in-out infinite; }
@@ -8989,7 +8990,8 @@ select.brand-select option,
 
 @media (max-width: 760px) {
   .hero { animation-duration: 10s; }
-  .hero-globe { animation-duration: 850ms, 8s; }
+  .hero-globe { animation-duration: 850ms; }
+  .globe-stage { animation-duration: 8s; }
   .oracle-globe-svg { animation-duration: 140s; }
 }
 @media (prefers-reduced-motion: reduce) {
