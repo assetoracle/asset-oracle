@@ -172,7 +172,7 @@ export default function Portfolio({
               symbol.trim().toLowerCase() === "usdc" ||
               symbol.trim().toLowerCase() === "ausdc.e"
                 ? ""
-                : `Unexpected token symbol: ${symbol}`,
+                : "Token check failed.",
           });
         }
       } catch (error) {
