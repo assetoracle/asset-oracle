@@ -67,6 +67,18 @@ export default function ReferralsPage({
 }: ReferralsPageProps) {
   const [activeLeaderboard, setActiveLeaderboard] = useState<"referral" | "points" | "total">("referral");
   const [walletSearch, setWalletSearch] = useState("");
+  const [copyMessage, setCopyMessage] = useState("");
+
+  async function copyReferralLink() {
+    if (!referralLink) return;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(referralLink);
+      setCopyMessage("Referral link copied.");
+    } catch {
+      setCopyMessage("Copy unavailable. Select the link to copy.");
+    }
+  }
   const searchTerm = walletSearch.trim().toLowerCase();
   const filteredReferrals = leaderboard.filter((entry) => entry.wallet.toLowerCase().includes(searchTerm));
   const filteredPoints = pointsLeaderboard.filter((entry) => entry.wallet.toLowerCase().includes(searchTerm));
@@ -117,8 +129,8 @@ export default function ReferralsPage({
         <div className="referral-link-field">
           <span>{referralLink || (address ? `${address.slice(0, 8)}…${address.slice(-6)} · Generate your unique link` : "Connect your wallet to get started")}</span>
           {referralLink ? (
-            <button className="referral-copy-button" type="button" onClick={() => { void navigator.clipboard.writeText(referralLink); }} aria-label="Copy referral link">
-              <Copy size={16} /><span>Copy link</span>
+            <button className="referral-copy-button" type="button" onClick={() => { void copyReferralLink(); }} aria-label="Copy referral link">
+              <Copy size={16} /><span>{copyMessage === "Referral link copied." ? "Copied" : "Copy link"}</span>
             </button>
           ) : (
             <span className="referral-link-status" role="status">
@@ -126,6 +138,7 @@ export default function ReferralsPage({
             </span>
           )}
         </div>
+        {copyMessage && <p className="referral-message" role="status">{copyMessage}</p>}
         {referralCode && (
           <div className="referral-link-field">
             <span>Referral code detected: {referralCode}</span>
