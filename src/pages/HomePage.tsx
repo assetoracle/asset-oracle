@@ -150,6 +150,39 @@ export default function HomePage({
   const motionPhrases = ["make evidence traceable.", "bring clarity to outcomes.", "connect real-world data.", "put verification first."];
   const [motionPhraseIndex, setMotionPhraseIndex] = useState(0);
   const motionPhrase = motionPhrases[motionPhraseIndex];
+  const heroTitleFirst = "Real-world truth.";
+  const heroTitleSecond = "On-chain.";
+  const heroDescriptionText = "Explore real-world questions, understand how outcomes are verified, and follow transparent settlement.";
+  const typewriterText = heroTitleFirst + heroTitleSecond + heroDescriptionText;
+  const [typedCharacters, setTypedCharacters] = useState(0);
+
+  useEffect(() => {
+    let typingTimer: number | undefined;
+    let restartTimer: number | undefined;
+    let cancelled = false;
+
+    const typeCycle = () => {
+      if (cancelled) return;
+      setTypedCharacters(0);
+      let cursor = 0;
+      typingTimer = window.setInterval(() => {
+        cursor += 1;
+        setTypedCharacters(cursor);
+        if (cursor >= typewriterText.length) {
+          if (typingTimer !== undefined) window.clearInterval(typingTimer);
+          typingTimer = undefined;
+          restartTimer = window.setTimeout(typeCycle, 120000);
+        }
+      }, 42);
+    };
+
+    typeCycle();
+    return () => {
+      cancelled = true;
+      if (typingTimer !== undefined) window.clearInterval(typingTimer);
+      if (restartTimer !== undefined) window.clearTimeout(restartTimer);
+    };
+  }, [typewriterText.length]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -194,8 +227,8 @@ export default function HomePage({
         <div className="hero-layout">
           <div className="hero-copy">
           <span className="eyebrow">PREDICT <span>·</span> VERIFY <span>·</span> BUILD</span>
-          <h1>Real-world truth.<br /><span>On-chain.</span></h1>
-          <p className="hero-description">Explore real-world questions, understand how outcomes are verified, and follow transparent settlement.</p>
+          <h1 className="hero-typewriter" aria-label="Real-world truth. On-chain."><span className="hero-typewriter-primary">{typewriterText.slice(0, Math.min(typedCharacters, heroTitleFirst.length))}</span>{typedCharacters > heroTitleFirst.length && <><br /><span>{typewriterText.slice(heroTitleFirst.length, Math.min(typedCharacters, heroTitleFirst.length + heroTitleSecond.length))}</span></>}</h1>
+          <p className="hero-description hero-typewriter-description">{typewriterText.slice(heroTitleFirst.length + heroTitleSecond.length, Math.max(heroTitleFirst.length + heroTitleSecond.length, typedCharacters))}</p>
           <div className="hero-motion-line" aria-live="polite" aria-atomic="true">
             <span className="hero-motion-label">THE ORACLE IS BUILT TO</span>
             <span className="hero-motion-phrase" key={motionPhrase}>{motionPhrase}</span>
