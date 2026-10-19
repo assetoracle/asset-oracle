@@ -227,7 +227,7 @@ export default function HomePage({
         <div className="hero-layout">
           <div className="hero-copy">
           <span className="eyebrow">PREDICT <span>·</span> VERIFY <span>·</span> BUILD</span>
-          <h1 className="hero-typewriter" aria-label="Real-world truth. On-chain."><span>{typewriterText.slice(0, Math.min(typedCharacters, heroTitleFirst.length))}</span>{typedCharacters > heroTitleFirst.length && <><br /><span>{typewriterText.slice(heroTitleFirst.length, Math.min(typedCharacters, heroTitleFirst.length + heroTitleSecond.length))}</span></>}</h1>
+          <h1 className="hero-typewriter" aria-label="Real-world truth. On-chain."><span className="hero-typewriter-primary">{typewriterText.slice(0, Math.min(typedCharacters, heroTitleFirst.length))}</span>{typedCharacters > heroTitleFirst.length && <><br /><span>{typewriterText.slice(heroTitleFirst.length, Math.min(typedCharacters, heroTitleFirst.length + heroTitleSecond.length))}</span></>}</h1>
           <p className="hero-description hero-typewriter-description">{typewriterText.slice(heroTitleFirst.length + heroTitleSecond.length, Math.max(heroTitleFirst.length + heroTitleSecond.length, typedCharacters))}</p>
           <div className="hero-motion-line" aria-live="polite" aria-atomic="true">
             <span className="hero-motion-label">THE ORACLE IS BUILT TO</span>
