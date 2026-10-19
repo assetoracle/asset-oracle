@@ -8898,3 +8898,108 @@ select.brand-select option,
     transition: none !important;
   }
 }
+
+
+/* Animated hero experience — cinematic, restrained, and accessible. */
+@keyframes ao-hero-enter {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); filter: blur(5px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+}
+@keyframes ao-hero-glow {
+  0%, 100% { text-shadow: 0 0 0 rgba(18,217,245,0); }
+  50% { text-shadow: 0 0 24px rgba(18,217,245,.25), 0 0 48px rgba(18,217,245,.1); }
+}
+@keyframes ao-panel-breathe {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(18,217,245,.05), 0 18px 60px rgba(0,0,0,.08); }
+  50% { box-shadow: 0 0 0 1px rgba(18,217,245,.2), 0 18px 70px rgba(0,184,169,.09); }
+}
+@keyframes ao-eyebrow-shimmer {
+  0% { background-position: 180% 0; }
+  100% { background-position: -180% 0; }
+}
+@keyframes ao-globe-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -9px, 0); }
+}
+@keyframes ao-orbit-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes ao-node-pulse {
+  0%, 100% { opacity: .55; box-shadow: 0 0 0 0 rgba(18,217,245,.18); }
+  50% { opacity: 1; box-shadow: 0 0 0 8px rgba(18,217,245,0); }
+}
+@keyframes ao-category-arrive {
+  from { opacity: 0; transform: translate3d(12px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.hero {
+  animation: ao-panel-breathe 8s ease-in-out infinite;
+  background-size: 150% 150%;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+.hero:hover { border-color: rgba(99,243,255,.58); }
+.hero .hero-copy > .eyebrow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 17px;
+  overflow: hidden;
+  border: 1px solid rgba(18,217,245,.24);
+  border-radius: 999px;
+  background: linear-gradient(105deg, rgba(18,217,245,.03) 20%, rgba(99,243,255,.18) 45%, rgba(18,217,245,.03) 70%);
+  background-size: 240% 100%;
+  animation: ao-eyebrow-shimmer 7s ease-in-out infinite, ao-hero-enter 700ms cubic-bezier(.2,.7,.2,1) both;
+}
+.hero .hero-copy > .eyebrow span { flex: 0 0 auto; }
+.hero h1 { animation: ao-hero-enter 850ms 100ms cubic-bezier(.2,.7,.2,1) both; }
+.hero h1 span {
+  display: inline-block;
+  animation: ao-hero-glow 5s ease-in-out 1.2s infinite;
+}
+.hero-description { animation: ao-hero-enter 800ms 240ms cubic-bezier(.2,.7,.2,1) both; }
+.hero-motion-line { animation: ao-hero-enter 800ms 360ms cubic-bezier(.2,.7,.2,1) both; }
+.hero-actions { animation: ao-hero-enter 800ms 470ms cubic-bezier(.2,.7,.2,1) both; }
+.hero-footnote { animation: ao-hero-enter 800ms 560ms cubic-bezier(.2,.7,.2,1) both; }
+.hero-globe { animation: ao-hero-enter 1000ms 220ms cubic-bezier(.2,.7,.2,1) both, ao-globe-drift 7s 1.2s ease-in-out infinite; }
+.globe-halo { animation: oracle-breathe 5s ease-in-out infinite; }
+.oracle-globe-svg { transform-origin: 50% 50%; animation: ao-orbit-turn 100s linear infinite; }
+.globe-node { animation: ao-node-pulse 3.4s ease-in-out infinite; }
+.globe-node-two { animation-delay: .8s; }
+.globe-node-three { animation-delay: 1.6s; }
+.globe-category {
+  animation: ao-category-arrive 650ms calc(450ms + var(--category-index, 0) * 110ms) cubic-bezier(.2,.7,.2,1) both;
+  transition: color 220ms ease, transform 220ms ease;
+}
+.globe-category:hover { color: var(--highlight); transform: translateX(4px); }
+.hero .primary-button { position: relative; overflow: hidden; }
+.hero .primary-button::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,.32) 48%, transparent 70%);
+  transform: translateX(-130%);
+  transition: transform 650ms ease;
+}
+.hero .primary-button:hover::after { transform: translateX(130%); }
+.hero .network-dot { animation: ao-node-pulse 2.8s ease-in-out infinite; }
+
+@media (max-width: 760px) {
+  .hero { animation-duration: 10s; }
+  .hero-globe { animation-duration: 850ms, 8s; }
+  .oracle-globe-svg { animation-duration: 140s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero, .hero .hero-copy > .eyebrow, .hero h1, .hero h1 span,
+  .hero-description, .hero-motion-line, .hero-actions, .hero-footnote,
+  .hero-globe, .globe-halo, .oracle-globe-svg, .globe-node,
+  .globe-category, .hero .network-dot {
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+  .hero .primary-button::after { display: none; }
+}
