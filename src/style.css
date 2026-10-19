@@ -9476,3 +9476,157 @@ select.brand-select option,
 @media (prefers-reduced-motion: reduce) {
   .market-sort-control select { scroll-behavior: auto; }
 }
+
+
+/* Phase 3 UI/UX: clearer market-card hierarchy and status scanning. */
+.market-grid {
+  align-items: stretch;
+}
+.market-card-compact {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(29, 102, 117, .62);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(18, 217, 245, .055), transparent 48%),
+    linear-gradient(150deg, rgba(16, 47, 58, .96), rgba(7, 26, 36, .96));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .12);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+.market-card-compact:hover {
+  border-color: rgba(18, 217, 245, .62);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, .2), 0 0 20px rgba(18, 217, 245, .05);
+}
+.market-card-compact .market-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.market-card-compact .market-symbol {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid rgba(18, 217, 245, .2);
+  border-radius: 13px;
+  background: rgba(18, 217, 245, .07);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+.market-card-compact .market-card-badges {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+.market-card-compact .market-category {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--highlight);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.market-card-compact .market-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(141, 169, 179, .22);
+  border-radius: 999px;
+  background: rgba(141, 169, 179, .07);
+  color: #A9C0C8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.market-card-compact .market-status-live {
+  border-color: rgba(0, 184, 169, .35);
+  background: rgba(0, 184, 169, .1);
+  color: #68F2D9;
+}
+.market-card-compact .market-status-settled {
+  border-color: rgba(99, 243, 255, .3);
+  background: rgba(99, 243, 255, .08);
+  color: var(--highlight);
+}
+.market-card-compact h3 {
+  margin: 18px 0 16px;
+  font-size: clamp(17px, 2vw, 20px);
+  font-weight: 700;
+  line-height: 1.42;
+  letter-spacing: -.25px;
+  overflow-wrap: anywhere;
+}
+.market-card-compact .market-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(29, 102, 117, .34);
+}
+.market-card-compact .market-status-note {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.market-card-compact .open-market-button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding-inline: 13px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.market-card-compact .open-market-button:disabled {
+  border: 1px solid rgba(141, 169, 179, .22);
+  background: rgba(141, 169, 179, .08);
+  color: #A2B5BC;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+.market-card-compact .market-sentiment {
+  margin: 0 0 17px;
+  padding: 12px;
+  border: 1px solid rgba(29, 102, 117, .32);
+  border-radius: 12px;
+  background: rgba(7, 26, 36, .38);
+}
+.market-card-compact .settled-outcome-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 17px;
+  padding: 12px;
+  border: 1px solid rgba(29, 102, 117, .34);
+  border-radius: 12px;
+  background: rgba(7, 26, 36, .38);
+  color: var(--muted);
+  font-size: 12px;
+}
+.market-card-compact .settled-outcome-preview strong { color: var(--highlight); font-size: 13px; }
+@media (max-width: 520px) {
+  .market-card-compact .market-card-bottom { align-items: stretch; flex-direction: column; }
+  .market-card-compact .open-market-button { width: 100%; min-height: 44px; }
+  .market-card-compact .market-card-top { gap: 8px; }
+  .market-card-compact .market-card-badges { gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .market-card-compact { transition: none; }
+  .market-card-compact:hover { transform: none; }
+}
