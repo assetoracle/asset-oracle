@@ -32,6 +32,7 @@ type MarketDetailPageProps = {
   onchainCloseTime?: number;
   onchainTxHash?: string | null;
   marketClosed?: boolean;
+  backLabel?: string;
   onBack: () => void;
 };
 
@@ -47,13 +48,14 @@ function MarketDetailPage({
   onchainCloseTime,
   onchainTxHash,
   marketClosed = false,
+  backLabel = "Back to markets",
   onBack,
 }: MarketDetailPageProps) {
   return (
     <section className="market-detail-page page-section">
       <button className="text-action market-detail-back" type="button" onClick={onBack}>
         <ArrowLeft size={17} />
-        Back to markets
+        {backLabel}
       </button>
 
       {marketClosed && (

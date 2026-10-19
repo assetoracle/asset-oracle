@@ -11,6 +11,7 @@ type Props = {
   evidenceHash: string;
   evidenceSource: string;
   managerAddress?: string | null;
+  backLabel?: string;
   onBack: () => void;
 };
 
@@ -27,7 +28,7 @@ function shortHash(value: string) {
   return value && value !== "0x" + "0".repeat(64) ? `${value.slice(0, 12)}…${value.slice(-8)}` : "Not recorded";
 }
 
-export default function MarketVerificationPage({ market, outcome, resolvedAt, evidenceHash, evidenceSource, managerAddress, onBack }: Props) {
+export default function MarketVerificationPage({ market, outcome, resolvedAt, evidenceHash, evidenceSource, managerAddress, backLabel = "Back to markets", onBack }: Props) {
   const { address } = useAccount();
   const marketId = market.onchainMarketId ? BigInt(market.onchainMarketId) : undefined;
   const position = useReadContract({
@@ -49,7 +50,7 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
 
   return (
     <section className="verification-details-page page-section">
-      <button className="text-action" type="button" onClick={onBack}><ArrowLeft size={17} /> Back to settled markets</button>
+      <button className="text-action" type="button" onClick={onBack}><ArrowLeft size={17} /> {backLabel}</button>
       <header className="verification-details-heading">
         <span className="eyebrow">ASSET ORACLE · MARKET RECORD</span>
         <span className="market-status market-status-settled">SETTLED</span>
