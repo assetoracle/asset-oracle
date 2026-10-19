@@ -9895,3 +9895,44 @@ select.brand-select option,
 @media (prefers-reduced-motion: reduce) {
   .market-detail-page * { scroll-behavior: auto; }
 }
+
+
+/* Phase 5: all market filters and sorting use the shared Asset Oracle dropdown. */
+.market-category-filter {
+  min-width: 0;
+}
+.market-category-branded-select {
+  min-width: 190px;
+}
+.market-sort-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.market-sort-branded-select {
+  width: 210px;
+  min-width: 0;
+}
+.market-sort-branded-select .branded-select-trigger {
+  min-height: 40px;
+  border-radius: 10px;
+}
+@media (max-width: 520px) {
+  .market-sort-control {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .market-sort-branded-select {
+    width: 100%;
+  }
+  .market-category-branded-select {
+    width: 100%;
+    min-width: 0;
+  }
+}
