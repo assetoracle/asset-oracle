@@ -877,7 +877,7 @@ useEffect(() => {
       if (!market) return <div className="empty-state"><h3>Verification record unavailable</h3><p>This market has not been found in the published market records.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to settled markets</button></div>;
       const record = marketLifecycle.get(market.id);
       if (!record || record.status !== MARKET_STATUS.SETTLED) return <div className="empty-state"><h3>Market not confirmed as settled</h3><p>Verification details are shown only after the on-chain market status confirms settlement.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to markets</button></div>;
-      return <MarketVerificationPage market={market} outcome={record.outcome} resolvedAt={record.resolvedAt} evidenceHash={record.evidenceHash} evidenceSource={record.evidenceSource} managerAddress={market.onchainManagerAddress} onBack={goBackToMarkets} />;
+      return <MarketVerificationPage market={market} outcome={record.outcome} resolvedAt={record.resolvedAt} evidenceHash={record.evidenceHash} evidenceSource={record.evidenceSource} managerAddress={market.onchainManagerAddress} onBack={goBackToMarkets} backLabel={returnHashRef.current === "#/" ? "Back to home" : "Back to markets"} />;
     }
 
     if (selectedMarketId && marketsLoading) {
@@ -910,6 +910,7 @@ useEffect(() => {
           onchainTxHash={selectedMarket.onchainTxHash}
           marketClosed={marketClosed}
           onBack={goBackToMarkets}
+          backLabel={returnHashRef.current === "#/" ? "Back to home" : "Back to markets"}
         />
       );
     }
