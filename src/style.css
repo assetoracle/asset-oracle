@@ -9116,3 +9116,5 @@ select.brand-select option,
 @media (max-width: 650px) {
   .hero-typewriter-description { min-height: 6.6em; }
 }
+
+.hero h1.hero-typewriter .hero-typewriter-primary { color: var(--text); }
