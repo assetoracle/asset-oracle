@@ -208,7 +208,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   }, [receipt.isSuccess, receipt.isError]);
 
   useEffect(() => {
-    if (writeError) setMessage(writeError.message);
+    if (writeError) setMessage(friendlyError(writeError, "Transaction failed."));
   }, [writeError]);
 
   async function submitStake() {
@@ -230,7 +230,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         setReferralAttributionReady(true);
         setMessage("Referral attribution confirmed. Continue with the stake transaction.");
       } catch (error) {
-        setMessage("Stake paused: " + (friendlyError(error, "Referral check failed.")));
+        setMessage(friendlyError(error, "Referral check failed."));
         setReferralPreparing(false);
         return;
       }
@@ -307,7 +307,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         if (!qualificationResponse.ok) throw new Error(qualificationData.error || "Referral qualification could not be verified.");
         setMessage("Stake confirmed on-chain. " + (qualificationData.message || "Referral qualification checked."));
       } catch (error) {
-        setMessage("Stake confirmed on-chain. Referral verification is pending: " + (friendlyError(error, "Referral check pending.")));
+        setMessage("Referral verification pending.");
       }
     })();
     
