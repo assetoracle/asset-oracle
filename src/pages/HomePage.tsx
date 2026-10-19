@@ -229,6 +229,11 @@ export default function HomePage({
           <span className="eyebrow">PREDICT <span>·</span> VERIFY <span>·</span> BUILD</span>
           <h1 className="hero-typewriter" aria-label="Real-world truth. On-chain."><span className="hero-typewriter-primary">{typewriterText.slice(0, Math.min(typedCharacters, heroTitleFirst.length))}</span>{typedCharacters > heroTitleFirst.length && <><br /><span>{typewriterText.slice(heroTitleFirst.length, Math.min(typedCharacters, heroTitleFirst.length + heroTitleSecond.length))}</span></>}</h1>
           <p className="hero-description hero-typewriter-description">{typewriterText.slice(heroTitleFirst.length + heroTitleSecond.length, Math.max(heroTitleFirst.length + heroTitleSecond.length, typedCharacters))}</p>
+          <div className="hero-trust-chips" aria-label="Platform principles">
+            <span><i aria-hidden="true" /> Clear resolution rules</span>
+            <span><i aria-hidden="true" /> Evidence-led outcomes</span>
+            <span><i aria-hidden="true" /> On-chain transparency</span>
+          </div>
           <div className="hero-motion-line" aria-live="polite" aria-atomic="true">
             <span className="hero-motion-label">THE ORACLE IS BUILT TO</span>
             <span className="hero-motion-phrase" key={motionPhrase}>{motionPhrase}</span>
@@ -287,6 +292,44 @@ export default function HomePage({
             <span className="globe-caption">FIVE MARKETS · ONE ORACLE</span>
           </aside>
         </div>
+      </section>
+
+      <section className="featured-markets" aria-labelledby="featured-markets-title">
+        <div className="featured-markets-heading">
+          <div>
+            <span className="eyebrow">REAL QUESTIONS. CLEAR RULES.</span>
+            <h2 id="featured-markets-title">What would you back?</h2>
+            <p>Explore published markets and see how each question is resolved.</p>
+          </div>
+          <button className="text-action" type="button" onClick={onExploreMarkets}>Explore all <ArrowUpRight size={15} /></button>
+        </div>
+        {marketsLoading ? (
+          <div className="featured-market-placeholder" role="status">Loading published markets…</div>
+        ) : marketsError ? (
+          <div className="featured-market-placeholder">Published markets are temporarily unavailable.</div>
+        ) : markets.length === 0 ? (
+          <div className="featured-market-placeholder">
+            <span className="featured-market-orbit" aria-hidden="true">◎</span>
+            <strong>Your next question starts here.</strong>
+            <span>Published markets will appear here when available.</span>
+          </div>
+        ) : (
+          <div className="featured-market-stack">
+            {markets.slice(0, 3).map((market, index) => (
+              <button
+                className={`featured-market-card featured-market-card-${index + 1}`}
+                type="button"
+                key={market.id}
+                onClick={() => onOpenMarket(market)}
+                aria-label={`Open market: ${market.question}`}
+              >
+                <span className="featured-market-meta"><span className="featured-market-dot" />{market.category}<span className="featured-market-separator">·</span>{market.status}</span>
+                <strong>{market.question}</strong>
+                <span className="featured-market-footer">View market rules <ArrowUpRight size={15} /></span>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <DashboardOverview />
