@@ -8757,3 +8757,144 @@ select.brand-select option,
 @media (prefers-reduced-motion: reduce) {
   .refresh-action-spinning { animation: none; }
 }
+
+
+/* UX pass 1: mobile spacing and readable type; preserve existing brand tokens. */
+@media (max-width: 650px) {
+  .hero,
+  .markets-section,
+  .principles,
+  .dashboard-overview,
+  .verification-banner,
+  .referral-promo {
+    min-width: 0;
+  }
+
+  .hero {
+    padding-top: clamp(24px, 6vw, 36px);
+    padding-bottom: 28px;
+  }
+
+  .hero-copy {
+    min-width: 0;
+  }
+
+  .hero-description {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .hero-motion-line {
+    line-height: 1.5;
+  }
+
+  .hero-actions {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .hero-actions .primary-button {
+    min-height: 46px;
+  }
+
+  .network-label {
+    line-height: 1.5;
+  }
+
+  .dashboard-overview,
+  .principles,
+  .markets-section,
+  .verification-banner,
+  .referral-promo {
+    margin-top: 22px;
+  }
+
+  .dashboard-stat-label,
+  .principle p,
+  .section-heading p,
+  .market-status-note {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .dashboard-stat-card {
+    min-width: 0;
+    padding: 15px;
+  }
+
+  .dashboard-stat-card strong {
+    overflow-wrap: anywhere;
+  }
+
+  .principle {
+    min-width: 0;
+    padding: 18px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .section-heading h1,
+  .section-heading h2 {
+    line-height: 1.2;
+  }
+
+  .market-grid {
+    gap: 14px;
+  }
+
+  .market-card {
+    min-width: 0;
+  }
+
+  .market-card h3 {
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  .market-card-bottom {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .market-card-bottom .primary-button {
+    flex: 0 0 auto;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 390px) {
+  .hero-actions {
+    align-items: flex-start;
+  }
+
+  .hero-actions .network-label {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .section-heading .text-action,
+  .section-heading > .primary-button {
+    flex-shrink: 0;
+  }
+
+  .market-card-bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .market-card-bottom .primary-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-motion-phrase,
+  .market-sentiment-yes,
+  .market-sentiment-no {
+    animation: none !important;
+    transition: none !important;
+  }
+}
