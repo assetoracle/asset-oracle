@@ -152,8 +152,6 @@ export default function HomePage({
   const motionPhrase = motionPhrases[motionPhraseIndex];
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) return;
     const timer = window.setInterval(() => {
       setMotionPhraseIndex((current) => (current + 1) % motionPhrases.length);
     }, 3600);

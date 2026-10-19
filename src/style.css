@@ -9005,3 +9005,82 @@ select.brand-select option,
   }
   .hero .primary-button::after { display: none; }
 }
+
+
+/* Motion correction: orbiting markers and category chips must enter, travel, and leave. */
+@keyframes ao-node-travel-one {
+  0%, 100% { transform: translate(0, 0) scale(.72); opacity: .25; }
+  25% { transform: translate(28px, -14px) scale(1.2); opacity: 1; }
+  50% { transform: translate(48px, 10px) scale(.9); opacity: .8; }
+  75% { transform: translate(18px, 28px) scale(1.1); opacity: .95; }
+}
+@keyframes ao-node-travel-two {
+  0%, 100% { transform: translate(0, 0) scale(.8); opacity: .3; }
+  25% { transform: translate(-25px, 22px) scale(1.15); opacity: 1; }
+  50% { transform: translate(-42px, -7px) scale(.85); opacity: .65; }
+  75% { transform: translate(-12px, -27px) scale(1.12); opacity: 1; }
+}
+@keyframes ao-node-travel-three {
+  0%, 100% { transform: translate(0, 0) scale(.75); opacity: .3; }
+  25% { transform: translate(24px, -24px) scale(1.15); opacity: 1; }
+  50% { transform: translate(-17px, -39px) scale(.9); opacity: .7; }
+  75% { transform: translate(-30px, -12px) scale(1.18); opacity: 1; }
+}
+@keyframes ao-category-arrive-depart {
+  0%, 4% { opacity: 0; transform: translate3d(-22px, 14px, 0) scale(.88); }
+  10%, 24% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  30%, 34% { opacity: 0; transform: translate3d(22px, -14px, 0) scale(.9); }
+  100% { opacity: 0; transform: translate3d(22px, -14px, 0) scale(.9); }
+}
+@keyframes ao-chip-dot-travel {
+  0%, 100% { transform: translateX(-2px) scale(.7); opacity: .35; }
+  50% { transform: translateX(3px) scale(1.25); opacity: 1; }
+}
+@keyframes ao-caption-rise {
+  0%, 100% { opacity: .65; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* Override earlier static/pulse-only rules with actual spatial motion. */
+.hero .globe-stage { animation: ao-globe-drift 7s 1.2s ease-in-out infinite !important; }
+.hero .oracle-globe-svg { animation: oracle-globe-rotate 32s linear infinite !important; }
+.hero .globe-node-one { animation: ao-node-travel-one 6.5s ease-in-out infinite !important; }
+.hero .globe-node-two { animation: ao-node-travel-two 7.2s ease-in-out infinite !important; }
+.hero .globe-node-three { animation: ao-node-travel-three 6.8s ease-in-out infinite !important; }
+.hero .globe-category {
+  animation: ao-category-arrive-depart 15s cubic-bezier(.22,.7,.25,1) infinite !important;
+  animation-delay: calc(var(--category-index, 0) * 2.5s) !important;
+  will-change: opacity, transform;
+}
+.hero .globe-category-dot { animation: ao-chip-dot-travel 1.8s ease-in-out infinite; }
+.hero .globe-caption { animation: ao-caption-rise 4s ease-in-out infinite; }
+.hero .hero-motion-phrase { animation: ao-category-arrive-depart 3.6s ease-in-out infinite; }
+
+/* Keep the requested live motion available even when the device requests reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .hero { animation: ao-panel-breathe 8s ease-in-out infinite !important; }
+  .hero .hero-copy > .eyebrow { animation: ao-eyebrow-shimmer 7s ease-in-out infinite, ao-hero-enter 700ms both !important; }
+  .hero h1 { animation: ao-hero-enter 850ms 100ms both !important; }
+  .hero h1 span { animation: ao-hero-glow 5s ease-in-out 1.2s infinite !important; }
+  .hero-description { animation: ao-hero-enter 800ms 240ms both !important; }
+  .hero-motion-line { animation: ao-hero-enter 800ms 360ms both !important; }
+  .hero .hero-motion-phrase { animation: ao-category-arrive-depart 3.6s ease-in-out infinite !important; }
+  .hero-actions { animation: ao-hero-enter 800ms 470ms both !important; }
+  .hero-footnote { animation: ao-hero-enter 800ms 560ms both !important; }
+  .hero-globe { animation: ao-hero-enter 1000ms 220ms both !important; }
+  .hero .globe-stage { animation: ao-globe-drift 7s 1.2s ease-in-out infinite !important; }
+  .hero .globe-halo { animation: oracle-breathe 5s ease-in-out infinite !important; }
+  .hero .oracle-globe-svg { animation: oracle-globe-rotate 32s linear infinite !important; }
+  .hero .globe-node-one { animation: ao-node-travel-one 6.5s ease-in-out infinite !important; }
+  .hero .globe-node-two { animation: ao-node-travel-two 7.2s ease-in-out infinite !important; }
+  .hero .globe-node-three { animation: ao-node-travel-three 6.8s ease-in-out infinite !important; }
+  .hero .globe-category {
+    display: inline-flex !important;
+    animation: ao-category-arrive-depart 15s cubic-bezier(.22,.7,.25,1) infinite !important;
+    animation-delay: calc(var(--category-index, 0) * 2.5s) !important;
+  }
+  .hero .globe-category-dot { animation: ao-chip-dot-travel 1.8s ease-in-out infinite !important; }
+  .hero .globe-caption { animation: ao-caption-rise 4s ease-in-out infinite !important; }
+  .hero .network-dot { animation: ao-node-pulse 2.8s ease-in-out infinite !important; }
+  .hero .primary-button::after { display: block; }
+}
