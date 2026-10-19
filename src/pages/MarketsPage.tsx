@@ -70,6 +70,7 @@ export default function MarketsPage({
   onOpenMarket,
 }: MarketsPageProps) {
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"closing" | "newest" | "question">("closing");
   const selectedSubjectCategory =
     categories.includes(activeCategory) &&
     !["All Markets", "Live", "Settled Markets"].includes(activeCategory)
@@ -79,8 +80,21 @@ export default function MarketsPage({
     (category) => !["All Markets", "Live", "Settled Markets"].includes(category),
   );
 
-  // Keep all published markets visible here; closed markets belong on this page too.
-  const visibleMarkets = markets;
+  // Keep all filtered published markets visible; sort locally without changing API or contract state.
+  const visibleMarkets = [...markets].sort((a, b) => {
+    if (sortOrder === "question") return a.question.localeCompare(b.question);
+    if (sortOrder === "newest") {
+      const dateA = Date.parse(a.closesAt ?? "");
+      const dateB = Date.parse(b.closesAt ?? "");
+      if (!Number.isNaN(dateA) && !Number.isNaN(dateB)) return dateB - dateA;
+      return b.id.localeCompare(a.id);
+    }
+    const dateA = Date.parse(a.closesAt ?? "");
+    const dateB = Date.parse(b.closesAt ?? "");
+    if (Number.isNaN(dateA)) return 1;
+    if (Number.isNaN(dateB)) return -1;
+    return dateA - dateB;
+  });
 
   function renderMarketCard(market: DisplayMarket, categoryIndex: number) {
     const sportsMarket = market.label.trim().toLowerCase() === "sports";
@@ -260,6 +274,23 @@ export default function MarketsPage({
         </div>
       </div>
 
+      {!marketsLoading && !marketsError && visibleMarkets.length > 0 && (
+        <div className="market-results-toolbar">
+          <p className="market-results-count" aria-live="polite">
+            <strong>{visibleMarkets.length}</strong> {visibleMarkets.length === 1 ? "market" : "markets"} found
+            {search.trim() ? <span> for “{search.trim()}”</span> : null}
+          </p>
+          <label className="market-sort-control">
+            <span>Sort by</span>
+            <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as "closing" | "newest" | "question")} aria-label="Sort markets">
+              <option value="closing">Closing soon</option>
+              <option value="newest">Latest closing date</option>
+              <option value="question">Question A–Z</option>
+            </select>
+          </label>
+        </div>
+      )}
+
       {marketsLoading ? (
         <div className="empty-state" role="status"><h3>Loading published markets</h3><p>Retrieving approved markets from Asset Oracle.</p></div>
       ) : marketsError ? (
@@ -268,7 +299,12 @@ export default function MarketsPage({
           <button className="primary-button" type="button" onClick={onRetryMarkets}>Try again</button>
         </div>
       ) : visibleMarkets.length === 0 ? (
-        <div className="empty-state"><h3>{activeCategory === "Live" ? "No live markets right now" : activeCategory === "Settled Markets" ? "No settled markets yet" : "No published markets in this category"}</h3><p>{activeCategory === "Live" ? "Markets appear here only while on-chain status is open and the participation deadline has not passed." : activeCategory === "Settled Markets" ? "Markets move here after their on-chain settlement status is confirmed." : "Markets appear here after publication and are filtered by the selected category."}</p></div>
+        <div className="empty-state market-empty-state">
+          <span className="market-empty-icon" aria-hidden="true"><Search size={22} /></span>
+          <h3>{search.trim() ? "No matching markets" : activeCategory === "Live" ? "No live markets right now" : activeCategory === "Settled Markets" ? "No settled markets yet" : "No published markets in this category"}</h3>
+          <p>{search.trim() ? "Try a different keyword or clear your search to see more published markets." : activeCategory === "Live" ? "Markets appear here only while on-chain status is open and the participation deadline has not passed." : activeCategory === "Settled Markets" ? "Markets move here after their on-chain settlement status is confirmed." : "Markets appear here after publication and are filtered by the selected category."}</p>
+          {search.trim() && <button className="text-action" type="button" onClick={() => onSearchChange("")}>Clear search <ArrowUpRight size={15} /></button>}
+        </div>
       ) : (
         <div className="market-grid">{visibleMarkets.map((market, index) => renderMarketCard(market, index))}</div>
       )}
