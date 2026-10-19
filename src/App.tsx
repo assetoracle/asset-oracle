@@ -486,7 +486,7 @@ useEffect(() => {
         setTotalLeaderboard(totalResult.leaderboard);
       })
       .catch((error) => {
-        if (active) setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load leaderboard.");
+        if (active) setReferralLeaderboardError(friendlyError(error, "Leaderboard unavailable."));
       })
       .finally(() => {
         if (active) setReferralLeaderboardLoading(false);
@@ -510,7 +510,7 @@ useEffect(() => {
       setAccountData(result);
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
-      setAccountDataError(error instanceof Error ? error.message : "Unable to load wallet account data.");
+      setAccountDataError(friendlyError(error, "Account data unavailable."));
     } finally {
       if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) setAccountDataLoading(false);
     }
