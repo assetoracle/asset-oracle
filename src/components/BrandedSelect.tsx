@@ -35,8 +35,11 @@ export default function BrandedSelect({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const selected = options.find((option) => option.value === String(value)) ?? options[0];
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === String(value)));
+  const selected = options[selectedIndex];
 
   function updateMenuPosition() {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -55,21 +58,79 @@ export default function BrandedSelect({
     });
   }
 
-  function toggleMenu() {
-    if (disabled) return;
-    if (open) {
-      setOpen(false);
-      return;
-    }
+  function openMenu(index = selectedIndex) {
+    if (disabled || options.length === 0) return;
     updateMenuPosition();
+    setActiveIndex(Math.max(0, Math.min(index, options.length - 1)));
     setOpen(true);
   }
+
+  function closeMenu(returnFocus = true) {
+    setOpen(false);
+    if (returnFocus) triggerRef.current?.focus();
+  }
+
+  function chooseOption(index: number) {
+    const option = options[index];
+    if (!option) return;
+    onChange(option.value);
+    closeMenu();
+  }
+
+  function handleTriggerKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (disabled) return;
+    if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openMenu(selectedIndex);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      openMenu(selectedIndex);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      openMenu(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      openMenu(options.length - 1);
+    }
+  }
+
+  function handleListKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMenu();
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.min(index + 1, options.length - 1));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.max(index - 1, 0));
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      setActiveIndex(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      setActiveIndex(options.length - 1);
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      chooseOption(activeIndex);
+    } else if (event.key.length === 1 && /[a-z0-9]/i.test(event.key)) {
+      const start = (activeIndex + 1) % options.length;
+      const ordered = [...options.slice(start), ...options.slice(0, start)];
+      const match = ordered.find((option) => option.label.toLowerCase().startsWith(event.key.toLowerCase()));
+      if (match) setActiveIndex(options.indexOf(match));
+    }
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    optionRefs.current[activeIndex]?.focus();
+  }, [open, activeIndex]);
 
   useEffect(() => {
     if (!open) return;
     const reposition = () => updateMenuPosition();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeMenu();
     };
     window.addEventListener("resize", reposition);
     window.addEventListener("scroll", reposition, true);
@@ -91,8 +152,10 @@ export default function BrandedSelect({
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={open ? `${id ?? "branded-select"}-listbox` : undefined}
         disabled={disabled}
-        onClick={toggleMenu}
+        onClick={() => open ? closeMenu(false) : openMenu()}
+        onKeyDown={handleTriggerKeyDown}
       >
         <span>{selected?.label ?? String(value)}</span>
         <span className="branded-select-icon"><ChevronDown size={17} /></span>
@@ -103,12 +166,15 @@ export default function BrandedSelect({
             className="branded-select-backdrop"
             type="button"
             aria-label="Close options"
-            onClick={() => setOpen(false)}
+            onClick={() => closeMenu(false)}
+            tabIndex={-1}
           />
           <div
+            id={`${id ?? "branded-select"}-listbox`}
             className="branded-select-options branded-select-options-portal"
             role="listbox"
             aria-label={ariaLabel}
+            aria-activedescendant={`${id ?? "branded-select"}-option-${activeIndex}`}
             style={{
               position: "fixed",
               zIndex: 1201,
@@ -118,18 +184,20 @@ export default function BrandedSelect({
               width: menuPosition.width,
               maxHeight: menuPosition.maxHeight,
             }}
+            onKeyDown={handleListKeyDown}
           >
-            {options.map((option) => (
+            {options.map((option, index) => (
               <button
                 key={option.value}
+                ref={(element) => { optionRefs.current[index] = element; }}
+                id={`${id ?? "branded-select"}-option-${index}`}
                 type="button"
                 role="option"
+                tabIndex={index === activeIndex ? 0 : -1}
                 aria-selected={option.value === String(value)}
                 className={`branded-select-option ${option.value === String(value) ? "active" : ""}`}
-                onClick={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
+                onMouseEnter={() => setActiveIndex(index)}
+                onClick={() => chooseOption(index)}
               >
                 {option.label}
               </button>
