@@ -9084,3 +9084,35 @@ select.brand-select option,
   .hero .network-dot { animation: ao-node-pulse 2.8s ease-in-out infinite !important; }
   .hero .primary-button::after { display: block; }
 }
+
+
+/* Hero storytelling typewriter: write the headline and supporting copy, hold, then replay. */
+.hero h1.hero-typewriter {
+  min-height: 2.04em;
+  overflow-wrap: anywhere;
+}
+.hero-typewriter-description {
+  min-height: 5.4em;
+  position: relative;
+}
+.hero-typewriter-description::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: .95em;
+  margin-left: 3px;
+  vertical-align: -.08em;
+  background: var(--highlight);
+  box-shadow: 0 0 12px rgba(99,243,255,.7);
+  animation: ao-typewriter-caret 850ms steps(2, end) infinite;
+}
+@keyframes ao-typewriter-caret {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0; }
+}
+.hero h1.hero-typewriter > span:last-child {
+  animation: ao-hero-glow 5s ease-in-out 1.2s infinite;
+}
+@media (max-width: 650px) {
+  .hero-typewriter-description { min-height: 6.6em; }
+}
