@@ -9058,15 +9058,29 @@ select.brand-select option,
 
 /* Keep the requested live motion available even when the device requests reduced motion. */
 @media (prefers-reduced-motion: reduce) {
-  .hero, .hero .hero-copy > .eyebrow, .hero h1, .hero h1 span,
-  .hero-description, .hero-motion-line, .hero-actions, .hero-footnote,
-  .hero-globe, .hero .globe-stage, .hero .globe-halo, .hero .oracle-globe-svg,
-  .hero .globe-node, .hero .globe-category, .hero .globe-category-dot,
-  .hero .globe-caption, .hero .hero-motion-phrase, .hero .network-dot {
-    animation-play-state: running !important;
-    animation-duration: initial;
-    filter: none;
+  .hero { animation: ao-panel-breathe 8s ease-in-out infinite !important; }
+  .hero .hero-copy > .eyebrow { animation: ao-eyebrow-shimmer 7s ease-in-out infinite, ao-hero-enter 700ms both !important; }
+  .hero h1 { animation: ao-hero-enter 850ms 100ms both !important; }
+  .hero h1 span { animation: ao-hero-glow 5s ease-in-out 1.2s infinite !important; }
+  .hero-description { animation: ao-hero-enter 800ms 240ms both !important; }
+  .hero-motion-line { animation: ao-hero-enter 800ms 360ms both !important; }
+  .hero .hero-motion-phrase { animation: ao-category-arrive-depart 3.6s ease-in-out infinite !important; }
+  .hero-actions { animation: ao-hero-enter 800ms 470ms both !important; }
+  .hero-footnote { animation: ao-hero-enter 800ms 560ms both !important; }
+  .hero-globe { animation: ao-hero-enter 1000ms 220ms both !important; }
+  .hero .globe-stage { animation: ao-globe-drift 7s 1.2s ease-in-out infinite !important; }
+  .hero .globe-halo { animation: oracle-breathe 5s ease-in-out infinite !important; }
+  .hero .oracle-globe-svg { animation: oracle-globe-rotate 32s linear infinite !important; }
+  .hero .globe-node-one { animation: ao-node-travel-one 6.5s ease-in-out infinite !important; }
+  .hero .globe-node-two { animation: ao-node-travel-two 7.2s ease-in-out infinite !important; }
+  .hero .globe-node-three { animation: ao-node-travel-three 6.8s ease-in-out infinite !important; }
+  .hero .globe-category {
+    display: inline-flex !important;
+    animation: ao-category-arrive-depart 15s cubic-bezier(.22,.7,.25,1) infinite !important;
+    animation-delay: calc(var(--category-index, 0) * 2.5s) !important;
   }
-  .hero .globe-category:nth-child(n+4) { display: inline-flex !important; }
+  .hero .globe-category-dot { animation: ao-chip-dot-travel 1.8s ease-in-out infinite !important; }
+  .hero .globe-caption { animation: ao-caption-rise 4s ease-in-out infinite !important; }
+  .hero .network-dot { animation: ao-node-pulse 2.8s ease-in-out infinite !important; }
   .hero .primary-button::after { display: block; }
 }
