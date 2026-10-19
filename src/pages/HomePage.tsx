@@ -171,7 +171,7 @@ export default function HomePage({
         if (cursor >= typewriterText.length) {
           if (typingTimer !== undefined) window.clearInterval(typingTimer);
           typingTimer = undefined;
-          restartTimer = window.setTimeout(typeCycle, 120000);
+          restartTimer = window.setTimeout(typeCycle, 30000);
         }
       }, 42);
     };
@@ -187,7 +187,7 @@ export default function HomePage({
   useEffect(() => {
     const timer = window.setInterval(() => {
       setMotionPhraseIndex((current) => (current + 1) % motionPhrases.length);
-    }, 3600);
+    }, 9000);
     return () => window.clearInterval(timer);
   }, []);
 
