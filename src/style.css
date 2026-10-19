@@ -9404,3 +9404,75 @@ select.brand-select option,
     transform: none;
   }
 }
+
+
+/* Phase 2 UI/UX: market sorting, result clarity, and helpful search states. */
+.market-results-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 20px 0 14px;
+  padding: 13px 16px;
+  border: 1px solid rgba(29, 102, 117, .42);
+  border-radius: 14px;
+  background: rgba(11, 42, 53, .52);
+}
+.market-results-count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.market-results-count strong { color: var(--text); font-weight: 800; }
+.market-sort-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.market-sort-control select {
+  max-width: 190px;
+  min-height: 38px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--secondary);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.market-sort-control select:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 3px;
+}
+.market-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(28px, 6vw, 54px) 22px;
+}
+.market-empty-state p { max-width: 480px; }
+.market-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(18, 217, 245, .28);
+  border-radius: 15px;
+  background: rgba(18, 217, 245, .07);
+  color: var(--accent);
+}
+.market-empty-state .text-action { margin-top: 8px; }
+@media (max-width: 520px) {
+  .market-results-toolbar { align-items: flex-start; flex-direction: column; }
+  .market-sort-control { width: 100%; justify-content: space-between; }
+  .market-sort-control select { flex: 1; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .market-sort-control select { scroll-behavior: auto; }
+}
