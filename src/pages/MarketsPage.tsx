@@ -2,12 +2,12 @@ import { useState } from "react";
 import {
   ArrowUpRight,
   Search,
-  ChevronDown,
   ShieldCheck,
 } from "lucide-react";
 import type { DisplayMarket } from "./HomePage";
 import type { MarketFilter } from "../types";
 import SportIcon, { type SportKind } from "../components/SportIcon";
+import BrandedSelect from "../components/BrandedSelect";
 
 function formatMarketTime(value: string | undefined): string {
   if (!value) return "date unavailable";
@@ -69,7 +69,6 @@ export default function MarketsPage({
   onRetryMarkets,
   onOpenMarket,
 }: MarketsPageProps) {
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<"closing" | "newest" | "question">("closing");
   const selectedSubjectCategory =
     categories.includes(activeCategory) &&
@@ -210,53 +209,20 @@ export default function MarketsPage({
 
         <div className="market-category-filter">
           <label htmlFor="market-category-select">Category</label>
-          <div className="market-category-select-wrap">
-            <button
-              id="market-category-select"
-              className="market-category-select market-category-select-trigger"
-              type="button"
-              aria-label="Filter markets by category"
-              aria-haspopup="listbox"
-              aria-expanded={categoryDropdownOpen}
-              onClick={() => setCategoryDropdownOpen((open) => !open)}
-            >
-              <span>{selectedSubjectCategory === "All Markets" ? "All categories" : selectedSubjectCategory === "RWA" ? "Real-World Assets (RWA)" : selectedSubjectCategory}</span>
-              <span className="market-category-select-icon"><ChevronDown size={17} /></span>
-            </button>
-            {categoryDropdownOpen && (
-              <>
-                <button
-                  className="market-category-dropdown-backdrop"
-                  type="button"
-                  aria-label="Close category menu"
-                  onClick={() => setCategoryDropdownOpen(false)}
-                />
-                <div className="market-category-dropdown" role="listbox" aria-label="Market categories">
-                  <button
-                    className={["market-category-option", selectedSubjectCategory === "All Markets" ? "active" : ""].filter(Boolean).join(" ")}
-                    type="button"
-                    role="option"
-                    aria-selected={selectedSubjectCategory === "All Markets"}
-                    onClick={() => { onCategoryChange("All Markets"); setCategoryDropdownOpen(false); }}
-                  >
-                    All categories
-                  </button>
-                  {subjectCategories.map((category) => (
-                    <button
-                      className={["market-category-option", selectedSubjectCategory === category ? "active" : ""].filter(Boolean).join(" ")}
-                      key={category}
-                      type="button"
-                      role="option"
-                      aria-selected={selectedSubjectCategory === category}
-                      onClick={() => { onCategoryChange(category); setCategoryDropdownOpen(false); }}
-                    >
-                      {category === "RWA" ? "Real-World Assets (RWA)" : category}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <BrandedSelect
+            id="market-category-select"
+            className="market-category-branded-select"
+            value={selectedSubjectCategory}
+            onChange={(value) => onCategoryChange(value as MarketFilter)}
+            options={[
+              { value: "All Markets", label: "All categories" },
+              ...subjectCategories.map((category) => ({
+                value: category,
+                label: category === "RWA" ? "Real-World Assets (RWA)" : category,
+              })),
+            ]}
+            ariaLabel="Filter markets by category"
+          />
         </div>
 
         <div className="category-list category-list-desktop" aria-label="Market categories">
@@ -280,14 +246,21 @@ export default function MarketsPage({
             <strong>{visibleMarkets.length}</strong> {visibleMarkets.length === 1 ? "market" : "markets"} found
             {search.trim() ? <span> for “{search.trim()}”</span> : null}
           </p>
-          <label className="market-sort-control">
-            <span>Sort by</span>
-            <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as "closing" | "newest" | "question")} aria-label="Sort markets">
-              <option value="closing">Closing soon</option>
-              <option value="newest">Latest closing date</option>
-              <option value="question">Question A–Z</option>
-            </select>
-          </label>
+          <div className="market-sort-control">
+            <label htmlFor="market-sort-select">Sort by</label>
+            <BrandedSelect
+              id="market-sort-select"
+              className="market-sort-branded-select"
+              value={sortOrder}
+              onChange={(value) => setSortOrder(value as "closing" | "newest" | "question")}
+              options={[
+                { value: "closing", label: "Closing soon" },
+                { value: "newest", label: "Latest closing date" },
+                { value: "question", label: "Question A–Z" },
+              ]}
+              ariaLabel="Sort markets"
+            />
+          </div>
         </div>
       )}
 
