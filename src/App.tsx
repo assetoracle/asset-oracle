@@ -193,6 +193,8 @@ export default function App() {
   const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
   const [accountDataLoading, setAccountDataLoading] = useState(false);
   const [accountDataError, setAccountDataError] = useState("");
+  // The originating route for market detail and verification views. Direct links fall back to Markets.
+  const returnHashRef = useRef<string | null>(null);
 
   const [publishedMarkets, setPublishedMarkets] =
     useState<DisplayMarket[]>([]);
@@ -546,6 +548,7 @@ useEffect(() => {
     : null;
 
   function navigateTo(nextPage: Page) {
+    returnHashRef.current = null;
     if (nextPage === "Home" || nextPage === "Markets") {
       void loadMarkets();
     }
@@ -558,21 +561,34 @@ useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function rememberReturnLocation() {
+    const currentRoute = parseHash();
+    // Avoid stacking detail pages as return destinations; direct links use the Markets fallback.
+    if (currentRoute.marketId || currentRoute.verificationMarketId) {
+      returnHashRef.current = null;
+      return;
+    }
+    returnHashRef.current = window.location.hash || "#/";
+  }
+
   function openMarket(market: DisplayMarket) {
     // Open details for published markets regardless of lifecycle status.
     // On-chain status and deadline checks still disable staking on closed markets.
+    rememberReturnLocation();
     window.location.hash = pathForPage("Markets", market.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function goBackToMarkets() {
-    // Preserve the market-list context (status tab, subject category, and search)
-    // from before the user opened details or verification.
-    window.location.hash = pathForPage("Markets");
+    // Return to the actual originating route. A directly opened detail/verification link has no in-app origin.
+    const returnHash = returnHashRef.current || "#/markets";
+    returnHashRef.current = null;
+    window.location.hash = returnHash;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function openVerification(market: DisplayMarket) {
+    rememberReturnLocation();
     window.location.hash = `/verify/${encodeURIComponent(market.id)}`;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
