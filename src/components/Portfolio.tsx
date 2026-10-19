@@ -99,12 +99,17 @@ export default function Portfolio({
       setAccountLoading(false);
       return () => { active = false; };
     }
+    // Never display the previous wallet's positions while the next wallet loads.
+    setAccountData(null);
     setAccountLoading(true);
     setAccountError("");
     void getWalletAccountData(address)
       .then((result) => { if (active) setAccountData(result); })
       .catch((error) => {
-        if (active) setAccountError(friendlyError(error, "Unable to load your market positions."));
+        if (active) {
+          setAccountData(null);
+          setAccountError(friendlyError(error, "Unable to load your market positions."));
+        }
       })
       .finally(() => { if (active) setAccountLoading(false); });
     return () => { active = false; };
