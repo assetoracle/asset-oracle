@@ -8252,7 +8252,7 @@ select.brand-select option,
 .outcome-no { color: #dc2626 !important; }
 .verify-market-button { gap: 8px; }
 
-/* Keep settled market actions inside narrow mobile cards. */
+/* Keep every market-card action visible on narrow mobile screens. */
 @media (max-width: 600px) {
   .market-card-compact .market-card-bottom {
     align-items: stretch;
@@ -8261,17 +8261,24 @@ select.brand-select option,
   }
 
   .market-card-compact .market-status-note {
+    display: block;
     min-width: 0;
     max-width: 100%;
     overflow-wrap: anywhere;
     line-height: 1.5;
   }
 
-  .market-card-compact .verify-market-button {
+  .market-card-compact .market-card-bottom > .open-market-button,
+  .market-card-compact .market-card-bottom > .verify-market-button {
+    display: inline-flex;
     width: 100%;
     min-width: 0;
+    max-width: 100%;
     align-self: stretch;
+    justify-content: center;
     white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
   }
 }
 .verification-details-page { max-width: 1040px; margin: 0 auto; }
