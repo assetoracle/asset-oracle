@@ -46,16 +46,19 @@ export default function BrandedSelect({
     if (!rect) return;
     const gap = 7;
     const viewportPadding = 8;
-    const availableBelow = window.innerHeight - rect.bottom - gap - viewportPadding;
-    const availableAbove = rect.top - gap - viewportPadding;
+    const availableBelow = Math.max(0, window.innerHeight - rect.bottom - gap - viewportPadding);
+    const availableAbove = Math.max(0, rect.top - gap - viewportPadding);
     const openAbove = availableBelow < Math.min(160, availableAbove);
-    const maxHeight = Math.max(96, Math.min(300, Math.floor(openAbove ? availableAbove : availableBelow)));
-    setMenuPosition({
-      left: Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - rect.width - viewportPadding)),
-      top: openAbove ? Math.max(viewportPadding, rect.top - gap - maxHeight) : rect.bottom + gap,
-      width: rect.width,
-      maxHeight,
-    });
+    const availableSpace = openAbove ? availableAbove : availableBelow;
+    const maxHeight = Math.max(80, Math.min(300, Math.floor(availableSpace)));
+    const width = Math.min(rect.width, window.innerWidth - viewportPadding * 2);
+    const left = Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - width - viewportPadding));
+    const preferredTop = openAbove ? rect.top - gap - maxHeight : rect.bottom + gap;
+    const top = Math.max(
+      viewportPadding,
+      Math.min(preferredTop, window.innerHeight - maxHeight - viewportPadding),
+    );
+    setMenuPosition({ left, top, width, maxHeight });
   }
 
   function openMenu(index = selectedIndex) {
