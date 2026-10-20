@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import type { ReactNode } from "react";
 
 export type DisplayResolutionRule = {
   sourceId: string;
@@ -46,14 +45,11 @@ type DashboardStats = {
 
 type HomePageProps = {
   markets: DisplayMarket[];
-  publishedMarkets: DisplayMarket[];
   marketsLoading: boolean;
   marketsError: string;
   onExploreMarkets: () => void;
   onOpenMarket: (market: DisplayMarket) => void;
-  onRetryMarkets: () => void;
   onOpenReferrals: () => void;
-  renderMarketCard: (market: DisplayMarket) => ReactNode;
 };
 
 const API_BASE_URL = "https://asset-oracle-backend.onrender.com";
@@ -139,16 +135,56 @@ function DashboardOverview() {
   );
 }
 
+function MarketSpotlight({ markets, onOpenMarket }: { markets: DisplayMarket[]; onOpenMarket: (market: DisplayMarket) => void }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const activeMarket = markets[activeIndex % markets.length];
+
+  useEffect(() => {
+    setActiveIndex((current) => current % Math.max(markets.length, 1));
+  }, [markets.length]);
+
+  useEffect(() => {
+    if (paused || markets.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % markets.length), 6500);
+    return () => window.clearInterval(timer);
+  }, [markets.length, paused]);
+
+  if (!activeMarket) return null;
+
+  return (
+    <div className="market-spotlight" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPaused(false);
+    }}>
+      <button className="market-spotlight-card" type="button" onClick={() => onOpenMarket(activeMarket)} aria-label={`Open featured market: ${activeMarket.question}`}>
+        <span className="market-spotlight-orbit market-spotlight-orbit-one" aria-hidden="true" />
+        <span className="market-spotlight-orbit market-spotlight-orbit-two" aria-hidden="true" />
+        <span className="market-spotlight-topline"><span className="market-spotlight-live-dot" /> LIVE NOW <span className="market-spotlight-divider">/</span> {activeMarket.category}</span>
+        <span className="market-spotlight-kicker">THE QUESTION</span>
+        <strong className="market-spotlight-question">{activeMarket.question}</strong>
+        <span className="market-spotlight-description">{activeMarket.description || "Review the market's resolution criteria before making your prediction."}</span>
+        <span className="market-spotlight-bottom"><span>Review market &amp; predict</span><span className="market-spotlight-arrow"><ArrowUpRight size={19} /></span></span>
+      </button>
+      <div className="market-spotlight-controls" aria-label="Choose featured market">
+        <span className="market-spotlight-count">{String(activeIndex + 1).padStart(2, "0")} <span>/</span> {String(markets.length).padStart(2, "0")}</span>
+        <div className="market-spotlight-dots">
+          {markets.map((market, index) => (
+            <button key={market.id} type="button" className={index === activeIndex ? "market-spotlight-dot is-active" : "market-spotlight-dot"} aria-label={`Show featured market ${index + 1}: ${market.question}`} aria-pressed={index === activeIndex} onClick={() => setActiveIndex(index)} />
+          ))}
+        </div>
+        <span className="market-spotlight-hint">Auto-rotates · pause by hovering</span>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage({
   markets,
-  publishedMarkets,
   marketsLoading,
   marketsError,
   onExploreMarkets,
   onOpenMarket,
-  onRetryMarkets,
   onOpenReferrals,
-  renderMarketCard,
 }: HomePageProps) {
   const motionPhrases = ["make evidence traceable.", "bring clarity to outcomes.", "connect real-world data.", "put verification first."];
   const [motionPhraseIndex, setMotionPhraseIndex] = useState(0);
@@ -235,36 +271,6 @@ export default function HomePage({
     };
   }, []);
 
-  function renderLoading() {
-    return (
-      <div className="empty-state" role="status">
-        <h3>Loading published markets</h3>
-        <p>Retrieving approved markets from Asset Oracle.</p>
-      </div>
-    );
-  }
-
-  function renderError() {
-    return (
-      <div className="empty-state" role="alert">
-        <h3>Unable to load markets</h3>
-        <p>{marketsError}</p>
-        <button className="primary-button" type="button" onClick={onRetryMarkets}>
-          Try again
-        </button>
-      </div>
-    );
-  }
-
-  function renderEmptyState() {
-    return (
-      <div className="empty-state" role="status">
-        <h3>No published markets yet</h3>
-        <p>Approved markets will appear here after an administrator publishes them. Check back later.</p>
-      </div>
-    );
-  }
-
   return (
     <>
       <section className="hero">
@@ -284,7 +290,7 @@ export default function HomePage({
           </div>
           <div className="hero-actions">
             <button className="primary-button" type="button" onClick={onExploreMarkets}>Explore markets <ArrowUpRight size={16} /></button>
-            <span className="network-label"><span className="network-dot" />Asset Chain · Testnet development</span>
+            <span className="network-label"><span className="network-dot" />Asset Oracle · Development Preview</span>
           </div>
           <div className="hero-footnote">Verification-first prediction infrastructure</div>
           </div>
@@ -338,42 +344,32 @@ export default function HomePage({
         </div>
       </section>
 
-      <section className="featured-markets" aria-labelledby="featured-markets-title">
+      <section className="featured-markets market-spotlight-section" aria-labelledby="featured-markets-title">
         <div className="featured-markets-heading">
           <div>
-            <span className="eyebrow">REAL QUESTIONS. CLEAR RULES.</span>
+            <span className="eyebrow">LIVE MARKET SPOTLIGHT</span>
             <h2 id="featured-markets-title">What would you back?</h2>
-            <p>Explore published markets and see how each question is resolved.</p>
+            <p>One live question in focus. Open the market to review its rules and make your prediction.</p>
           </div>
-          <button className="text-action" type="button" onClick={onExploreMarkets}>Explore all <ArrowUpRight size={15} /></button>
+          <button className="text-action" type="button" onClick={onExploreMarkets}>Explore all markets <ArrowUpRight size={15} /></button>
         </div>
         {marketsLoading ? (
-          <div className="featured-market-placeholder" role="status" aria-live="polite">Loading published markets…</div>
+          <div className="featured-market-placeholder" role="status" aria-live="polite">Loading live markets…</div>
         ) : marketsError ? (
-          <div className="featured-market-placeholder" role="alert">Published markets are temporarily unavailable.</div>
+          <div className="featured-market-placeholder" role="alert">Live markets are temporarily unavailable.</div>
         ) : markets.length === 0 ? (
           <div className="featured-market-placeholder" role="status">
             <span className="featured-market-orbit" aria-hidden="true">◎</span>
             <strong>No live markets right now.</strong>
-            <span>Browse published markets or check back when an on-chain market opens.</span>
-            <button className="text-action" type="button" onClick={onExploreMarkets}>Browse all markets <ArrowUpRight size={15} /></button>
+            <span>Explore the market catalogue and check back when a market opens.</span>
+            <button className="text-action" type="button" onClick={onExploreMarkets}>Browse markets <ArrowUpRight size={15} /></button>
           </div>
         ) : (
-          <div className="featured-market-stack">
-            {markets.slice(0, 3).map((market, index) => (
-              <button
-                className={`featured-market-card featured-market-card-${index + 1}`}
-                type="button"
-                key={market.id}
-                onClick={() => onOpenMarket(market)}
-                aria-label={`Open market: ${market.question}`}
-              >
-                <span className="featured-market-meta"><span className="featured-market-dot" />{market.category}<span className="featured-market-separator">·</span>{market.status}</span>
-                <strong>{market.question}</strong>
-                <span className="featured-market-footer">View market rules <ArrowUpRight size={15} /></span>
-              </button>
-            ))}
-          </div>
+          <MarketSpotlight markets={markets.filter((market) => market.status.toLowerCase() === "open" || market.status.toLowerCase() === "live").slice(0, 5).length
+            ? markets.filter((market) => market.status.toLowerCase() === "open" || market.status.toLowerCase() === "live").slice(0, 5)
+            : markets.slice(0, 5)}
+            onOpenMarket={onOpenMarket}
+          />
         )}
       </section>
 
@@ -435,22 +431,6 @@ export default function HomePage({
             <p>The current interface identifies Asset Chain as a testnet development environment. Testnet activity should not be mistaken for mainnet deployment.</p>
           </details>
         </div>
-      </section>
-
-      <section className="markets-section">
-        <div className="section-heading">
-          <div><span className="eyebrow">DISCOVER</span><h2>Published markets</h2><p>Explore markets approved for publication.</p></div>
-          <button className="text-action" type="button" onClick={onExploreMarkets}>All markets <ArrowUpRight size={15} /></button>
-        </div>
-        {marketsLoading ? renderLoading() : marketsError ? renderError() : publishedMarkets.length === 0 ? renderEmptyState() : (
-          <div className="market-grid">
-            {publishedMarkets.slice(0, 3).map((market) => (
-              <div key={market.id} className="home-market-card-wrap">
-                {renderMarketCard(market)}
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       <section className="verification-banner">

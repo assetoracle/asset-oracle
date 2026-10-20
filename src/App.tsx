@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BriefcaseBusiness,
   ChartNoAxesCombined,
-  ArrowUpRight,
   FileText,
   History,
   House,
@@ -13,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
-import { MARKET_STATUS, MARKET_OUTCOME, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
+import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
   ASSET_CHAIN_TESTNET_ID,
@@ -666,75 +665,6 @@ useEffect(() => {
       return idA - idB;
     });
 
-  function renderMarketCard(market: DisplayMarket) {
-    const lifecycle = marketLifecycle.get(market.id);
-    const isSettled = lifecycle?.status === MARKET_STATUS.SETTLED;
-    const outcomeLabel = lifecycle?.outcome === MARKET_OUTCOME.YES ? "YES" : lifecycle?.outcome === MARKET_OUTCOME.NO ? "NO" : lifecycle?.outcome === MARKET_OUTCOME.INVALID ? "INVALID" : "Outcome pending";
-    const totalYes = lifecycle?.totalYes ?? 0n;
-    const totalNo = lifecycle?.totalNo ?? 0n;
-    const totalSideStake = totalYes + totalNo;
-    const hasSideStake = totalSideStake > 0n;
-    const yesPercent = hasSideStake ? Number((totalYes * 10000n) / totalSideStake) / 100 : 0;
-    const noPercent = hasSideStake ? 100 - yesPercent : 0;
-    const isLive = liveMarkets.some((item) => item.id === market.id);
-    return (
-      <article className="market-card market-card-compact" key={market.id}>
-        <div className="market-card-top">
-          <span className="market-symbol">{market.symbol}</span>
-          <div className="market-card-badges">
-            <span className="market-category">{market.label}</span>
-            {marketLifecycle.get(market.id)?.status === MARKET_STATUS.SETTLED ? (
-              <span className="market-status market-status-settled">SETTLED</span>
-            ) : liveMarkets.some((item) => item.id === market.id) ? (
-              <span className="market-status market-status-live"><span className="live-indicator" aria-hidden="true" />LIVE</span>
-            ) : (
-              <span className="market-status">CLOSED</span>
-            )}
-          </div>
-        </div>
-        <h3>{market.question}</h3>
-        {isLive && (
-          <div className="market-sentiment" aria-label={`Current stake distribution: YES ${yesPercent.toFixed(1)} percent, NO ${noPercent.toFixed(1)} percent`}>
-            <div className={`market-sentiment-track${hasSideStake ? "" : " market-sentiment-empty"}`} role="img" aria-label={hasSideStake ? `YES ${yesPercent.toFixed(1)}%, NO ${noPercent.toFixed(1)}%` : "No stakes yet"}>
-              <div className="market-sentiment-yes" style={{ width: `${yesPercent}%` }} />
-              <div className="market-sentiment-no" style={{ width: `${noPercent}%` }} />
-            </div>
-            <div className="market-sentiment-labels">
-              <span className="market-sentiment-yes-label">YES {hasSideStake ? `${yesPercent.toFixed(1)}%` : "—"}</span>
-              <span className="market-sentiment-no-label">NO {hasSideStake ? `${noPercent.toFixed(1)}%` : "—"}</span>
-            </div>
-          </div>
-        )}
-        {isSettled && (
-          <div className="settled-outcome-preview">
-            <span>Final outcome</span>
-            <strong className={outcomeLabel === "YES" ? "outcome-yes" : outcomeLabel === "NO" ? "outcome-no" : ""}>{outcomeLabel}</strong>
-          </div>
-        )}
-        <div className="market-card-bottom">
-          <span className="market-status-note">{isSettled ? `Resolved ${lifecycle?.resolvedAt ? new Date(lifecycle.resolvedAt * 1000).toLocaleDateString() : "on-chain"}` : `Closes ${market.closesAt ? formatDate(market.closesAt) : "date unavailable"}`}</span>
-          {isSettled ? (
-            <button className="primary-button open-market-button verify-market-button" type="button" onClick={() => openVerification(market)}>
-              <ShieldCheck size={15} /> Verify
-            </button>
-          ) : (
-            <button
-              className="primary-button open-market-button"
-              type="button"
-              onClick={() => openMarket(market)}
-              disabled={!liveMarkets.some((item) => item.id === market.id)}
-              aria-disabled={!liveMarkets.some((item) => item.id === market.id)}
-              title={!liveMarkets.some((item) => item.id === market.id) ? "This market is closed to participation." : "Open live market"}
-            >
-              {liveMarkets.some((item) => item.id === market.id) ? "Open Market" : "Market Closed"}
-              {liveMarkets.some((item) => item.id === market.id) && <ArrowUpRight size={15} />}
-            </button>
-          )}
-        </div>
-      </article>
-    );
-  }
-
   async function handleLoadMyProposals() {
     const requestedAddress = addressRef.current;
 
@@ -942,14 +872,11 @@ useEffect(() => {
       return (
         <HomePage
           markets={liveMarkets}
-          publishedMarkets={publishedMarkets}
           marketsLoading={marketsLoading}
           marketsError={marketsError}
           onExploreMarkets={() => navigateTo("Markets")}
           onOpenMarket={openMarket}
-          onRetryMarkets={() => void loadMarkets()}
           onOpenReferrals={() => navigateTo("Referrals")}
-          renderMarketCard={renderMarketCard}
         />
       );
     }
