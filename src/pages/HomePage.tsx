@@ -258,7 +258,7 @@ export default function HomePage({
 
   function renderEmptyState() {
     return (
-      <div className="empty-state">
+      <div className="empty-state" role="status">
         <h3>No published markets yet</h3>
         <p>Approved markets will appear here after an administrator publishes them. Check back later.</p>
       </div>
@@ -348,11 +348,11 @@ export default function HomePage({
           <button className="text-action" type="button" onClick={onExploreMarkets}>Explore all <ArrowUpRight size={15} /></button>
         </div>
         {marketsLoading ? (
-          <div className="featured-market-placeholder" role="status">Loading published markets…</div>
+          <div className="featured-market-placeholder" role="status" aria-live="polite">Loading published markets…</div>
         ) : marketsError ? (
-          <div className="featured-market-placeholder">Published markets are temporarily unavailable.</div>
+          <div className="featured-market-placeholder" role="alert">Published markets are temporarily unavailable.</div>
         ) : markets.length === 0 ? (
-          <div className="featured-market-placeholder">
+          <div className="featured-market-placeholder" role="status">
             <span className="featured-market-orbit" aria-hidden="true">◎</span>
             <strong>No live markets right now.</strong>
             <span>Browse published markets or check back when an on-chain market opens.</span>
