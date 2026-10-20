@@ -123,6 +123,15 @@ function pathForPage(page: Page, marketId?: string): string {
   return paths[page];
 }
 
+function decodeRoutePath(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    // Keep malformed URL encoding from crashing route parsing.
+    return value;
+  }
+}
+
 function parseHash(): {
   page: Page;
   marketId: string | null;
@@ -135,14 +144,14 @@ function parseHash(): {
     return {
       page: "Markets",
       marketId: null,
-      verificationMarketId: decodeURIComponent(parts.slice(1).join("/")),
+      verificationMarketId: decodeRoutePath(parts.slice(1).join("/")),
     };
   }
 
   if (parts[0] === "markets" && parts[1]) {
     return {
       page: "Markets",
-      marketId: decodeURIComponent(parts.slice(1).join("/")),
+      marketId: decodeRoutePath(parts.slice(1).join("/")),
       verificationMarketId: null,
     };
   }
