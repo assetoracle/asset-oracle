@@ -46,6 +46,7 @@ type DashboardStats = {
 
 type HomePageProps = {
   markets: DisplayMarket[];
+  publishedMarkets: DisplayMarket[];
   marketsLoading: boolean;
   marketsError: string;
   onExploreMarkets: () => void;
@@ -140,6 +141,7 @@ function DashboardOverview() {
 
 export default function HomePage({
   markets,
+  publishedMarkets,
   marketsLoading,
   marketsError,
   onExploreMarkets,
@@ -352,8 +354,9 @@ export default function HomePage({
         ) : markets.length === 0 ? (
           <div className="featured-market-placeholder">
             <span className="featured-market-orbit" aria-hidden="true">◎</span>
-            <strong>Your next question starts here.</strong>
-            <span>Published markets will appear here when available.</span>
+            <strong>No live markets right now.</strong>
+            <span>Browse published markets or check back when an on-chain market opens.</span>
+            <button className="text-action" type="button" onClick={onExploreMarkets}>Browse all markets <ArrowUpRight size={15} /></button>
           </div>
         ) : (
           <div className="featured-market-stack">
@@ -387,9 +390,9 @@ export default function HomePage({
           <div><span className="eyebrow">DISCOVER</span><h2>Published markets</h2><p>Explore markets approved for publication.</p></div>
           <button className="text-action" type="button" onClick={onExploreMarkets}>All markets <ArrowUpRight size={15} /></button>
         </div>
-        {marketsLoading ? renderLoading() : marketsError ? renderError() : markets.length === 0 ? renderEmptyState() : (
+        {marketsLoading ? renderLoading() : marketsError ? renderError() : publishedMarkets.length === 0 ? renderEmptyState() : (
           <div className="market-grid">
-            {markets.slice(0, 3).map((market) => (
+            {publishedMarkets.slice(0, 3).map((market) => (
               <div key={market.id} className="home-market-card-wrap">
                 {renderMarketCard(market)}
               </div>
