@@ -10452,3 +10452,60 @@ select.brand-select option,
 @media (prefers-reduced-motion: reduce) {
   .home-faq-list * { scroll-behavior: auto; }
 }
+
+
+/* Proposal review clarity: readable status pills and compact, consistent dates. */
+.my-proposal-grid .market-card-top {
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.proposal-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid rgba(141, 169, 179, .35);
+  border-radius: 999px;
+  background: rgba(141, 169, 179, .08);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+}
+.proposal-status-pending,
+.proposal-status-pending-review,
+.proposal-status-submitted {
+  border-color: rgba(18, 217, 245, .35);
+  background: rgba(18, 217, 245, .09);
+  color: var(--highlight);
+}
+.proposal-status-approved,
+.proposal-status-published,
+.proposal-status-accepted {
+  border-color: rgba(0, 184, 169, .42);
+  background: rgba(0, 184, 169, .1);
+  color: #6DE8D9;
+}
+.proposal-status-rejected,
+.proposal-status-expired,
+.proposal-status-cancelled {
+  border-color: rgba(255, 180, 169, .35);
+  background: rgba(255, 180, 169, .08);
+  color: #FFB4A9;
+}
+.my-proposal-grid .market-meta span:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 420px) {
+  .my-proposal-grid .market-card { padding: 17px; }
+  .my-proposal-grid .market-card-top { gap: 9px; }
+  .my-proposal-grid .market-meta { gap: 6px 12px; }
+}
