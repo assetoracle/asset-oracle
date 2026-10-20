@@ -10813,7 +10813,7 @@ select.brand-select option,
   font-weight: 800;
 }
 .asset-login-wallet:hover:not(:disabled) { box-shadow: 0 8px 24px #12D9F526; }
-.asset-login-status { margin: 14px 0 0; color: #FFCF8A; font-size: 12px; line-height: 1.55; text-align: center; overflow-wrap: anywhere; }
+.asset-login-status { margin: 14px 0 0; padding: 11px 12px; border: 1px solid #12D9F540; border-radius: 12px; background: #12D9F50D; color: #BCEEF4; font-size: 12px; line-height: 1.55; text-align: center; overflow-wrap: anywhere; }
 .asset-login-footnote { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 20px 0 0; color: #7897A4; font-size: 10px; }
 .asset-login-footnote svg { color: #00B8A9; }
 
@@ -10821,6 +10821,6 @@ select.brand-select option,
   .asset-login-overlay { align-items: end; padding: 10px; }
   .asset-login-dialog { padding: 24px 18px 20px; border-radius: 22px; }
   .asset-login-heading { padding: 23px 0 18px; }
-  .asset-login-heading h2 { font-size: 25px; }
+  .asset-login-heading h2 { max-width: 290px; margin-right: auto; margin-left: auto; font-size: 23px; }
   .asset-login-option { min-height: 62px; }
 }
