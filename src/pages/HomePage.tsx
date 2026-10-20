@@ -411,6 +411,32 @@ export default function HomePage({
         <p className="trust-clarity-footnote">Asset Chain testnet is a development environment. Always confirm the network and on-chain record; this interface does not claim independent verification beyond the data it displays.</p>
       </section>
 
+      <section className="home-faq" aria-labelledby="home-faq-title">
+        <div className="home-faq-intro">
+          <span className="eyebrow">BEFORE YOU PARTICIPATE</span>
+          <h2 id="home-faq-title">A few things worth knowing.</h2>
+          <p>Understand the market record, resolution evidence, and current network environment before taking part.</p>
+        </div>
+        <div className="home-faq-list">
+          <details>
+            <summary>What is Asset Oracle?</summary>
+            <p>Asset Oracle is a prediction-market interface built around real-world questions, defined resolution criteria, and on-chain market records.</p>
+          </details>
+          <details>
+            <summary>How is a market outcome determined?</summary>
+            <p>Each market should be read on its own terms. Review its resolution criteria and available data sources before participating; the contract record reflects the outcome submitted for that market.</p>
+          </details>
+          <details>
+            <summary>Does an evidence record mean the result was independently audited?</summary>
+            <p>No. A source name or evidence hash is a reference recorded for the market, not proof of an independent audit. Check the available source and on-chain transaction details yourself.</p>
+          </details>
+          <details>
+            <summary>Is Asset Chain currently mainnet?</summary>
+            <p>The current interface identifies Asset Chain as a testnet development environment. Testnet activity should not be mistaken for mainnet deployment.</p>
+          </details>
+        </div>
+      </section>
+
       <section className="markets-section">
         <div className="section-heading">
           <div><span className="eyebrow">DISCOVER</span><h2>Published markets</h2><p>Explore markets approved for publication.</p></div>

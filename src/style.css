@@ -10330,3 +10330,78 @@ select.brand-select option,
   .trust-clarity-card { padding: 16px; }
   .trust-clarity-card h3 { margin-top: 10px; }
 }
+
+
+/* Homepage FAQ: answer common trust and participation questions without overstating guarantees. */
+.home-faq {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: clamp(24px, 5vw, 64px);
+  align-items: start;
+  margin: clamp(34px, 6vw, 68px) 0;
+}
+.home-faq-intro { position: sticky; top: 24px; }
+.home-faq-intro h2 {
+  margin: 10px 0 12px;
+  font-size: clamp(26px, 3.8vw, 36px);
+  line-height: 1.16;
+  letter-spacing: -.65px;
+  text-wrap: balance;
+}
+.home-faq-intro p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.home-faq-list { min-width: 0; }
+.home-faq-list details {
+  border-bottom: 1px solid rgba(29, 102, 117, .42);
+}
+.home-faq-list details:first-child { border-top: 1px solid rgba(29, 102, 117, .42); }
+.home-faq-list summary {
+  position: relative;
+  padding: 19px 34px 19px 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.55;
+  cursor: pointer;
+  list-style: none;
+}
+.home-faq-list summary::-webkit-details-marker { display: none; }
+.home-faq-list summary::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  color: var(--highlight);
+  font-size: 22px;
+  font-weight: 400;
+  transform: translateY(-50%);
+}
+.home-faq-list details[open] summary::after { content: "−"; }
+.home-faq-list summary:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.home-faq-list details p {
+  max-width: 620px;
+  margin: -2px 0 19px;
+  padding-right: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  .home-faq { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .home-faq-intro { position: static; }
+  .home-faq-intro h2 { max-width: 440px; }
+  .home-faq-list summary { padding-block: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-faq-list * { scroll-behavior: auto; }
+}
