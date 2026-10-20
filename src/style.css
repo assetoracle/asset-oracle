@@ -8221,8 +8221,7 @@ select.brand-select option,
 /* Settled market outcome cards and dedicated verification page */
 .settled-outcome-preview {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 12px;
   margin: 16px 0 4px;
   padding: 13px 14px;
@@ -8230,9 +8229,25 @@ select.brand-select option,
   border-radius: 12px;
   background: linear-gradient(115deg, rgba(18, 217, 245, .08), rgba(0, 184, 169, .07));
 }
+.settled-outcome-result,
+.settled-verified-source {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
 .settled-outcome-preview span,
 .verification-detail-label { color: var(--muted); font-size: 12px; }
 .settled-outcome-preview strong { font-size: 19px; letter-spacing: .5px; }
+.settled-verified-source { padding-top: 10px; border-top: 1px solid var(--border); }
+.settled-verified-source a { display: inline-flex; align-items: center; gap: 5px; min-width: 0; color: var(--accent); font-size: 13px; font-weight: 650; text-align: right; overflow-wrap: anywhere; }
+.settled-verified-source a:hover { text-decoration: underline; }
+.settled-verified-source a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+@media (max-width: 420px) {
+  .settled-outcome-result, .settled-verified-source { align-items: flex-start; }
+  .settled-verified-source a { max-width: 65%; }
+}
 .outcome-yes { color: #16a34a !important; }
 .outcome-no { color: #dc2626 !important; }
 .verify-market-button { gap: 8px; }

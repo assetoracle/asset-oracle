@@ -891,6 +891,7 @@ useEffect(() => {
           liveMarketIds={new Set(liveMarkets.map((market) => market.id))}
           settledMarketIds={new Set(settledMarkets.map((market) => market.id))}
           marketOutcomes={new Map(settledMarkets.map((market) => [market.id, marketLifecycle.get(market.id)?.outcome ?? 0]))}
+          marketEvidenceSources={new Map(settledMarkets.map((market) => [market.id, marketLifecycle.get(market.id)?.evidenceSource ?? ""]))}
           marketStakeDistribution={new Map(publishedMarkets.map((market) => {
             const lifecycle = marketLifecycle.get(market.id);
             const totalYes = lifecycle?.totalYes ?? 0n;

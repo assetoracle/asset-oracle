@@ -9,6 +9,16 @@ import type { MarketFilter } from "../types";
 import SportIcon, { type SportKind } from "../components/SportIcon";
 import BrandedSelect from "../components/BrandedSelect";
 
+function safeEvidenceUrl(value: string | undefined): URL | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 function formatMarketTime(value: string | undefined): string {
   if (!value) return "date unavailable";
   const date = new Date(value);
@@ -33,6 +43,7 @@ type MarketsPageProps = {
   liveMarketIds: Set<string>;
   settledMarketIds: Set<string>;
   marketOutcomes: Map<string, number>;
+  marketEvidenceSources: Map<string, string>;
   marketStakeDistribution: Map<string, { yesPercent: number; noPercent: number; hasSideStake: boolean }>;
   onVerify: (market: DisplayMarket) => void;
   marketsLoading: boolean;
@@ -56,6 +67,7 @@ export default function MarketsPage({
   liveMarketIds,
   settledMarketIds,
   marketOutcomes,
+  marketEvidenceSources,
   marketStakeDistribution,
   onVerify,
   marketsLoading,
@@ -139,7 +151,20 @@ export default function MarketsPage({
         {settledMarketIds.has(market.id) && (() => {
           const outcome = marketOutcomes.get(market.id);
           const label = outcome === 1 ? "YES" : outcome === 2 ? "NO" : outcome === 3 ? "INVALID" : "Outcome pending";
-          return <div className="settled-outcome-preview"><span>Final outcome</span><strong className={label === "YES" ? "outcome-yes" : label === "NO" ? "outcome-no" : ""}>{label}</strong></div>;
+          const sourceUrl = safeEvidenceUrl(marketEvidenceSources.get(market.id));
+          return (
+            <div className="settled-outcome-preview">
+              <div className="settled-outcome-result"><span>Final outcome</span><strong className={label === "YES" ? "outcome-yes" : label === "NO" ? "outcome-no" : ""}>{label}</strong></div>
+              {sourceUrl && (
+                <div className="settled-verified-source">
+                  <span>Verified source</span>
+                  <a href={sourceUrl.href} target="_blank" rel="noopener noreferrer" aria-label={`Open verified source ${sourceUrl.hostname} in a new tab`}>
+                    {sourceUrl.hostname.replace(/^www\\./i, "")} <ArrowUpRight size={14} aria-hidden="true" />
+                  </a>
+                </div>
+              )}
+            </div>
+          );
         })()}
         <div className="market-card-bottom">
           <span className="market-status-note">{settledMarketIds.has(market.id) ? "Resolution confirmed on-chain" : `Closes ${formatMarketTime(market.closesAt)}`}</span>
