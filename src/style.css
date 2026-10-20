@@ -7611,7 +7611,54 @@ svg {
   overflow-wrap: anywhere;
 }
 .my-proposal-grid > .market-card:hover { transform: none; }
-.proposal-state { margin-top: 0; }
+.my-proposal-grid > .market-card h3 {
+  margin: 18px 0 10px;
+  font-size: clamp(18px, 2.4vw, 22px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.my-proposal-grid > .market-card .market-card-top {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.my-proposal-grid > .market-card .market-status {
+  max-width: 100%;
+  white-space: normal;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.my-proposal-grid > .market-card .market-meta {
+  align-items: flex-start;
+  gap: 8px 14px;
+}
+.my-proposal-grid > .market-card .market-meta span:first-child {
+  flex: 0 0 auto;
+}
+.my-proposal-grid > .market-card .market-meta span:last-child {
+  min-width: 0;
+  max-width: 68%;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.my-proposal-grid > .market-card .proposal-edit-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+}
+.my-proposal-grid > .market-card .proposal-edit-actions .primary-button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+.proposal-state,
+.proposal-feedback { margin-top: 16px; }
+.proposal-state h3,
+.proposal-feedback h3 { margin-bottom: 8px; }
+.proposal-state p,
+.proposal-feedback p { max-width: 620px; margin-inline: auto; line-height: 1.65; }
 @media (min-width: 761px) {
   .market-filter-panel { grid-template-columns: 1fr; }
   .market-category-filter { display: none; }

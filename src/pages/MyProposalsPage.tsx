@@ -110,33 +110,37 @@ export default function MyProposalsPage({
             </p>
           )}
 
-          {roleError && (
-            <div className="empty-state" role="alert">
-              <h3>Unable to verify wallet role</h3>
-              <p>{roleError}</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="empty-state" role="alert">
-              <h3>Unable to load proposals</h3>
-              <p>{error}</p>
-            </div>
-          )}
-
-          {loaded && proposals.length === 0 && !error && (
-            <div className="empty-state">
-              <h3>No proposals found</h3>
-              <p>No submissions were found for this wallet.</p>
-            </div>
-          )}
-
           {loading ? (
-            <div className="empty-state proposal-state" role="status">
-              <h3>Verifying wallet and loading proposals</h3>
-              <p>Please wait while we verify your wallet and retrieve your submissions.</p>
+            <div className="empty-state proposal-state" role="status" aria-live="polite">
+              <h3>Loading your proposals</h3>
+              <p>Verifying this wallet and retrieving its submissions. This may take a moment.</p>
             </div>
-          ) : error ? null : loaded && proposals.length === 0 ? null : (
+          ) : (
+            <>
+              {roleError && (
+                <div className="empty-state proposal-feedback" role="alert">
+                  <h3>Unable to verify wallet role</h3>
+                  <p>{roleError}</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="empty-state proposal-feedback" role="alert">
+                  <h3>Unable to load proposals</h3>
+                  <p>{error}</p>
+                </div>
+              )}
+
+              {loaded && proposals.length === 0 && !error && (
+                <div className="empty-state proposal-feedback">
+                  <h3>No proposals found</h3>
+                  <p>No submissions were found for this wallet.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {!loading && !error && loaded && proposals.length > 0 ? (
           <div className="market-grid my-proposal-grid">
             {proposals.map((proposal) => (
               <article className="market-card" key={proposal.id}>
@@ -193,7 +197,7 @@ export default function MyProposalsPage({
               </article>
             ))}
           </div>
-          )}
+          ) : null}
         </>
       )}
     </section>
