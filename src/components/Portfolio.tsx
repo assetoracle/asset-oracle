@@ -271,7 +271,7 @@ export default function Portfolio({
           </div>
 
           <div className="portfolio-token-list">
-            <article className="portfolio-token-card">
+            <article className="portfolio-token-card" aria-busy={data.loading}>
               <div className="portfolio-token-identity">
              
 <div className="portfolio-token-icon portfolio-token-usdc">
@@ -343,12 +343,12 @@ export default function Portfolio({
             </article>
           </div>
 
-          <section className="account-record-section portfolio-positions-section">
+          <section className="account-record-section portfolio-positions-section" aria-busy={accountLoading}>
             <div className="section-heading">
               <div><h2>Your market positions</h2><p>Stakes, settlement outcomes, and payout status for this wallet.</p></div>
               <button className="refresh-action-button portfolio-refresh-button" type="button" disabled={accountLoading} onClick={() => setPositionsRefreshKey((value) => value + 1)}><RefreshCw size={15} className={accountLoading ? "refresh-action-spinning" : ""} /> {accountLoading ? "Refreshing..." : "Refresh"}</button>
             </div>
-            {accountLoading ? <div className="empty-state"><h3>Loading positions</h3><p>Reading your market records.</p></div>
+            {accountLoading ? <div className="empty-state" role="status" aria-live="polite"><h3>Loading positions</h3><p>Reading your market records.</p></div>
               : accountError ? <div className="empty-state" role="alert"><h3>Positions unavailable</h3><p>{accountError}</p></div>
               : !accountData || accountData.positions.length === 0 ? <div className="empty-state"><h3>No market positions found</h3><p>Predictions placed by this wallet will appear here once found by the account data service.</p></div>
               : <div className="market-grid">{accountData.positions.map((position) => {
