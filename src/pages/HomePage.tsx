@@ -385,6 +385,32 @@ export default function HomePage({
         <article className="principle"><span className="principle-number">03</span><h2>Verify the result</h2><p>Trace the evidence behind the final outcome.</p></article>
       </section>
 
+      <section className="trust-clarity" aria-labelledby="trust-clarity-title">
+        <div className="trust-clarity-heading">
+          <span className="eyebrow">WHAT THE RECORD SHOWS</span>
+          <h2 id="trust-clarity-title">Trust, with clear limits.</h2>
+          <p>See what Asset Oracle checks today—and what still needs to be verified on-chain.</p>
+        </div>
+        <div className="trust-clarity-grid">
+          <article className="trust-clarity-card">
+            <span className="trust-clarity-index">01 · PUBLICATION</span>
+            <h3>Listed markets only</h3>
+            <p>Published markets shown here must include an on-chain market ID, creation transaction, manager address, and Asset Chain testnet reference.</p>
+          </article>
+          <article className="trust-clarity-card">
+            <span className="trust-clarity-index">02 · RULES</span>
+            <h3>Read the resolution criteria</h3>
+            <p>Each market detail page presents the available question, schedule, and resolution rules before you decide how to participate.</p>
+          </article>
+          <article className="trust-clarity-card">
+            <span className="trust-clarity-index">03 · EVIDENCE</span>
+            <h3>Check recorded proof</h3>
+            <p>For settled markets, the verification view shows outcome and evidence references recorded by the contract. A record is not an independent audit.</p>
+          </article>
+        </div>
+        <p className="trust-clarity-footnote">Asset Chain testnet is a development environment. Always confirm the network and on-chain record; this interface does not claim independent verification beyond the data it displays.</p>
+      </section>
+
       <section className="markets-section">
         <div className="section-heading">
           <div><span className="eyebrow">DISCOVER</span><h2>Published markets</h2><p>Explore markets approved for publication.</p></div>
