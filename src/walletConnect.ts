@@ -24,13 +24,12 @@ export const appKit = createAppKit({
     url: "https://assetoracleapp.xyz",
     icons: [],
   },
-  // Keep the full wallet list available, including mobile wallet deep links.
-  // This is important when the site is opened in a mobile browser without
-  // browser-extension support.
+  // Enable built-in email and social authentication alongside external wallets.
+  // Existing Wagmi wallet and contract interactions remain in place.
   features: {
     analytics: false,
-    email: false,
-    socials: false,
+    email: true,
+    socials: ["google", "x"],
     allWallets: true,
   },
   themeMode: "dark",
