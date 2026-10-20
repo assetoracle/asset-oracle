@@ -10673,3 +10673,154 @@ select.brand-select option,
   .market-spotlight-card:hover { transform: none; }
   .market-spotlight-dot { transition: none; }
 }
+
+
+/* Asset Oracle branded sign-in */
+.asset-login-overlay {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  overflow-y: auto;
+  background: rgb(2 10 15 / 78%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.asset-login-dialog {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 30px;
+  border: 1px solid #1D6675;
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 100% 0%, #12D9F51c, transparent 45%),
+    linear-gradient(155deg, #0B2A35 0%, #071A24 70%);
+  box-shadow: 0 28px 90px #0009, 0 0 0 1px #12D9F50a inset;
+  color: #F2FCFF;
+}
+
+.asset-login-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #31505D;
+  border-radius: 12px;
+  background: #102F3A;
+  color: #A9C4CF;
+}
+.asset-login-close:hover { color: #F2FCFF; border-color: #12D9F5; }
+.asset-login-close:disabled { cursor: wait; opacity: .55; }
+
+.asset-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 32px;
+}
+.asset-login-mark {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  border: 1px solid #12D9F5;
+  border-radius: 15px;
+  background: #12D9F510;
+  color: #12D9F5;
+  font-size: 25px;
+  font-weight: 800;
+  box-shadow: 0 0 24px #12D9F510;
+}
+.asset-login-brand-name,
+.asset-login-brand-tagline { display: block; }
+.asset-login-brand-name { font-size: 13px; font-weight: 800; letter-spacing: 2px; }
+.asset-login-brand-tagline { margin-top: 5px; color: #8DA9B3; font-size: 8px; letter-spacing: 1.25px; }
+
+.asset-login-heading { padding: 28px 0 22px; text-align: center; }
+.asset-login-shield {
+  display: inline-grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid #12D9F540;
+  border-radius: 15px;
+  background: #12D9F510;
+  color: #12D9F5;
+}
+.asset-login-heading h2 { margin: 15px 0 8px; font-size: 28px; line-height: 1.15; letter-spacing: -.7px; }
+.asset-login-heading p { max-width: 320px; margin: 0 auto; color: #8DA9B3; font-size: 13px; line-height: 1.65; }
+
+.asset-login-options { display: grid; gap: 10px; }
+.asset-login-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 66px;
+  padding: 11px 14px;
+  border: 1px solid #31505D;
+  border-radius: 14px;
+  background: #102F3A;
+  color: #F2FCFF;
+  text-align: left;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+.asset-login-option:hover:not(:disabled) { border-color: #12D9F5; background: #123744; transform: translateY(-1px); }
+.asset-login-option:disabled, .asset-login-wallet:disabled { cursor: wait; opacity: .65; }
+.asset-login-option-primary { border-color: #12D9F5; background: linear-gradient(110deg, #0F3B47, #102F3A); }
+.asset-login-option-icon, .asset-login-google-mark, .asset-login-x-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 1px solid #31505D;
+  border-radius: 11px;
+  background: #071A24;
+}
+.asset-login-option-icon { color: #12D9F5; }
+.asset-login-google-mark { color: #fff; font-size: 20px; font-weight: 800; }
+.asset-login-x-mark { color: #fff; font-size: 22px; font-weight: 600; }
+.asset-login-option-copy { display: grid; flex: 1; gap: 4px; }
+.asset-login-option-copy strong { font-size: 13px; font-weight: 700; }
+.asset-login-option-copy small { color: #8DA9B3; font-size: 11px; }
+.asset-login-option > svg:last-child { color: #8DA9B3; }
+.asset-login-spinner { flex: 0 0 auto; color: #12D9F5; animation: asset-login-spin 850ms linear infinite; }
+@keyframes asset-login-spin { to { transform: rotate(360deg); } }
+
+.asset-login-divider { display: flex; align-items: center; gap: 12px; margin: 3px 0; color: #668590; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+.asset-login-divider::before, .asset-login-divider::after { height: 1px; flex: 1; background: #23414D; content: ""; }
+.asset-login-wallet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  border: 1px solid #12D9F5;
+  border-radius: 13px;
+  background: linear-gradient(110deg, #12D9F5, #00B8A9);
+  color: #071A24;
+  font-size: 13px;
+  font-weight: 800;
+}
+.asset-login-wallet:hover:not(:disabled) { box-shadow: 0 8px 24px #12D9F526; }
+.asset-login-status { margin: 14px 0 0; color: #FFCF8A; font-size: 12px; line-height: 1.55; text-align: center; overflow-wrap: anywhere; }
+.asset-login-footnote { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 20px 0 0; color: #7897A4; font-size: 10px; }
+.asset-login-footnote svg { color: #00B8A9; }
+
+@media (max-width: 480px) {
+  .asset-login-overlay { align-items: end; padding: 10px; }
+  .asset-login-dialog { padding: 24px 18px 20px; border-radius: 22px; }
+  .asset-login-heading { padding: 23px 0 18px; }
+  .asset-login-heading h2 { font-size: 25px; }
+  .asset-login-option { min-height: 62px; }
+}
