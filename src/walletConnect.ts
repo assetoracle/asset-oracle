@@ -22,10 +22,10 @@ export const appKit = createAppKit({
     name: "Asset Oracle",
     description: "Real-world prediction markets on Asset Chain",
     url: "https://assetoracleapp.xyz",
-    icons: [],
+    icons: ["/asset-oracle-logo-transparent.svg"],
   },
-  // Enable built-in email and social authentication alongside external wallets.
-  // Existing Wagmi wallet and contract interactions remain in place.
+  // Keep email/social authentication available, with external wallets as a
+  // separate, searchable wallet-picker experience.
   features: {
     analytics: false,
     email: true,
@@ -35,6 +35,9 @@ export const appKit = createAppKit({
   themeMode: "dark",
   themeVariables: {
     "--w3m-accent": "#12D9F5",
-    "--w3m-border-radius-master": "2px",
+    "--w3m-color-mix": "#071A24",
+    "--w3m-color-mix-strength": 38,
+    "--w3m-font-family": "'Bricolage Grotesque', sans-serif",
+    "--w3m-border-radius-master": "12px",
   },
 });
