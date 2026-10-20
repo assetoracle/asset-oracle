@@ -48,7 +48,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     try {
       await open({ view: "Connect", namespace: "eip155" });
     } catch {
-      setStatusMessage("Wallet connection could not be opened. Please try again.");
+      // AppKit reports wallet-modal failures through its own connection UI.
     }
   }
 
