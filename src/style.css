@@ -8251,6 +8251,29 @@ select.brand-select option,
 .outcome-yes { color: #16a34a !important; }
 .outcome-no { color: #dc2626 !important; }
 .verify-market-button { gap: 8px; }
+
+/* Keep settled market actions inside narrow mobile cards. */
+@media (max-width: 600px) {
+  .market-card-compact .market-card-bottom {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .market-card-compact .market-status-note {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+  }
+
+  .market-card-compact .verify-market-button {
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+    white-space: normal;
+  }
+}
 .verification-details-page { max-width: 1040px; margin: 0 auto; }
 .verification-details-heading { margin: 24px 0 28px; }
 .verification-details-heading h1 { margin: 10px 0 8px; font-size: clamp(26px, 4vw, 38px); line-height: 1.18; }
