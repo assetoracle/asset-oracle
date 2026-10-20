@@ -933,6 +933,7 @@ useEffect(() => {
       return (
         <HomePage
           markets={liveMarkets}
+          publishedMarkets={publishedMarkets}
           marketsLoading={marketsLoading}
           marketsError={marketsError}
           onExploreMarkets={() => navigateTo("Markets")}
