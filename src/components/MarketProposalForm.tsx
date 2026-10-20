@@ -97,6 +97,27 @@ export function MarketProposalForm({
   const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState(1);
+
+  function continueStep() {
+    setErrors([]);
+    setMessage("");
+    if (step === 1) {
+      const nextErrors: string[] = [];
+      if (question.trim().length < 15) nextErrors.push("Write a market question with at least 15 characters.");
+      if (description.trim().length < 20) nextErrors.push("Add at least 20 characters of context.");
+      if (category === "Sports" && !sport) nextErrors.push("Choose a sport for this market.");
+      if (nextErrors.length) { setErrors(nextErrors); return; }
+    }
+    if (step === 2) {
+      const nextErrors: string[] = [];
+      if ([closesAt, resolvesAt].some((value) => !value || Number.isNaN(new Date(value).getTime()))) nextErrors.push("Enter valid closing and resolution dates.");
+      else if (new Date(resolvesAt) <= new Date(closesAt)) nextErrors.push("The resolution deadline must be after the market closing time.");
+      if (resolutionCriteria.trim().length < 10) nextErrors.push("Explain clearly what must happen for YES or NO to win.");
+      if (nextErrors.length) { setErrors(nextErrors); return; }
+    }
+    setStep((current) => Math.min(3, current + 1));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -253,6 +274,16 @@ export function MarketProposalForm({
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 17 }}>
+          <div aria-label="Proposal steps" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginBottom: 2 }}>
+            {[{ number: 1, title: "Define" }, { number: 2, title: "Resolve" }, { number: 3, title: "Review" }].map((item) => (
+              <div key={item.number} aria-current={step === item.number ? "step" : undefined} style={{ minWidth: 0, padding: "10px 8px", border: "1px solid " + (step === item.number ? "#12D9F5" : "#1D6675"), borderRadius: 10, background: step === item.number ? "rgba(18,217,245,.1)" : "#0B2A35" }}>
+                <span style={{ display: "block", color: step === item.number ? "#63F3FF" : "#8DA9B3", fontSize: 10, fontWeight: 800, letterSpacing: 1 }}>STEP 0{item.number}</span>
+                <strong style={{ display: "block", marginTop: 4, fontSize: 12, color: "#F2FCFF" }}>{item.title}</strong>
+              </div>
+            ))}
+          </div>
+          {step === 1 && <>
+          <p style={{ margin: 0, color: "#8DA9B3", fontSize: 13, lineHeight: 1.6 }}>Start with a precise question, enough context, and the right category. You can review everything before submitting.</p>
           <label style={labelStyle}>
             Market question
             <textarea
@@ -355,6 +386,9 @@ export function MarketProposalForm({
             </fieldset>
           )}
 
+          </>}
+          {step === 2 && <>
+          <p style={{ margin: 0, color: "#8DA9B3", fontSize: 13, lineHeight: 1.6 }}>Set when predictions stop and when the outcome should be determined. Times are shown in West Africa Time (WAT).</p>
           <div style={{ display: "grid", gap: 14 }}>
             <label style={labelStyle}>
               Market closing date and time (WAT)
@@ -395,6 +429,11 @@ export function MarketProposalForm({
           </label>
 
 
+          </>}
+          {step === 3 && <section aria-labelledby="proposal-review-title" style={{ display: "grid", gap: 14, padding: 16, border: "1px solid #1D6675", borderRadius: 14, background: "linear-gradient(145deg, #102F3A, #0B2A35)" }}>
+            <div><p style={{ margin: "0 0 5px", color: "#12D9F5", fontSize: 11, fontWeight: 800, letterSpacing: 1.5 }}>FINAL CHECK</p><h3 id="proposal-review-title" style={{ margin: 0, fontSize: 20 }}>Review your proposal</h3><p style={{ marginBottom: 0, color: "#8DA9B3", fontSize: 13, lineHeight: 1.6 }}>Check the wording and schedule before sending it for review.</p></div>
+            {[{ label: "Question", value: question }, { label: "Category", value: category + (category === "Sports" && sport ? " · " + sport : "") }, { label: "Description", value: description }, { label: "Closes (WAT)", value: closesAt.replace("T", " ") }, { label: "Resolution deadline (WAT)", value: resolvesAt.replace("T", " ") }, { label: "Resolution criteria", value: resolutionCriteria }].map((item) => <div key={item.label} style={{ display: "grid", gap: 5, paddingTop: 10, borderTop: "1px solid rgba(29,102,117,.45)" }}><strong style={{ color: "#8DA9B3", fontSize: 11, textTransform: "uppercase", letterSpacing: .8 }}>{item.label}</strong><p style={{ margin: 0, color: "#F2FCFF", fontSize: 13, lineHeight: 1.65, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{item.value || "Not provided"}</p></div>)}
+          </section>}
           {errors.length > 0 && (
             <div
               role="alert"
@@ -431,23 +470,8 @@ export function MarketProposalForm({
               marginTop: 4,
             }}
           >
-            <button
-              type="submit"
-              disabled={busy}
-              style={{
-                flex: "1 1 200px",
-                minHeight: 48,
-                padding: "12px 18px",
-                border: 0,
-                borderRadius: 11,
-                background: "linear-gradient(110deg, #12D9F5, #00B8A9)",
-                color: "#071A24",
-                fontWeight: 800,
-                opacity: busy ? 0.65 : 1,
-              }}
-            >
-              {busy ? "Validating and submitting..." : initialProposal ? "Save changes and resubmit" : "Submit proposal"}
-            </button>
+            {step > 1 && <button type="button" disabled={busy} onClick={() => { setErrors([]); setMessage(""); setStep((current) => Math.max(1, current - 1)); }} style={{ flex: "1 1 120px", minHeight: 48, padding: "12px 18px", border: "1px solid #1D6675", borderRadius: 11, background: "#0B2A35", color: "#F2FCFF", fontWeight: 700 }}>Back</button>}
+            {step < 3 ? <button type="button" onClick={continueStep} style={{ flex: "1 1 200px", minHeight: 48, padding: "12px 18px", border: 0, borderRadius: 11, background: "linear-gradient(110deg, #12D9F5, #00B8A9)", color: "#071A24", fontWeight: 800 }}>Continue to {step === 1 ? "resolution details" : "review"}</button> : <button type="submit" disabled={busy} style={{ flex: "1 1 200px", minHeight: 48, padding: "12px 18px", border: 0, borderRadius: 11, background: "linear-gradient(110deg, #12D9F5, #00B8A9)", color: "#071A24", fontWeight: 800, opacity: busy ? 0.65 : 1 }}>{busy ? "Validating and submitting..." : initialProposal ? "Save changes and resubmit" : "Submit proposal"}</button>}
 
             <button
               type="button"
