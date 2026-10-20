@@ -1,5 +1,5 @@
 import type { StoredMarketProposal, WalletRoleResponse } from "../markets/marketApi";
-import { categoryLabel } from "../utils/format";
+import { categoryLabel, formatDate } from "../utils/format";
 
 type MyProposalsPageProps = {
   walletConnected: boolean;
@@ -148,7 +148,7 @@ export default function MyProposalsPage({
                   <span className="market-category">
                     {categoryLabel(proposal.category)}
                   </span>
-                  <span className="market-status">
+                  <span className={`market-status proposal-status proposal-status-${proposal.status.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
                     {proposal.status.replace(/_/g, " ")}
                   </span>
                 </div>
@@ -177,17 +177,17 @@ export default function MyProposalsPage({
 
                 <div className="market-meta">
                   <span>Submitted</span>
-                  <span>{proposal.submittedAt}</span>
+                  <span>{formatDate(proposal.submittedAt)}</span>
                 </div>
 
                 <div className="market-meta">
                   <span>Market closes</span>
-                  <span>{proposal.closesAt}</span>
+                  <span>{formatDate(proposal.closesAt)}</span>
                 </div>
 
                 <div className="market-meta">
                   <span>Resolution date</span>
-                  <span>{proposal.resolvesAt}</span>
+                  <span>{formatDate(proposal.resolvesAt)}</span>
                 </div>
 
                 <div className="market-meta">
