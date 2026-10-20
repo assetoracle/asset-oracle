@@ -276,10 +276,15 @@ export function MarketProposalForm({
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 17 }}>
           <div aria-label="Proposal steps" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginBottom: 2 }}>
             {[{ number: 1, title: "Define" }, { number: 2, title: "Resolve" }, { number: 3, title: "Review" }].map((item) => (
-              <div key={item.number} aria-current={step === item.number ? "step" : undefined} style={{ minWidth: 0, padding: "10px 8px", border: "1px solid " + (step === item.number ? "#12D9F5" : "#1D6675"), borderRadius: 10, background: step === item.number ? "rgba(18,217,245,.1)" : "#0B2A35" }}>
+              <button key={item.number} type="button" aria-current={step === item.number ? "step" : undefined} aria-label={`Step ${item.number}: ${item.title}`} onClick={() => {
+                setErrors([]);
+                setMessage("");
+                if (item.number <= step) setStep(item.number);
+                else if (item.number === step + 1) continueStep();
+              }} style={{ minWidth: 0, padding: "10px 8px", border: "1px solid " + (step === item.number ? "#12D9F5" : "#1D6675"), borderRadius: 10, background: step === item.number ? "rgba(18,217,245,.1)" : "#0B2A35", color: "#F2FCFF", font: "inherit", textAlign: "left", cursor: item.number <= step + 1 ? "pointer" : "not-allowed", opacity: item.number > step + 1 ? 0.65 : 1 }}>
                 <span style={{ display: "block", color: step === item.number ? "#63F3FF" : "#8DA9B3", fontSize: 10, fontWeight: 800, letterSpacing: 1 }}>STEP 0{item.number}</span>
                 <strong style={{ display: "block", marginTop: 4, fontSize: 12, color: "#F2FCFF" }}>{item.title}</strong>
-              </div>
+              </button>
             ))}
           </div>
           {step === 1 && <>
