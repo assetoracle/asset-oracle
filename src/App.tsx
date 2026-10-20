@@ -850,7 +850,7 @@ useEffect(() => {
       window.history.replaceState(null, "", url.toString());
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
-      setReferralMessage(error instanceof Error ? error.message : "Unable to register this referral.");
+      setReferralMessage(friendlyError(error, "Referral registration failed."));
     } finally {
       if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
         setReferralActionLoading(false);
