@@ -760,9 +760,7 @@ useEffect(() => {
       }
 
       setMyProposalsError(
-        error instanceof Error
-          ? error.message
-          : "Unable to load your proposals.",
+        friendlyError(error, "Proposals unavailable."),
       );
     } finally {
       if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
@@ -814,7 +812,7 @@ useEffect(() => {
       setReferralMessage("Your referral link is ready. Copy it to share.");
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;
-      setReferralMessage(error instanceof Error ? error.message : "Unable to generate your referral link.");
+      setReferralMessage(friendlyError(error, "Referral link unavailable."));
     } finally {
       if (addressRef.current?.toLowerCase() === requestedAddress.toLowerCase()) {
         setReferralActionLoading(false);
@@ -1042,7 +1040,7 @@ useEffect(() => {
                 setPointsLeaderboard(pointsResult.leaderboard);
                 setTotalLeaderboard(totalResult.leaderboard);
               })
-              .catch((error) => setReferralLeaderboardError(error instanceof Error ? error.message : "Unable to load leaderboard."))
+              .catch((error) => setReferralLeaderboardError(friendlyError(error, "Leaderboard unavailable.")))
               .finally(() => setReferralLeaderboardLoading(false));
           }}
         />
