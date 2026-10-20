@@ -322,9 +322,7 @@ export function useWalletStatus() {
     } catch (error) {
       userInitiatedDisconnectRef.current = false;
       setWalletMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to disconnect the wallet.",
+        friendlyError(error, "Unable to disconnect wallet."),
       );
     } finally {
       setWalletBusy(false);
