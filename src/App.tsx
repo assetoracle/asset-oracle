@@ -946,7 +946,6 @@ useEffect(() => {
           marketsError={marketsError}
           onExploreMarkets={() => navigateTo("Markets")}
           onOpenMarket={openMarket}
-          onRetryMarkets={() => void loadMarkets()}
           onOpenReferrals={() => navigateTo("Referrals")}
         />
       );
