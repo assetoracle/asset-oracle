@@ -9936,3 +9936,107 @@ select.brand-select option,
     min-width: 0;
   }
 }
+
+
+/* Mobile-first polish: keep market discovery controls compact and easy to scan. */
+@media (max-width: 520px) {
+  .market-filter-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid rgba(29, 102, 117, .38);
+    border-radius: 16px;
+    background: rgba(11, 42, 53, .42);
+  }
+
+  .market-status-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .market-status-filters .category-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 0 7px;
+    white-space: nowrap;
+  }
+
+  .market-category-filter {
+    display: grid;
+    gap: 7px;
+  }
+
+  .market-category-filter > label,
+  .market-sort-control > label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+  }
+
+  .market-results-toolbar {
+    gap: 12px;
+    padding: 13px;
+  }
+
+  .market-results-count {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .market-card-compact {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .market-card-compact .market-card-top {
+    align-items: center;
+  }
+
+  .market-card-compact .market-card-badges {
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .market-card-compact h3 {
+    margin-top: 16px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+
+  .market-card-compact .market-card-bottom {
+    gap: 10px;
+    padding-top: 13px;
+  }
+
+  .market-card-compact .market-status-note {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .market-filter-panel {
+    padding: 11px;
+  }
+
+  .market-status-filters {
+    gap: 5px;
+  }
+
+  .market-status-filters .category-button {
+    padding-inline: 4px;
+    font-size: 10px;
+  }
+
+  .market-card-compact {
+    padding: 13px;
+  }
+}
