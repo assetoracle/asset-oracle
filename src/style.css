@@ -9682,6 +9682,8 @@ select.brand-select option,
   font-size: 12px;
 }
 .market-card-compact .settled-outcome-preview strong { color: var(--highlight); font-size: 13px; }
+.market-card-compact .settled-outcome-preview strong.outcome-yes { color: #22c55e !important; }
+.market-card-compact .settled-outcome-preview strong.outcome-no { color: #ef4444 !important; }
 @media (max-width: 520px) {
   .market-card-compact .market-card-bottom { align-items: stretch; flex-direction: column; }
   .market-card-compact .open-market-button { width: 100%; min-height: 44px; }
