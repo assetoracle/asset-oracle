@@ -15,12 +15,12 @@ type Props = {
   onBack: () => void;
 };
 
-function isHttpUrl(value: string) {
+function normalizedHttpUrl(value: string): string | null {
   try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -45,7 +45,7 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
   const userPrediction = yesStake > noStake ? "YES" : noStake > yesStake ? "NO" : null;
   const userResult = !userPrediction ? "NO POSITION" : outcome === MARKET_OUTCOME.INVALID ? "REFUNDED" : (outcome === MARKET_OUTCOME.YES ? userPrediction === "YES" : userPrediction === "NO") ? "WON" : "LOST";
   const outcomeLabel = outcome === MARKET_OUTCOME.YES ? "YES" : outcome === MARKET_OUTCOME.NO ? "NO" : outcome === MARKET_OUTCOME.INVALID ? "INVALID" : "UNAVAILABLE";
-  const sourceLink = isHttpUrl(evidenceSource) ? evidenceSource : null;
+  const sourceLink = normalizedHttpUrl(evidenceSource);
   const hasEvidenceHash = Boolean(evidenceHash && evidenceHash !== "0x" + "0".repeat(64));
 
   return (

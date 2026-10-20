@@ -161,14 +161,16 @@ export default function MarketsPage({
           return (
             <div className="settled-outcome-preview">
               <div className="settled-outcome-result"><span>Final outcome</span><strong className={label === "YES" ? "outcome-yes" : label === "NO" ? "outcome-no" : ""}>{label}</strong></div>
-              {sourceUrl && (
-                <div className="settled-verified-source">
-                  <span>Verified source</span>
+              <div className="settled-verified-source">
+                <span>Verified source</span>
+                {sourceUrl ? (
                   <a href={sourceUrl.href} target="_blank" rel="noopener noreferrer" aria-label={`Open verified source ${sourceUrl.hostname} in a new tab`}>
                     {sourceUrl.hostname.replace(/^www\\./i, "")} <ArrowUpRight size={14} aria-hidden="true" />
                   </a>
-                </div>
-              )}
+                ) : (
+                  <strong>{marketEvidenceSources.get(market.id)?.trim() || "Source not recorded on-chain"}</strong>
+                )}
+              </div>
             </div>
           );
         })()}
