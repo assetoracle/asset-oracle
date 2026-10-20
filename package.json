@@ -1,4 +1,3 @@
-
 {
   "name": "asset-oracle",
   "private": true,
@@ -17,7 +16,8 @@
     "viem": "^2.0.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "@reown/appkit-wallet-button": "1.8.24"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
