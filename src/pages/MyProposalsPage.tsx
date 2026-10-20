@@ -140,7 +140,7 @@ export default function MyProposalsPage({
             </>
           )}
 
-          {!loading && !error && !(loaded && proposals.length === 0) ? (
+          {!loading && !error && loaded && proposals.length > 0 ? (
           <div className="market-grid my-proposal-grid">
             {proposals.map((proposal) => (
               <article className="market-card" key={proposal.id}>
