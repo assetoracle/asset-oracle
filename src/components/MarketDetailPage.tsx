@@ -51,6 +51,14 @@ function MarketDetailPage({
   backLabel = "Back to markets",
   onBack,
 }: MarketDetailPageProps) {
+  // Reject malformed API identifiers before converting them to BigInt.
+  const validOnchainMarketId = typeof onchainMarketId === "string" && /^\d+$/.test(onchainMarketId)
+    ? onchainMarketId
+    : null;
+  const validCloseTime = typeof onchainCloseTime === "number" && Number.isSafeInteger(onchainCloseTime) && onchainCloseTime >= 0
+    ? onchainCloseTime
+    : undefined;
+
   return (
     <section className="market-detail-page page-section">
       <button className="text-action market-detail-back" type="button" onClick={onBack}>
@@ -71,19 +79,19 @@ function MarketDetailPage({
       <header className="market-detail-hero">
         <div className="market-detail-heading">
           <span className="eyebrow">{category}</span>
-          <span className={`market-detail-chain-badge${onchainMarketId ? " is-listed" : ""}`}>
+          <span className={`market-detail-chain-badge${validOnchainMarketId ? " is-listed" : ""}`}>
             <span className="market-detail-chain-dot" aria-hidden="true" />
-            {onchainMarketId ? `On-chain · Testnet · #${onchainMarketId}` : "Not listed on-chain"}
+            {validOnchainMarketId ? `On-chain · Testnet · #${validOnchainMarketId}` : "Not listed on-chain"}
           </span>
         </div>
 
         <h1>{question}</h1>
         <p className="market-detail-description">{description}</p>
 
-        {onchainMarketId && (
-          <div className="market-id-panel" aria-label={`Market ID ${onchainMarketId}`}>
+        {validOnchainMarketId && (
+          <div className="market-id-panel" aria-label={`Market ID ${validOnchainMarketId}`}>
             <span>Market ID</span>
-            <strong>{onchainMarketId}</strong>
+            <strong>{validOnchainMarketId}</strong>
             <p>Use this exact ID when checking the market on the blockchain.</p>
           </div>
         )}
@@ -101,16 +109,16 @@ function MarketDetailPage({
 
       <div className="market-detail-onchain">
         <OnchainMarketStatus />
-        {onchainMarketId && onchainCloseTime !== undefined && (
+        {validOnchainMarketId && validCloseTime !== undefined && (
           <OnchainMarketActions
-            marketId={BigInt(onchainMarketId)}
+            marketId={BigInt(validOnchainMarketId)}
             managerAddress={onchainManagerAddress}
-            closeTime={onchainCloseTime}
+            closeTime={validCloseTime}
           />
         )}
       </div>
 
-      {!onchainMarketId && (
+      {!validOnchainMarketId && (
         <div className="market-detail-status market-detail-status-setup">
           <LockKeyhole size={21} aria-hidden="true" />
           <div>
@@ -139,7 +147,7 @@ function MarketDetailPage({
           <article className="detail-info-card">
             <span className="detail-info-icon"><LockKeyhole size={19} aria-hidden="true" /></span>
             <span className="detail-info-label">Market record</span>
-            <strong>{onchainMarketId ? `ID #${onchainMarketId}` : "Not linked"}</strong>
+            <strong>{validOnchainMarketId ? `ID #${validOnchainMarketId}` : "Not linked"}</strong>
           </article>
         </div>
       </section>
