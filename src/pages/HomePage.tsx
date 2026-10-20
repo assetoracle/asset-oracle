@@ -49,7 +49,6 @@ type HomePageProps = {
   marketsError: string;
   onExploreMarkets: () => void;
   onOpenMarket: (market: DisplayMarket) => void;
-  onRetryMarkets: () => void;
   onOpenReferrals: () => void;
 };
 
@@ -185,7 +184,6 @@ export default function HomePage({
   marketsError,
   onExploreMarkets,
   onOpenMarket,
-  onRetryMarkets,
   onOpenReferrals,
 }: HomePageProps) {
   const motionPhrases = ["make evidence traceable.", "bring clarity to outcomes.", "connect real-world data.", "put verification first."];
@@ -272,36 +270,6 @@ export default function HomePage({
       motionPreference.removeEventListener("change", syncMotionPreference);
     };
   }, []);
-
-  function renderLoading() {
-    return (
-      <div className="empty-state" role="status">
-        <h3>Loading published markets</h3>
-        <p>Retrieving approved markets from Asset Oracle.</p>
-      </div>
-    );
-  }
-
-  function renderError() {
-    return (
-      <div className="empty-state" role="alert">
-        <h3>Unable to load markets</h3>
-        <p>{marketsError}</p>
-        <button className="primary-button" type="button" onClick={onRetryMarkets}>
-          Try again
-        </button>
-      </div>
-    );
-  }
-
-  function renderEmptyState() {
-    return (
-      <div className="empty-state" role="status">
-        <h3>No published markets yet</h3>
-        <p>Approved markets will appear here after an administrator publishes them. Check back later.</p>
-      </div>
-    );
-  }
 
   return (
     <>
