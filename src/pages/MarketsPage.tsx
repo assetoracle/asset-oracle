@@ -10,10 +10,16 @@ import SportIcon, { type SportKind } from "../components/SportIcon";
 import BrandedSelect from "../components/BrandedSelect";
 
 function safeEvidenceUrl(value: string | undefined): URL | null {
-  if (!value) return null;
+  const source = value?.trim();
+  if (!source || /[\\s<>"']/u.test(source)) return null;
   try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:" ? url : null;
+    // Validators sometimes record a domain such as "FireScreener.com" rather
+    // than a fully qualified URL. Treat bare domains as HTTPS source links.
+    const candidate = /^[a-z][a-z\\d+.-]*:\/\//i.test(source) ? source : `https://${source}`;
+    const url = new URL(candidate);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    if (!url.hostname.includes(".") || url.hostname.startsWith(".") || url.hostname.endsWith(".")) return null;
+    return url;
   } catch {
     return null;
   }
