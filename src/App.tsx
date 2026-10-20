@@ -942,14 +942,12 @@ useEffect(() => {
       return (
         <HomePage
           markets={liveMarkets}
-          publishedMarkets={publishedMarkets}
           marketsLoading={marketsLoading}
           marketsError={marketsError}
           onExploreMarkets={() => navigateTo("Markets")}
           onOpenMarket={openMarket}
           onRetryMarkets={() => void loadMarkets()}
           onOpenReferrals={() => navigateTo("Referrals")}
-          renderMarketCard={renderMarketCard}
         />
       );
     }
