@@ -40,9 +40,8 @@ function compactErrorMessage(value: unknown, fallback = "Request failed. Try aga
   if (lower.includes("nonce")) return "Wallet verification failed. Retry.";
   if (lower.includes("unauthorized") || lower.includes("forbidden")) return "Not authorized.";
   if (lower.includes("not found")) return "Record not found.";
-  const firstSentence = message.split(/[\\n.!?]/, 1)[0].replace(/^error:\\s*/i, "").trim();
-  if (!firstSentence) return fallback;
-  return firstSentence.length > 84 ? `${firstSentence.slice(0, 81).trimEnd()}…` : firstSentence;
+  // Do not expose unknown backend/provider text in the UI.
+  return fallback.length > 0 && fallback.length <= 40 ? fallback : "Request failed.";
 }
 
 async function request<T>(
