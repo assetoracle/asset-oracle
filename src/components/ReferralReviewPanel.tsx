@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Check, RefreshCw, ShieldAlert } from "lucide-react";
 import { ensureWalletSession } from "../markets/marketApi";
+import { friendlyError } from "../utils/friendlyError";
 
 const API = "https://asset-oracle-backend.onrender.com";
 
@@ -48,7 +49,7 @@ export default function ReferralReviewPanel({ address, signMessage }: Props) {
       if (!response.ok) throw new Error(data.error || "Unable to load flagged referrals.");
       setItems(data.flaggedReferrals ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to load flagged referrals.");
+      setError(friendlyError(err, "Unable to load flagged referrals."));
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ export default function ReferralReviewPanel({ address, signMessage }: Props) {
         ? "Referral approved and added to the all-time leaderboard."
         : "Referral remains flagged and excluded from the leaderboard.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Referral review failed.");
+      setError(friendlyError(err, "Referral review failed."));
     } finally {
       setBusyWallet("");
     }

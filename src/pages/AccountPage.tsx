@@ -11,6 +11,7 @@ import {
   erc20TestnetAbi,
 } from "../contracts/assetOracle";
 import type { WalletAccountData, WalletHistoryRecord, WalletPositionRecord } from "../markets/marketApi";
+import { friendlyError } from "../utils/friendlyError";
 
 type AccountPageProps = {
   page: "Claims" | "History";
@@ -196,7 +197,7 @@ function AccountPage({
       setActionMessage("Claim/refund confirmed. Updating your account records…");
       await onRetry();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Unable to submit claim.");
+      setActionError(friendlyError(err, "Unable to submit claim."));
     } finally {
       setBusyMarketKey(null);
     }

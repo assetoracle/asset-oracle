@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
+import { friendlyError } from "../utils/friendlyError";
 import {
   ensureWalletSession,
   type StoredMarketProposal,
@@ -59,7 +60,7 @@ export default function AdminDashboard({
 
       setProposals(data.proposals ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Request failed.");
+      setError(friendlyError(err, "Request failed."));
     } finally {
       setLoading(false);
     }
@@ -110,7 +111,7 @@ export default function AdminDashboard({
 
       setNotice(`Proposal ${status.toLowerCase()} successfully.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Decision failed.");
+      setError(friendlyError(err, "Decision failed."));
     } finally {
       setBusyId("");
     }
