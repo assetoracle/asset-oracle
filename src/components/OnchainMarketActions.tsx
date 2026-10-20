@@ -356,8 +356,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             <label htmlFor={`onchain-amount-${marketId}`}>Stake amount (test USDC)</label>
             <input id={`onchain-amount-${marketId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="e.g. 5.00" />
             <div className="outcome-preview">
-              <button type="button" aria-pressed={yesSide} onClick={() => setYesSide(true)}>YES</button>
-              <button type="button" aria-pressed={!yesSide} onClick={() => setYesSide(false)}>NO</button>
+              <button className="outcome-choice-yes" type="button" aria-pressed={yesSide} onClick={() => setYesSide(true)}>YES</button>
+              <button className="outcome-choice-no" type="button" aria-pressed={!yesSide} onClick={() => setYesSide(false)}>NO</button>
             </div>
             <button className="primary-button" type="button" disabled={!canStake || isWalletPending || receipt.isLoading || referralPreparing || !amount.trim()} onClick={submitStake}>
               {referralPreparing ? "Confirm referral in wallet…" : isWalletPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : (allowance.data ?? 0n) < parsedAmount ? "Approve exact USDC amount" : `Stake ${amount || "USDC"} on ${yesSide ? "YES" : "NO"}`}
