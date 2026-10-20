@@ -210,10 +210,27 @@ export default function HomePage({
   }, [typewriterText.length]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setMotionPhraseIndex((current) => (current + 1) % motionPhrases.length);
-    }, 9000);
-    return () => window.clearInterval(timer);
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer: number | undefined;
+
+    const syncMotionPreference = () => {
+      if (timer !== undefined) {
+        window.clearInterval(timer);
+        timer = undefined;
+      }
+      if (!motionPreference.matches) {
+        timer = window.setInterval(() => {
+          setMotionPhraseIndex((current) => (current + 1) % motionPhrases.length);
+        }, 9000);
+      }
+    };
+
+    syncMotionPreference();
+    motionPreference.addEventListener("change", syncMotionPreference);
+    return () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      motionPreference.removeEventListener("change", syncMotionPreference);
+    };
   }, []);
 
   function renderLoading() {

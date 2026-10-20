@@ -276,7 +276,18 @@ export default function MarketsPage({
           <span className="market-empty-icon" aria-hidden="true"><Search size={22} /></span>
           <h3>{search.trim() ? "No matching markets" : activeCategory === "Live" ? "No live markets right now" : activeCategory === "Settled Markets" ? "No settled markets yet" : "No published markets in this category"}</h3>
           <p>{search.trim() ? "Try a different keyword or clear your search to see more published markets." : activeCategory === "Live" ? "Markets appear here only while on-chain status is open and the participation deadline has not passed." : activeCategory === "Settled Markets" ? "Markets move here after their on-chain settlement status is confirmed." : "Markets appear here after publication and are filtered by the selected category."}</p>
-          {search.trim() && <button className="text-action" type="button" onClick={() => onSearchChange("")}>Clear search <ArrowUpRight size={15} /></button>}
+          {(search.trim() || activeCategory !== "All Markets") && (
+            <button
+              className="text-action"
+              type="button"
+              onClick={() => {
+                onSearchChange("");
+                onCategoryChange("All Markets");
+              }}
+            >
+              Clear filters <ArrowUpRight size={15} />
+            </button>
+          )}
         </div>
       ) : (
         <div className="market-grid">{visibleMarkets.map((market, index) => renderMarketCard(market, index))}</div>
