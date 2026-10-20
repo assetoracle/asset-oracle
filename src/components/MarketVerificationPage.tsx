@@ -16,9 +16,16 @@ type Props = {
 };
 
 function normalizedHttpUrl(value: string): string | null {
+  const source = value.trim();
+  if (!source || /[\\s<>"']/u.test(source)) return null;
   try {
-    const url = new URL(value.trim());
-    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+    // Validators may record a bare domain (e.g. Firescreener.com). Normalize
+    // it to HTTPS so the source is still clickable on the verification page.
+    const candidate = /^[a-z][a-z\\d+.-]*:\/\//i.test(source) ? source : `https://${source}`;
+    const url = new URL(candidate);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    if (!url.hostname.includes(".") || url.hostname.startsWith(".") || url.hostname.endsWith(".")) return null;
+    return url.href;
   } catch {
     return null;
   }
