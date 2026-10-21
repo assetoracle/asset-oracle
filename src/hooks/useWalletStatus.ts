@@ -243,7 +243,7 @@ export function useWalletStatus() {
     setWalletMessage("");
 
     try {
-      // Keep the modal on the EVM namespace so injected browser extensions, WalletConnect\n      // QR sessions, and mobile wallet deep links all use the configured EVM chain.\n      await open({ view: "Connect", namespace: "eip155" });
+      await open({ view: "Connect" });
     } catch (error) {
       setWalletMessage(
         friendlyError(error, "Wallet unavailable."),
