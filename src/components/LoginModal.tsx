@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, LoaderCircle, Mail, ShieldCheck, Wallet, X } from "lucide-react";
 import { useAppKit } from "@reown/appkit/react";
+import { useAccount } from "wagmi";
 import { useAppKitWallet } from "@reown/appkit-wallet-button/react";
 import type { Wallet as AppKitWallet } from "@reown/appkit-wallet-button";
 
@@ -29,6 +30,7 @@ function XMark() {
 
 export default function LoginModal({ onClose }: LoginModalProps) {
   const { open } = useAppKit();
+  const { address, isConnected } = useAccount();
   const [statusMessage, setStatusMessage] = useState("");
   const [activeMethod, setActiveMethod] = useState<AppKitWallet | null>(null);
 
@@ -44,6 +46,13 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     },
   });
 
+  // OAuth may finish in a separate browser tab on mobile. Close the branded
+  // modal as soon as the original Asset Oracle tab observes the connected account,
+  // even if the wallet-button callback is delayed by the browser handoff.
+  useEffect(() => {
+    if (isConnected && address) onClose();
+  }, [isConnected, address, onClose]);
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !isPending) onClose();
@@ -55,7 +64,11 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   async function startLogin(method: AppKitWallet) {
     if (isPending) return;
     setActiveMethod(method);
-    setStatusMessage("");
+    setStatusMessage(
+      method === "email"
+        ? "Complete the email verification, then return to this tab. Asset Oracle will finish connecting automatically."
+        : "Finish sign-in in the secure browser page, then return to this Asset Oracle tab. Your connection will complete when the browser handoff finishes.",
+    );
     try {
       // Start Reown's email OTP or social OAuth directly from the user's click.
       await connect(method);
@@ -114,9 +127,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
         <div className="asset-login-heading">
           <span className="asset-login-shield"><ShieldCheck size={23} /></span>
-          <h2 id="asset-login-title">Welcome back</h2>
+          <h2 id="asset-login-title">Create your account or sign in</h2>
           <p id="asset-login-description">
-            Sign in to explore markets and manage your Asset Oracle account.
+            Choose email, Google, X, or an external wallet to continue to Asset Oracle.
           </p>
         </div>
 
