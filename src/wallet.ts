@@ -50,7 +50,7 @@ function getEthereumWindow(): EthereumWindow {
 }
 
 export const ASSET_CHAIN_TESTNET = {
-  chainId: "0xa575",
+  chainId: "0xa5b5",
   chainName: "Asset Chain Testnet",
   nativeCurrency: {
     name: "Real World Asset",
