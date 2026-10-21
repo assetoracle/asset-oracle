@@ -263,7 +263,8 @@ export function useWalletStatus() {
       );
       // Prefer a connector explicitly identified as Rabby. Only fall back to the
       // generic injected connector when the wallet browser exposes no named one.
-      const injectedConnector = connectors.find((item) => /rabby/i.test(item.name))
+      const injectedConnector = connectors.find((item) => item.id === "rabby")
+        ?? connectors.find((item) => /rabby/i.test(item.name))
         ?? connectors.find((item) => item.id === "injected");
 
       if (rabbyBrowser && injectedConnector) {
