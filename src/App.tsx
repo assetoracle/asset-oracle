@@ -816,7 +816,6 @@ useEffect(() => {
     const ethereum = (window as Window & { ethereum?: { isMetaMask?: boolean; isTrust?: boolean; isCoinbaseWallet?: boolean; isTokenPocket?: boolean } }).ethereum;
     return Boolean(mobile && (ethereum?.isMetaMask || ethereum?.isTrust || ethereum?.isCoinbaseWallet || ethereum?.isTokenPocket));
   }, []);
-  const [walletHelpOpen, setWalletHelpOpen] = useState(false);
   const [walletChooserOpen, setWalletChooserOpen] = useState(false);
   const [walletChooserError, setWalletChooserError] = useState("");
 
@@ -830,7 +829,6 @@ useEffect(() => {
     try {
       await connectAsync({ connector });
       setWalletChooserOpen(false);
-      setWalletHelpOpen(false);
     } catch (error) {
       setWalletChooserError(friendlyError(error, "Wallet connection could not be completed. Please try again or open Asset Oracle in your wallet app."));
     }
