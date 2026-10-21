@@ -1,4 +1,3 @@
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu, X } from "lucide-react";
 import type { Page, NavItem } from "./Nav";
 import { DesktopNav, MobileNav } from "./Nav";
@@ -20,8 +19,13 @@ type HeaderProps = {
 export default function Header({
   page,
   navItems,
+  wallet,
+  walletBusy,
   mobileMenuOpen,
   onNavigate,
+  onConnect,
+  onOpenAccount,
+  onDisconnect,
   onToggleMobileMenu,
 }: HeaderProps) {
   return (
@@ -53,11 +57,18 @@ export default function Header({
         />
 
         <div className="header-actions">
-          <ConnectButton
-            chainStatus="none"
-            accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
-            showBalance={false}
-          />
+          {wallet ? (
+            <div className="wallet-header-actions">
+              <button className="connect-button" type="button" onClick={onOpenAccount} disabled={walletBusy} aria-label="Open connected wallet account">
+                {walletBusy ? "Wallet…" : `${wallet.address.slice(0, 6)}…${wallet.address.slice(-4)}`}
+              </button>
+              <button className="disconnect-button" type="button" onClick={onDisconnect} disabled={walletBusy} aria-label="Disconnect wallet">Disconnect</button>
+            </div>
+          ) : (
+            <button className="connect-button" type="button" onClick={onConnect} disabled={walletBusy}>
+              {walletBusy ? "Connecting…" : "Connect Wallet"}
+            </button>
+          )}
 
           <button
             className="mobile-menu-button"
