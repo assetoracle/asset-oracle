@@ -1,5 +1,5 @@
 import { Menu, X } from "lucide-react";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import type { Page, NavItem } from "./Nav";
 import { DesktopNav, MobileNav } from "./Nav";
 import type { WalletConnection } from "../hooks/useWalletStatus";
@@ -11,7 +11,7 @@ type HeaderProps = {
   walletBusy: boolean;
   mobileMenuOpen: boolean;
   onNavigate: (page: Page) => void;
-  onConnect: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+  onConnect: () => void;
   onOpenAccount: () => void;
   onDisconnect: () => void;
   onToggleMobileMenu: () => void;
@@ -29,6 +29,8 @@ export default function Header({
   onDisconnect,
   onToggleMobileMenu,
 }: HeaderProps) {
+  const { login } = usePrivy();
+
   return (
     <>
       <header className="header">
@@ -105,7 +107,7 @@ export default function Header({
             <button
               className="connect-button"
               type="button"
-              onClick={onConnect}
+              onClick={login}
               disabled={walletBusy}
             >
               {walletBusy ? "Opening sign-in..." : "Sign in"}
