@@ -343,7 +343,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       : !stablecoinVerified ? <p>Transactions blocked: the manager must explicitly enable the approved testnet USDC address with 6 decimals.</p>
       : !marketVerified ? <p>Transactions blocked: on-chain market ID, USDC asset, or close time does not match the displayed market record.</p>
       : market.isError || tokenConfig.isError || tokenDecimals.isError || position.isError ? <p>Transactions blocked because one or more verification reads failed.</p>
-      : !isConnected ? <p>Connect a wallet on Asset Chain Testnet to check your position and participate.</p>
+      : !isConnected ? <p>Sign in on Asset Chain Testnet to check your position and participate.</p>
       : <>
           <div className="market-detail-grid">
             <article className="detail-info-card"><span>Your YES stake</span><strong>{formatUnits(positionYes, 6)} USDC</strong></article>
