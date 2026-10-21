@@ -37,7 +37,7 @@ export const wagmiAdapter = new WagmiAdapter({
       target: {
         id: "rabby",
         name: "Rabby",
-        provider: getRabbyProvider,
+        provider: () => getRabbyProvider() as never,
       },
     }),
   ],
