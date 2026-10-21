@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
@@ -19,7 +20,6 @@ import {
 } from "./contracts/assetOracle";
 
 import Header from "./components/Header";
-import LoginModal from "./components/LoginModal";
 import {
   BottomNav,
   type NavItem,
@@ -191,7 +191,6 @@ export default function App() {
     useState<MarketFilter>("All Markets");
   const [search, setSearch] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [proposalFormOpen, setProposalFormOpen] = useState(false);
   const [proposalBeingEdited, setProposalBeingEdited] = useState<StoredMarketProposal | null>(null);
@@ -257,6 +256,7 @@ export default function App() {
   } = useWalletStatus();
 
   const { signMessageAsync } = useSignMessage();
+  const { login } = usePrivy();
   const isAdmin = useIsAdmin(address);
 
   const validatorStatusReads = useReadContracts({
@@ -809,10 +809,10 @@ useEffect(() => {
     }
   }
 
-  // Open the Asset Oracle-branded login modal. Individual auth buttons call
-  // Reown directly from the click gesture so mobile social popups can open.
+  // Use Privy’s native sign-in UI directly; avoid stacking a custom modal
+  // in front of the same Privy chooser.
   function openWalletHelp() {
-    setLoginModalOpen(true);
+    login();
   }
 
   function renderContent() {
@@ -1058,8 +1058,6 @@ useEffect(() => {
         onDisconnect={() => void handleDisconnectWallet()}
         onToggleMobileMenu={() => setMobileMenuOpen((open) => !open)}
       />
-
-      {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}
 
       {wallet && (
         <section className="wallet-status" aria-live="polite">
