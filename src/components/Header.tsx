@@ -10,7 +10,7 @@ type HeaderProps = {
   walletBusy: boolean;
   mobileMenuOpen: boolean;
   onNavigate: (page: Page) => void;
-  onConnect: () => void;
+  onConnect: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onOpenAccount: () => void;
   onDisconnect: () => void;
   onToggleMobileMenu: () => void;
