@@ -79,11 +79,11 @@ createRoot(rootElement).render(
           embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
         }}
       >
-        <WagmiProvider config={wagmiConfig as never}>
-          <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <WagmiProvider config={wagmiConfig as never}>
             <App />
-          </QueryClientProvider>
-        </WagmiProvider>
+          </WagmiProvider>
+        </QueryClientProvider>
       </PrivyProvider>
     </React.StrictMode>
   </StartupErrorBoundary>,
