@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
@@ -256,7 +256,7 @@ export default function App() {
   } = useWalletStatus();
 
   const { signMessageAsync } = useSignMessage();
-  const { open } = useAppKit();
+  const { openConnectModal } = useConnectModal();
   const isAdmin = useIsAdmin(address);
 
   const validatorStatusReads = useReadContracts({
@@ -809,9 +809,9 @@ useEffect(() => {
     }
   }
 
-  // Open Reown AppKit's external-wallet picker; no embedded wallet or social login.
+  // Open RainbowKit's wallet chooser; approval remains in the selected wallet.
   function openWalletHelp() {
-    void open({ view: "AllWallets", namespace: "eip155" });
+    openConnectModal?.();
   }
 
   function renderContent() {

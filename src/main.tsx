@@ -3,8 +3,10 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import App from "./App";
-import { wagmiConfig } from "./walletConnect";
+import { rainbowKitTheme, wagmiConfig } from "./walletConnect";
+import "@rainbow-me/rainbowkit/styles.css";
 import "./style.css";
 
 const queryClient = new QueryClient();
@@ -19,7 +21,15 @@ createRoot(rootElement).render(
   <React.StrictMode>
     <WagmiProvider config={wagmiConfig as never}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <RainbowKitProvider
+          theme={rainbowKitTheme}
+          appInfo={{
+            appName: "Assets Oracle",
+            learnMoreUrl: "https://assetoracleapp.xyz",
+          }}
+        >
+          <App />
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   </React.StrictMode>

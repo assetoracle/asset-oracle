@@ -1,14 +1,14 @@
-import { useAppKit } from "@reown/appkit/react";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { Wallet, X } from "lucide-react";
 
 type LoginModalProps = { onClose: () => void };
 
 export default function LoginModal({ onClose }: LoginModalProps) {
-  const { open } = useAppKit();
+  const { openConnectModal } = useConnectModal();
 
   async function connectExternalWallet() {
     onClose();
-    await open({ view: "AllWallets", namespace: "eip155" });
+    openConnectModal?.();
   }
 
   return (

@@ -1,9 +1,8 @@
 import { friendlyError } from "../utils/friendlyError";
-import { useAppKit } from "@reown/appkit/react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccountModal, useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { assetChainTestnet } from "../config/assetChain";
-import { discoverRabbyProvider } from "../walletConnect";
 import {
   displayChainId,
   isTestnet,
@@ -36,23 +35,6 @@ export type WalletConnection = {
 
 type Eip1193Provider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-};
-
-type RabbyInjectedWindow = Window & {
-  ethereum?: {
-    isRabby?: boolean;
-    isMetaMask?: boolean;
-    isTrust?: boolean;
-    isOKXWallet?: boolean;
-    isBitgetWallet?: boolean;
-    providers?: Array<{
-      isRabby?: boolean;
-      isMetaMask?: boolean;
-      isTrust?: boolean;
-      isOKXWallet?: boolean;
-      isBitgetWallet?: boolean;
-    }>;
-  };
 };
 
 async function requestAssetChainSwitch(
@@ -90,8 +72,8 @@ async function requestAssetChainSwitch(
 }
 
 export function useWalletStatus() {
-  const { open, close } = useAppKit();
-  const { connectors, connectAsync } = useConnect();
+  const { openConnectModal } = useConnectModal();
+  const { openAccountModal } = useAccountModal();
   const { address, chainId, isConnected, connector } = useAccount();
   const { disconnectAsync } = useDisconnect();
 
@@ -144,15 +126,6 @@ export function useWalletStatus() {
       : isTestnet(wallet.chainId)
         ? "correct"
         : "wrong";
-
-  // When the wallet app returns after switching successfully, close any stale
-  // AppKit network modal. Mobile deep-link handoff can leave that modal open
-  // even though wagmi already reports Enugu (42421).
-  useEffect(() => {
-    if (networkState === "correct") {
-      close();
-    }
-  }, [networkState, close]);
 
   useEffect(() => {
     if (
@@ -258,65 +231,20 @@ export function useWalletStatus() {
 
   async function handleConnect() {
     userInitiatedDisconnectRef.current = false;
-    setWalletBusy(true);
     setWalletMessage("");
-
-    try {
-      // Rabby's in-app browser exposes an injected provider. Connect to that
-      // provider directly instead of relying on AppKit's remote wallet list,
-      // which may remain loading in some mobile wallet browsers.
-      const injectedProvider = typeof window !== "undefined"
-        ? (window as RabbyInjectedWindow).ethereum
-        : undefined;
-      const rabbyProvider = await discoverRabbyProvider();
-      const rabbyBrowser = Boolean(
-        rabbyProvider ||
-        injectedProvider?.isRabby ||
-        injectedProvider?.providers?.some((provider) => provider.isRabby),
-      );
-      // Prefer the injected wallet when the site is opened inside a wallet app.
-      // In a normal browser, retain AppKit's chooser for extensions and mobile handoff.
-      const rabbyConnector = connectors.find((item) => item.id === "rabby")
-        ?? connectors.find((item) => /rabby/i.test(item.name));
-      const genericInjectedConnector = connectors.find((item) => item.id === "injected");
-      const userAgent = typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
-      const mobileDevice = /android|iphone|ipad|ipod/i.test(userAgent);
-      const namedInjectedWallet = Boolean(
-        injectedProvider?.isRabby ||
-        injectedProvider?.isMetaMask ||
-        injectedProvider?.isTrust ||
-        injectedProvider?.isOKXWallet ||
-        injectedProvider?.isBitgetWallet
-      );
-      // Avoid silently choosing a desktop browser extension just because it
-      // injected window.ethereum. Use direct connection for recognizable wallet
-      // DApp browsers, while normal browsers keep the wallet chooser.
-      const walletAppBrowser = /rabby|metamask|trustwallet|trust wallet|okx|bitget|coinbasewallet|zerion/i.test(userAgent)
-        || (mobileDevice && namedInjectedWallet);
-      if (rabbyBrowser && walletAppBrowser && rabbyConnector) {
-        await connectAsync({ connector: rabbyConnector });
-      } else if (walletAppBrowser && injectedProvider && genericInjectedConnector) {
-        await connectAsync({ connector: genericInjectedConnector });
-      } else {
-        await open({ view: "Connect" });
-      }
-    } catch (error) {
-      setWalletMessage(
-        friendlyError(error, "Wallet unavailable."),
-      );
-    } finally {
-      setWalletBusy(false);
+    if (!openConnectModal) {
+      setWalletMessage("Wallet connection is unavailable. Please reload the page and try again.");
+      return;
     }
+    openConnectModal();
   }
 
   async function handleOpenAccount() {
-    try {
-      await open({ view: "Account" });
-    } catch (error) {
-      setWalletMessage(
-        friendlyError(error, "Wallet unavailable."),
-      );
+    if (!openAccountModal) {
+      setWalletMessage("Wallet account controls are unavailable. Please reload the page and try again.");
+      return;
     }
+    openAccountModal();
   }
 
   async function handleSwitchNetwork() {

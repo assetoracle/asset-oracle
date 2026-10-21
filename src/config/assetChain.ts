@@ -1,11 +1,9 @@
-import { defineChain } from "@reown/appkit/networks";
+import { defineChain } from "viem";
 
 export const ASSET_CHAIN_ID = 42421;
 
 export const assetChainTestnet = defineChain({
   id: 42421,
-  caipNetworkId: "eip155:42421",
-  chainNamespace: "eip155",
   name: "Asset Chain Testnet",
   nativeCurrency: {
     name: "Real World Asset",
