@@ -107,7 +107,7 @@ export default function Header({
               onClick={onConnect}
               disabled={walletBusy}
             >
-              {walletBusy ? "Opening sign-in..." : "Sign Up/Sign in"}
+              {walletBusy ? "Opening sign-in..." : "Sign in"}
             </button>
           )}
 
