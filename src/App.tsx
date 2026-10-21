@@ -422,7 +422,7 @@ useEffect(() => {
   useEffect(() => {
     if (marketsLoading) return;
 
-    const route = parseHash();
+    const route = parseRoutePath(window.location.pathname);
     if (!route.marketId) return;
 
     const exists = publishedMarkets.some(
@@ -582,7 +582,7 @@ useEffect(() => {
   }
 
   function rememberReturnLocation() {
-    const currentRoute = parseHash();
+    const currentRoute = parseRoutePath(window.location.pathname);
     // Avoid stacking detail pages as return destinations; direct links use the Markets fallback.
     if (currentRoute.marketId || currentRoute.verificationMarketId) {
       returnHashRef.current = null;
