@@ -12,7 +12,6 @@ import {
   X,
 } from "lucide-react";
 import { useConnect, useReadContracts, useSignMessage } from "wagmi";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
