@@ -11039,3 +11039,138 @@ select.brand-select option,
     flex-basis: 36px;
   }
 }
+
+
+/* Production mobile header correction: keep brand and wallet/menu on one row. */
+@media (max-width: 760px) {
+  .header {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    column-gap: 8px !important;
+    padding: 6px 0 8px !important;
+    min-width: 0;
+  }
+
+  .header > .brand {
+    display: inline-flex !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    gap: 7px !important;
+  }
+
+  .header > .brand > span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .header .brand-logo {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px !important;
+  }
+
+  .header .brand-name {
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    white-space: nowrap !important;
+  }
+
+  .header .brand-tagline {
+    display: block !important;
+    margin-top: 2px !important;
+    font-size: 6px !important;
+    letter-spacing: .45px !important;
+    white-space: nowrap !important;
+  }
+
+  .header > .desktop-navigation {
+    display: none !important;
+  }
+
+  .header > .header-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  .header-actions > [data-rk] {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  .header-actions [data-rk] button {
+    min-height: 36px !important;
+    height: 36px !important;
+    max-width: 126px !important;
+    padding: 0 10px !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .header-actions .mobile-menu-button {
+    display: inline-flex !important;
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .hero {
+    margin-top: 8px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .app {
+    padding: 10px !important;
+  }
+
+  .header {
+    column-gap: 5px !important;
+  }
+
+  .header > .brand {
+    gap: 5px !important;
+  }
+
+  .header .brand-logo {
+    width: 27px !important;
+    height: 27px !important;
+    flex-basis: 27px !important;
+  }
+
+  .header .brand-name {
+    font-size: 10px !important;
+    letter-spacing: .7px !important;
+  }
+
+  .header .brand-tagline {
+    font-size: 5.5px !important;
+    letter-spacing: .15px !important;
+  }
+
+  .header > .header-actions {
+    gap: 4px !important;
+  }
+
+  .header-actions [data-rk] button {
+    max-width: 112px !important;
+    padding: 0 7px !important;
+    font-size: 11px !important;
+  }
+}
