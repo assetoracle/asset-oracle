@@ -58,11 +58,11 @@ export default function Header({
 
         <div className="header-actions">
           {wallet ? (
-            <div className="header-wallet-actions">
+            <div className="wallet-header-actions">
               <button className="connect-button" type="button" onClick={onOpenAccount} disabled={walletBusy} aria-label="Open connected wallet account">
                 {walletBusy ? "Wallet…" : `${wallet.address.slice(0, 6)}…${wallet.address.slice(-4)}`}
               </button>
-              <button className="header-wallet-disconnect" type="button" onClick={onDisconnect} disabled={walletBusy} aria-label="Disconnect wallet">Disconnect</button>
+              <button className="disconnect-button" type="button" onClick={onDisconnect} disabled={walletBusy} aria-label="Disconnect wallet">Disconnect</button>
             </div>
           ) : (
             <button className="connect-button" type="button" onClick={onConnect} disabled={walletBusy}>
