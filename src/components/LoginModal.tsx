@@ -21,7 +21,7 @@ function XMark() {
 }
 
 export default function LoginModal({ onClose }: LoginModalProps) {
-  const { login, ready } = usePrivy();
+  const { login, connectWallet, ready } = usePrivy();
   const { address, isConnected } = useAccount();
   const [statusMessage, setStatusMessage] = useState("");
   const [activeMethod, setActiveMethod] = useState<LoginMethod | null>(null);
@@ -49,12 +49,27 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         ? "Choose your external wallet in the secure sign-in window."
         : "Complete sign-in in the secure browser window, then return to Asset Oracle.");
     try {
-      await login({ loginMethods: [method] });
-      setStatusMessage("Sign-in complete. If your wallet is not connected yet, reopen Sign in and choose Connect an external wallet.");
+      // External wallets use Privy's dedicated connection flow.
+      if (method === "wallet") {
+        connectWallet();
+      } else {
+        login({ loginMethods: [method] });
+      }
+      // Privy opens its modal asynchronously; do not treat the call return
+      // as completed authentication or leave the custom buttons disabled.
+      setStatusMessage(
+        method === "wallet"
+          ? "Choose a wallet in the Privy connection window."
+          : method === "email"
+            ? "Continue in the Privy email verification window."
+            : method === "google"
+              ? "Continue with Google in the Privy sign-in window."
+              : "Continue with X in the Privy sign-in window.",
+      );
       setIsPending(false);
       setActiveMethod(null);
     } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : "Sign-in did not complete. Please try again.");
+      setStatusMessage(error instanceof Error ? error.message : "Could not open sign-in. Check that this method is enabled in the Privy dashboard.");
       setIsPending(false);
       setActiveMethod(null);
     }
