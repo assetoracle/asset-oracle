@@ -239,7 +239,7 @@ export default function Portfolio({
             type="button"
             onClick={onConnect}
           >
-            Sign in
+            Connect wallet
           </button>
         </div>
       ) : (
