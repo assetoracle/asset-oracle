@@ -1,4 +1,5 @@
 import { Menu, X } from "lucide-react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import type { Page, NavItem } from "./Nav";
 import { DesktopNav, MobileNav } from "./Nav";
 import type { WalletConnection } from "../hooks/useWalletStatus";
@@ -10,7 +11,7 @@ type HeaderProps = {
   walletBusy: boolean;
   mobileMenuOpen: boolean;
   onNavigate: (page: Page) => void;
-  onConnect: () => void;
+  onConnect: (event: ReactMouseEvent<HTMLButtonElement>) => void;
   onOpenAccount: () => void;
   onDisconnect: () => void;
   onToggleMobileMenu: () => void;
