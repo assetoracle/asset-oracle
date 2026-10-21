@@ -239,7 +239,7 @@ function AccountPage({
           <CircleHelp size={25} />
           <h2>Sign in to continue</h2>
           <p>Connect the wallet used to place predictions to load its verified account records.</p>
-          <button className="primary-button" type="button" onClick={onConnect}>Sign in</button>
+          <button className="primary-button" type="button" onClick={onConnect}>Connect wallet</button>
         </div>
       ) : (
         <>
