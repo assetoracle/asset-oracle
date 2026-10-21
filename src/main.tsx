@@ -67,7 +67,7 @@ createRoot(rootElement).render(
       <PrivyProvider
         appId={privyAppId || "missing-privy-app-id"}
         config={{
-          loginMethods: ["email", "google", "twitter", "wallet"],
+          loginMethods: ["email", "google", "twitter", "wallet", "passkey"],
           appearance: {
             theme: "dark",
             accentColor: "#12D9F5",

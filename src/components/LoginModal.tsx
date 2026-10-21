@@ -53,7 +53,11 @@ export default function LoginModal({ onClose }: LoginModalProps) {
       if (method === "wallet") {
         connectWallet();
       } else {
-        login({ loginMethods: [method] });
+        // Open Privy's complete configured login screen. Passing a one-item
+        // loginMethods list only filters the screen; it does not authenticate
+        // directly, and can strand users on a method-specific step. Keeping
+        // the full chooser available lets users switch methods or go back.
+        login();
       }
       // Privy opens its modal asynchronously; do not treat the call return
       // as completed authentication or leave the custom buttons disabled.
