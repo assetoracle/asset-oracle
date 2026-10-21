@@ -809,8 +809,23 @@ useEffect(() => {
     }
   }
 
-  // Open RainbowKit's wallet chooser; approval remains in the selected wallet.
+  const isWalletBrowser = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    if (/MetaMaskMobile|TrustWallet|TokenPocket|imToken|CoinbaseWallet|OKApp|OKXWallet|BitKeep|BitgetWallet|SafePal|MathWallet|OneKey|Zerion|Rainbow/i.test(ua)) return true;
+    const mobile = /android|iphone|ipad|ipod/i.test(ua);
+    const ethereum = (window as Window & { ethereum?: { isMetaMask?: boolean; isTrust?: boolean; isCoinbaseWallet?: boolean; isTokenPocket?: boolean } }).ethereum;
+    return Boolean(mobile && (ethereum?.isMetaMask || ethereum?.isTrust || ethereum?.isCoinbaseWallet || ethereum?.isTokenPocket));
+  }, []);
+  const [walletHelpOpen, setWalletHelpOpen] = useState(false);
+
   function openWalletHelp() {
+    if (isWalletBrowser) openConnectModal?.();
+    else setWalletHelpOpen(true);
+  }
+
+  function continueToWalletChooser() {
+    setWalletHelpOpen(false);
     openConnectModal?.();
   }
 
@@ -1163,6 +1178,26 @@ useEffect(() => {
           </a>
         </div>
       </footer>
+
+      {walletHelpOpen && !isWalletBrowser && (
+        <div className="wallet-help-overlay" role="presentation" onClick={() => setWalletHelpOpen(false)}>
+          <section className="wallet-help-dialog" role="dialog" aria-modal="true" aria-labelledby="wallet-help-title" onClick={(event) => event.stopPropagation()}>
+            <button className="wallet-help-close" type="button" onClick={() => setWalletHelpOpen(false)} aria-label="Close wallet help"><X size={20} /></button>
+            <div className="wallet-help-brand">ASSET ORACLE</div>
+            <p className="wallet-help-eyebrow">CONNECTION SUPPORT</p>
+            <h2 id="wallet-help-title">Wallet not connecting?</h2>
+            <p className="wallet-help-copy">If you’re using Chrome, Brave, or another regular browser, open your wallet app and use its built-in browser to visit Asset Oracle. This often resolves mobile wallet connection issues.</p>
+            <div className="wallet-help-steps">
+              <div><span>1</span><p>Open your wallet app, such as MetaMask, Trust Wallet, or OKX Wallet.</p></div>
+              <div><span>2</span><p>Find the wallet’s Browser or Discover tab and visit <strong>assetoracleapp.xyz</strong>.</p></div>
+              <div><span>3</span><p>Tap Connect Wallet and approve only the connection request you recognize.</p></div>
+            </div>
+            <button className="wallet-help-primary" type="button" onClick={continueToWalletChooser}>Try connecting in this browser</button>
+            <button className="wallet-help-secondary" type="button" onClick={() => setWalletHelpOpen(false)}>I’ll open my wallet app</button>
+            <p className="wallet-help-safety">Never share your recovery phrase or private keys. Asset Oracle will never ask for them.</p>
+          </section>
+        </div>
+      )}
 
       {helpOpen && (
         <div className="help-overlay" role="presentation" onClick={() => setHelpOpen(false)}>
