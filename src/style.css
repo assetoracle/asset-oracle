@@ -10916,3 +10916,12 @@ select.brand-select option,
     margin-bottom: 28px;
   }
 }
+
+
+/* RainbowKit inherits Asset Oracle's brand typeface and compact header treatment. */
+[data-rk] {
+  font-family: "Bricolage Grotesque", sans-serif;
+}
+[data-rk] button {
+  font-family: inherit;
+}
