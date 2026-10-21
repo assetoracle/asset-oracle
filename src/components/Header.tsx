@@ -24,7 +24,6 @@ export default function Header({
   walletBusy,
   mobileMenuOpen,
   onNavigate,
-  onConnect,
   onOpenAccount,
   onDisconnect,
   onToggleMobileMenu,
