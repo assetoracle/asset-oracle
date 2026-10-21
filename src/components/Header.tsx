@@ -20,13 +20,8 @@ type HeaderProps = {
 export default function Header({
   page,
   navItems,
-  wallet,
-  walletBusy,
   mobileMenuOpen,
   onNavigate,
-  onConnect,
-  onOpenAccount,
-  onDisconnect,
   onToggleMobileMenu,
 }: HeaderProps) {
   return (
