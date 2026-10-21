@@ -8,17 +8,57 @@ type RabbyProvider = {
   request: (...args: any[]) => Promise<any>;
 };
 
+type Eip6963RabbyDetail = {
+  info?: { name?: string; rdns?: string; uuid?: string };
+  provider?: RabbyProvider;
+};
+
 type RabbyWindow = Window & {
   ethereum?: RabbyProvider & {
     providers?: RabbyProvider[];
   };
 };
 
+let announcedRabbyProvider: RabbyProvider | undefined;
+
 function getRabbyProvider(): RabbyProvider | undefined {
   if (typeof window === "undefined") return undefined;
+  if (announcedRabbyProvider) return announcedRabbyProvider;
   const ethereum = (window as RabbyWindow).ethereum;
   if (ethereum?.isRabby) return ethereum;
   return ethereum?.providers?.find((provider) => provider.isRabby);
+}
+
+export async function discoverRabbyProvider(): Promise<RabbyProvider | undefined> {
+  if (typeof window === "undefined") return undefined;
+  const directProvider = getRabbyProvider();
+  if (directProvider) return directProvider;
+
+  return await new Promise<RabbyProvider | undefined>((resolve) => {
+    let settled = false;
+    const finish = (provider?: RabbyProvider) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      window.removeEventListener("eip6963:announceProvider", onAnnouncement);
+      if (provider) announcedRabbyProvider = provider;
+      resolve(provider);
+    };
+    const onAnnouncement = (event: Event) => {
+      const detail = (event as CustomEvent<Eip6963RabbyDetail>).detail;
+      const name = detail?.info?.name?.toLowerCase() ?? "";
+      const rdns = detail?.info?.rdns?.toLowerCase() ?? "";
+      if (
+        detail?.provider &&
+        (detail.provider.isRabby || name.includes("rabby") || rdns.includes("rabby"))
+      ) {
+        finish(detail.provider);
+      }
+    };
+    const timer = window.setTimeout(() => finish(), 500);
+    window.addEventListener("eip6963:announceProvider", onAnnouncement);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+  });
 }
 
 const projectId =
