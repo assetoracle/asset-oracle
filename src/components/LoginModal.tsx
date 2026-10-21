@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, LoaderCircle, Mail, ShieldCheck, Wallet, X } from "lucide-react";
-import { useAppKit } from "@reown/appkit/react";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useSetActiveWallet } from "@privy-io/wagmi";
 import { useAccount } from "wagmi";
-import { useAppKitWallet } from "@reown/appkit-wallet-button/react";
-import type { Wallet as AppKitWallet } from "@reown/appkit-wallet-button";
+
+type LoginMethod = "email" | "google" | "twitter" | "wallet";
 
 type LoginModalProps = {
   onClose: () => void;
@@ -29,26 +30,34 @@ function XMark() {
 }
 
 export default function LoginModal({ onClose }: LoginModalProps) {
-  const { open } = useAppKit();
+  const { login, authenticated, ready } = usePrivy();
+  const { wallets } = useWallets();
+  const { setActiveWallet } = useSetActiveWallet();
   const { address, isConnected } = useAccount();
   const [statusMessage, setStatusMessage] = useState("");
-  const [activeMethod, setActiveMethod] = useState<AppKitWallet | null>(null);
+  const [activeMethod, setActiveMethod] = useState<LoginMethod | null>(null);
+  const [isPending, setIsPending] = useState(false);
 
-  const { connect, isPending, isError } = useAppKitWallet({
-    namespace: "eip155",
-    onSuccess: () => {
-      setStatusMessage("Connected. Preparing your Asset Oracle session…");
-      onClose();
-    },
-    onError: (error) => {
-      setActiveMethod(null);
-      setStatusMessage(error.message || "Sign-in did not complete. Please try again.");
-    },
-  });
+  // Make the signed-in Privy wallet the wagmi wallet used by existing contract,
+  // session-signature, and account hooks.
+  useEffect(() => {
+    if (!authenticated || !wallets.length || isConnected) return;
+    let cancelled = false;
+    void setActiveWallet(wallets[0]).then(() => {
+      if (!cancelled) {
+        setStatusMessage("Wallet connected. Preparing your Asset Oracle session…");
+        onClose();
+      }
+    }).catch((error: unknown) => {
+      if (!cancelled) {
+        setStatusMessage(error instanceof Error ? error.message : "Could not activate your wallet. Please try again.");
+        setIsPending(false);
+        setActiveMethod(null);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [authenticated, wallets, isConnected, setActiveWallet, onClose]);
 
-  // OAuth may finish in a separate browser tab on mobile. Close the branded
-  // modal as soon as the original Asset Oracle tab observes the connected account,
-  // even if the wallet-button callback is delayed by the browser handoff.
   useEffect(() => {
     if (isConnected && address) onClose();
   }, [isConnected, address, onClose]);
@@ -61,60 +70,36 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPending, onClose]);
 
-  async function startLogin(method: AppKitWallet) {
-    if (isPending) return;
+  async function startLogin(method: LoginMethod) {
+    if (isPending || !ready) return;
     setActiveMethod(method);
+    setIsPending(true);
     setStatusMessage(
       method === "email"
-        ? "Complete the email verification, then return to this tab. Asset Oracle will finish connecting automatically."
-        : "Finish sign-in in the secure browser page, then return to this Asset Oracle tab. Your connection will complete when the browser handoff finishes.",
+        ? "Complete email verification in the secure sign-in window."
+        : method === "wallet"
+          ? "Choose your external wallet in the secure sign-in window."
+          : "Complete sign-in in the secure browser window, then return to Asset Oracle.",
     );
     try {
-      // Start Reown's email OTP or social OAuth directly from the user's click.
-      await connect(method);
+      await login({ loginMethods: [method] });
+      // Wallet activation runs when Privy publishes the newly available wallet.
+      setStatusMessage("Sign-in complete. Connecting your wallet…");
     } catch (error) {
-      setActiveMethod(null);
       setStatusMessage(error instanceof Error ? error.message : "Sign-in did not complete. Please try again.");
-    }
-  }
-
-  async function openExternalWallets() {
-    if (isPending) return;
-    onClose();
-    try {
-      // Skip the generic Connect screen (which repeats email/social login) and
-      // go straight to Reown's searchable list of external wallet providers.
-      await open({ view: "AllWallets", namespace: "eip155" });
-    } catch {
-      // AppKit reports wallet-modal failures through its own connection UI.
+      setIsPending(false);
+      setActiveMethod(null);
     }
   }
 
   return (
-    <div
-      className="asset-login-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isPending) onClose();
-      }}
-    >
-      <section
-        className="asset-login-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="asset-login-title"
-        aria-describedby="asset-login-description"
-      >
-        <button
-          className="asset-login-close"
-          type="button"
-          onClick={onClose}
-          disabled={isPending}
-          aria-label="Close sign in"
-        >
+    <div className="asset-login-overlay" role="presentation" onMouseDown={(event) => {
+      if (event.target === event.currentTarget && !isPending) onClose();
+    }}>
+      <section className="asset-login-dialog" role="dialog" aria-modal="true" aria-labelledby="asset-login-title" aria-describedby="asset-login-description">
+        <button className="asset-login-close" type="button" onClick={onClose} disabled={isPending} aria-label="Close sign in">
           <X size={20} />
         </button>
-
         <div className="asset-login-brand">
           <span className="asset-login-mark" aria-hidden="true">
             <img src="/asset-oracle-logo-transparent.svg" alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
@@ -124,79 +109,35 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             <span className="asset-login-brand-tagline">REAL-WORLD TRUTH, ON-CHAIN.</span>
           </div>
         </div>
-
         <div className="asset-login-heading">
           <span className="asset-login-shield"><ShieldCheck size={23} /></span>
           <h2 id="asset-login-title">Create your account or sign in</h2>
-          <p id="asset-login-description">
-            Choose email, Google, X, or an external wallet to continue to Asset Oracle.
-          </p>
+          <p id="asset-login-description">Choose email, Google, X, or an external wallet to continue to Asset Oracle.</p>
         </div>
-
         <div className="asset-login-options">
-          <button
-            className="asset-login-option asset-login-option-primary"
-            type="button"
-            onClick={() => void startLogin("email")}
-            disabled={isPending}
-          >
+          <button className="asset-login-option asset-login-option-primary" type="button" onClick={() => void startLogin("email")} disabled={isPending || !ready}>
             <span className="asset-login-option-icon"><Mail size={19} /></span>
-            <span className="asset-login-option-copy">
-              <strong>Continue with email</strong>
-              <small>Get a secure sign-in link or code</small>
-            </span>
+            <span className="asset-login-option-copy"><strong>Continue with email</strong><small>Get a secure sign-in code</small></span>
             {isPending && activeMethod === "email" ? <LoaderCircle className="asset-login-spinner" size={18} /> : <ArrowRight size={18} />}
           </button>
-
-          <button
-            className="asset-login-option"
-            type="button"
-            onClick={() => void startLogin("google")}
-            disabled={isPending}
-          >
+          <button className="asset-login-option" type="button" onClick={() => void startLogin("google")} disabled={isPending || !ready}>
             <span className="asset-login-google-mark"><GoogleMark /></span>
-            <span className="asset-login-option-copy">
-              <strong>Continue with Google</strong>
-              <small>Use your Google account</small>
-            </span>
+            <span className="asset-login-option-copy"><strong>Continue with Google</strong><small>Use your Google account</small></span>
             {isPending && activeMethod === "google" ? <LoaderCircle className="asset-login-spinner" size={18} /> : <ArrowRight size={18} />}
           </button>
-
-          <button
-            className="asset-login-option"
-            type="button"
-            onClick={() => void startLogin("x")}
-            disabled={isPending}
-          >
+          <button className="asset-login-option" type="button" onClick={() => void startLogin("twitter")} disabled={isPending || !ready}>
             <span className="asset-login-x-mark"><XMark /></span>
-            <span className="asset-login-option-copy">
-              <strong>Continue with X</strong>
-              <small>Use your X account</small>
-            </span>
-            {isPending && activeMethod === "x" ? <LoaderCircle className="asset-login-spinner" size={18} /> : <ArrowRight size={18} />}
+            <span className="asset-login-option-copy"><strong>Continue with X</strong><small>Use your X account</small></span>
+            {isPending && activeMethod === "twitter" ? <LoaderCircle className="asset-login-spinner" size={18} /> : <ArrowRight size={18} />}
           </button>
-
           <div className="asset-login-divider"><span>OR</span></div>
-
-          <button
-            className="asset-login-wallet"
-            type="button"
-            onClick={() => void openExternalWallets()}
-            disabled={isPending}
-          >
-            <Wallet size={19} />
-            <span>Connect an external wallet</span>
+          <button className="asset-login-wallet" type="button" onClick={() => void startLogin("wallet")} disabled={isPending || !ready}>
+            <Wallet size={19} /><span>Connect an external wallet</span>
+            {isPending && activeMethod === "wallet" ? <LoaderCircle className="asset-login-spinner" size={18} /> : null}
           </button>
         </div>
-
-        {(statusMessage || isError) && (
-          <p className="asset-login-status" role="status">{statusMessage || "Sign-in failed. Please try again."}</p>
-        )}
-
-        <p className="asset-login-footnote">
-          <CheckCircle2 size={14} />
-          <span>Secure sign-in · Asset Chain Testnet</span>
-        </p>
+        {(statusMessage || !ready) && <p className="asset-login-status" role="status">{statusMessage || "Preparing secure sign-in…"}</p>}
+        <p className="asset-login-footnote"><CheckCircle2 size={14} /><span>Secure sign-in · Asset Chain Testnet</span></p>
       </section>
     </div>
   );
