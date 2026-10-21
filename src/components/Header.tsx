@@ -53,29 +53,6 @@ export default function Header({
         />
 
         <div className="header-actions">
-          <a
-            className="connect-button pumpflow-link"
-            href="https://assetclaw.xyz/testnet"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Get test tokens and gas on AssetClaw testnet"
-            title="Test USDC / Gas"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: 40,
-              padding: "0 12px",
-              fontSize: 12,
-              lineHeight: 1.2,
-              whiteSpace: "nowrap",
-              textDecoration: "none",
-              flexShrink: 0,
-            }}
-          >
-            Test USDC / Gas
-          </a>
-
           <ConnectButton
             chainStatus="none"
             accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
