@@ -11292,3 +11292,33 @@ select.brand-select option,
 [data-rk] [role="dialog"] .ao-rainbowkit-guide > p { margin: 10px 0 0; color: #b7cbd1; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 [data-rk] [role="dialog"] .ao-rainbowkit-guide > p strong { color: #63f3ff; }
 [data-rk] [role="dialog"] .ao-rainbowkit-guide .ao-rainbowkit-guide-safety { padding-top: 9px; border-top: 1px solid rgba(18,217,245,.14); color: #63f3ff; }
+
+
+/* Match the guide to Asset Oracle's normal navy surfaces rather than a bright callout. */
+[data-rk] [role="dialog"] .ao-rainbowkit-guide {
+  background: linear-gradient(180deg, #0a222c 0%, #071a24 100%);
+  border-color: #1d6675;
+  box-shadow: inset 0 1px 0 rgba(99,243,255,.035);
+}
+[data-rk] [role="dialog"] .ao-wallet-copy-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(18,217,245,.4);
+  border-radius: 10px;
+  background: #0b2a35;
+  color: #63f3ff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+[data-rk] [role="dialog"] .ao-wallet-copy-link:hover,
+[data-rk] [role="dialog"] .ao-wallet-copy-link:focus-visible {
+  background: rgba(18,217,245,.12);
+  border-color: #12d9f5;
+}
