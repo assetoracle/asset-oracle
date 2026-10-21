@@ -24,12 +24,11 @@ export const appKit = createAppKit({
     url: "https://assetoracleapp.xyz",
     icons: ["/asset-oracle-logo-transparent.svg"],
   },
-  // Keep email/social authentication available, with external wallets as a
-  // separate, searchable wallet-picker experience.
+  // External wallets only: no email/social login or embedded-wallet onboarding.
   features: {
     analytics: false,
-    email: true,
-    socials: ["google", "x"],
+    email: false,
+    socials: [],
     allWallets: true,
   },
   themeMode: "dark",
