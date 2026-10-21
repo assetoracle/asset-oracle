@@ -2,7 +2,8 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { assetChainTestnet } from "./config/assetChain";
 
-const projectId = "31b59192af5764277976dd36db7754ba";
+const projectId =
+  import.meta.env.VITE_REOWN_PROJECT_ID || "31b59192af5764277976dd36db7754ba";
 
 const networks = [assetChainTestnet] as const;
 
