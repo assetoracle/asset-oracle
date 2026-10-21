@@ -11,7 +11,8 @@ import {
   CircleHelp,
   X,
 } from "lucide-react";
-import { useConnect, useReadContracts, useSignMessage } from "wagmi";
+import { useReadContracts, useSignMessage } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
@@ -255,7 +256,7 @@ export default function App() {
   } = useWalletStatus();
 
   const { signMessageAsync } = useSignMessage();
-  const { connectors, connectAsync, isPending: walletConnectPending } = useConnect();
+  const { openConnectModal } = useConnectModal();
   const isAdmin = useIsAdmin(address);
 
   const validatorStatusReads = useReadContracts({
@@ -816,23 +817,26 @@ useEffect(() => {
     const ethereum = (window as Window & { ethereum?: { isMetaMask?: boolean; isTrust?: boolean; isCoinbaseWallet?: boolean; isTokenPocket?: boolean } }).ethereum;
     return Boolean(mobile && (ethereum?.isMetaMask || ethereum?.isTrust || ethereum?.isCoinbaseWallet || ethereum?.isTokenPocket));
   }, []);
-  const [walletChooserOpen, setWalletChooserOpen] = useState(false);
-  const [walletChooserError, setWalletChooserError] = useState("");
 
   function openWalletHelp() {
-    setWalletChooserError("");
-    setWalletChooserOpen(true);
+    openConnectModal?.();
   }
 
-  async function chooseWallet(connector: (typeof connectors)[number]) {
-    setWalletChooserError("");
-    try {
-      await connectAsync({ connector });
-      setWalletChooserOpen(false);
-    } catch (error) {
-      setWalletChooserError(friendlyError(error, "Wallet connection could not be completed. Please try again or open Asset Oracle in your wallet app."));
-    }
-  }
+  useEffect(() => {
+    if (isWalletBrowser) return;
+    const installWalletGuide = () => {
+      const dialog = document.querySelector<HTMLElement>('[data-rk] [role="dialog"]');
+      if (!dialog || dialog.querySelector(".ao-rainbowkit-guide")) return;
+      const guide = document.createElement("section");
+      guide.className = "ao-rainbowkit-guide";
+      guide.innerHTML = '<div class="ao-rainbowkit-guide-heading"><span class="ao-rainbowkit-guide-icon">◎</span><div><h3>Wallet not connecting?</h3><p>New to wallets? Follow these quick steps.</p></div></div><p>On mobile, open Asset Oracle in your wallet app’s built-in Browser or Discover tab (MetaMask, Trust Wallet, or OKX Wallet), then tap Connect Wallet.</p><p class="ao-rainbowkit-guide-safety">Never share your recovery phrase or private keys.</p>';
+      dialog.appendChild(guide);
+    };
+    installWalletGuide();
+    const observer = new MutationObserver(installWalletGuide);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [isWalletBrowser]);
 
   function renderContent() {
     if (verificationMarketId && marketsLoading) {
@@ -1184,39 +1188,7 @@ useEffect(() => {
         </div>
       </footer>
 
-      {walletChooserOpen && (
-        <div className="wallet-help-overlay" role="presentation" onClick={() => setWalletChooserOpen(false)}>
-          <section className="wallet-help-dialog wallet-chooser-dialog" role="dialog" aria-modal="true" aria-labelledby="wallet-chooser-title" onClick={(event) => event.stopPropagation()}>
-            <button className="wallet-help-close" type="button" onClick={() => setWalletChooserOpen(false)} aria-label="Close wallet chooser"><X size={20} /></button>
-            <div className="wallet-help-brand">ASSET ORACLE</div>
-            <p className="wallet-help-eyebrow">SECURE WALLET CONNECTION</p>
-            <h2 id="wallet-chooser-title">Connect a Wallet</h2>
-            <p className="wallet-help-copy">Choose your preferred wallet to connect to Asset Oracle.</p>
-            <div className="wallet-chooser-grid">
-              {connectors.map((connector) => (
-                <button className="wallet-chooser-option" key={connector.uid} type="button" disabled={walletConnectPending} onClick={() => void chooseWallet(connector)}>
-                  <span className="wallet-chooser-icon" aria-hidden="true">{connector.name.slice(0, 1)}</span>
-                  <strong>{connector.name}</strong>
-                  {["WalletConnect", "MetaMask", "Injected"].includes(connector.name) && <small>Popular</small>}
-                </button>
-              ))}
-            </div>
-            {walletConnectPending && <p className="wallet-chooser-status" role="status">Waiting for wallet approval…</p>}
-            {walletChooserError && <p className="wallet-chooser-error" role="alert">{walletChooserError}</p>}
-            {!isWalletBrowser && (
-              <div className="wallet-inline-help">
-                <div className="wallet-inline-help-heading"><span aria-hidden="true">◎</span><div><h3>Wallet not connecting?</h3><p>Open Asset Oracle inside your wallet app.</p></div></div>
-                <div className="wallet-inline-help-links">
-                  {["MetaMask", "Trust Wallet", "OKX Wallet", "Bitget Wallet", "Coinbase Wallet"].map((name) => (
-                    <div className="wallet-inline-help-chip" key={name}><span>{name.slice(0, 1)}</span>{name}</div>
-                  ))}
-                </div>
-                <p className="wallet-inline-help-note">You’re using a regular browser (e.g. Chrome or Brave). For the best experience on mobile, open your wallet app, find its Browser or Discover tab, and visit <strong>assetoracleapp.xyz</strong>. Never share your recovery phrase or private keys.</p>
-              </div>
-            )}
-          </section>
-        </div>
-      )}
+
 
       {helpOpen && (
         <div className="help-overlay" role="presentation" onClick={() => setHelpOpen(false)}>
