@@ -10824,3 +10824,54 @@ select.brand-select option,
   .asset-login-heading h2 { max-width: 290px; margin-right: auto; margin-left: auto; font-size: 23px; }
   .asset-login-option { min-height: 62px; }
 }
+
+
+/* Mobile hero spacing refinement: remove oversized empty space between copy blocks. */
+@media (max-width: 650px) {
+  .hero {
+    min-height: 0;
+    padding: 24px 20px 26px;
+  }
+
+  .hero-layout {
+    align-items: start;
+    gap: 18px;
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero h1 {
+    margin: 20px 0 16px;
+    line-height: 1.02;
+  }
+
+  .hero-typewriter-description {
+    min-height: 3.6em;
+    margin: 0;
+    line-height: 1.65;
+  }
+
+  .hero-trust-chips {
+    margin-top: 14px;
+    gap: 7px;
+  }
+
+  .hero-motion-line {
+    margin-top: 18px;
+  }
+
+  .hero-actions {
+    width: 100%;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  .hero-footnote {
+    margin-top: 20px;
+    padding-top: 12px;
+  }
+}
