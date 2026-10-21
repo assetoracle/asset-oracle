@@ -1,5 +1,5 @@
 import { friendlyError } from "../utils/friendlyError";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { assetChainTestnet } from "../config/assetChain";
@@ -72,7 +72,7 @@ async function requestAssetChainSwitch(
 }
 
 export function useWalletStatus() {
-  const { login, logout, ready, authenticated } = usePrivy();
+  const { open, close } = useAppKit();
   const { address, chainId, isConnected, connector } = useAccount();
   const { disconnectAsync } = useDisconnect();
 
@@ -125,6 +125,15 @@ export function useWalletStatus() {
       : isTestnet(wallet.chainId)
         ? "correct"
         : "wrong";
+
+  // When the wallet app returns after switching successfully, close any stale
+  // AppKit network modal. Mobile deep-link handoff can leave that modal open
+  // even though wagmi already reports Enugu (42421).
+  useEffect(() => {
+    if (networkState === "correct") {
+      close();
+    }
+  }, [networkState, close]);
 
   useEffect(() => {
     if (
@@ -232,11 +241,13 @@ export function useWalletStatus() {
     userInitiatedDisconnectRef.current = false;
     setWalletBusy(true);
     setWalletMessage("");
+
     try {
-      if (!ready) throw new Error("Secure sign-in is still loading. Please try again.");
-      await login();
+      await open({ view: "Connect" });
     } catch (error) {
-      setWalletMessage(friendlyError(error, "Could not open secure sign-in."));
+      setWalletMessage(
+        friendlyError(error, "Wallet unavailable."),
+      );
     } finally {
       setWalletBusy(false);
     }
@@ -244,10 +255,11 @@ export function useWalletStatus() {
 
   async function handleOpenAccount() {
     try {
-      if (!ready) throw new Error("Secure sign-in is still loading. Please try again.");
-      login();
+      await open({ view: "Account" });
     } catch (error) {
-      setWalletMessage(friendlyError(error, "Could not open secure sign-in."));
+      setWalletMessage(
+        friendlyError(error, "Wallet unavailable."),
+      );
     }
   }
 
@@ -305,9 +317,8 @@ export function useWalletStatus() {
 
     try {
       userInitiatedDisconnectRef.current = true;
-      if (authenticated) await logout();
       await disconnectAsync();
-      setWalletMessage("Signed out of Asset Oracle.");
+      setWalletMessage("Wallet disconnected from Asset Oracle.");
     } catch (error) {
       userInitiatedDisconnectRef.current = false;
       setWalletMessage(
