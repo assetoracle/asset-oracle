@@ -269,9 +269,23 @@ export function useWalletStatus() {
       const rabbyConnector = connectors.find((item) => item.id === "rabby")
         ?? connectors.find((item) => /rabby/i.test(item.name));
       const genericInjectedConnector = connectors.find((item) => item.id === "injected");
-      if (rabbyBrowser && rabbyConnector) {
+      const userAgent = typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
+      const mobileDevice = /android|iphone|ipad|ipod/i.test(userAgent);
+      const namedInjectedWallet = Boolean(
+        injectedProvider?.isRabby ||
+        injectedProvider?.isMetaMask ||
+        injectedProvider?.isTrust ||
+        injectedProvider?.isOKXWallet ||
+        injectedProvider?.isBitgetWallet
+      );
+      // Avoid silently choosing a desktop browser extension just because it
+      // injected window.ethereum. Use direct connection for recognizable wallet
+      // DApp browsers, while normal browsers keep the wallet chooser.
+      const walletAppBrowser = /rabby|metamask|trustwallet|trust wallet|okx|bitget|coinbasewallet|zerion/i.test(userAgent)
+        || (mobileDevice && namedInjectedWallet);
+      if (rabbyBrowser && walletAppBrowser && rabbyConnector) {
         await connectAsync({ connector: rabbyConnector });
-      } else if (injectedProvider && genericInjectedConnector) {
+      } else if (walletAppBrowser && injectedProvider && genericInjectedConnector) {
         await connectAsync({ connector: genericInjectedConnector });
       } else {
         await open({ view: "Connect" });
