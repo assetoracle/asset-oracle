@@ -111,8 +111,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         </div>
         <div className="asset-login-heading">
           <span className="asset-login-shield"><ShieldCheck size={23} /></span>
-          <h2 id="asset-login-title">Create your account or sign in</h2>
-          <p id="asset-login-description">Choose email, Google, X, or an external wallet to continue to Asset Oracle.</p>
+          <h2 id="asset-login-title">Sign in to Asset Oracle</h2>
+          <p id="asset-login-description">Choose email, Google, X, or an external wallet to sign in to Asset Oracle.</p>
         </div>
         <div className="asset-login-options">
           <button className="asset-login-option asset-login-option-primary" type="button" onClick={() => void startLogin("email")} disabled={isPending || !ready}>
