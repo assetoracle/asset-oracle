@@ -123,7 +123,7 @@ export default function Header({
               className="connect-button"
               type="button"
               onClick={handleSignIn}
-              disabled={walletBusy || !privyReady}
+              disabled={walletBusy}
             >
               {walletBusy ? "Opening sign-in..." : !privyReady ? "Preparing sign-in..." : "Sign in"}
             </button>
