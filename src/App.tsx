@@ -123,11 +123,6 @@ function pathForPage(page: Page, marketId?: string): string {
   return paths[page];
 }
 
-function navigatePath(path: string): void {
-  window.history.pushState({}, "", path);
-  window.dispatchEvent(new PopStateEvent("popstate"));
-}
-
 function decodeRoutePath(value: string): string {
   try {
     return decodeURIComponent(value);
@@ -137,12 +132,12 @@ function decodeRoutePath(value: string): string {
   }
 }
 
-function parseRoutePath(pathname: string): {
+function parseHash(): {
   page: Page;
   marketId: string | null;
   verificationMarketId: string | null;
 } {
-  const raw = pathname || "/";
+  const raw = window.location.hash.replace(/^#/, "") || "/";
   const parts = raw.split("/").filter(Boolean);
 
   if (parts[0] === "verify" && parts[1]) {
@@ -393,22 +388,17 @@ useEffect(() => {
   // Resolve browser history and direct market-detail links after markets load.
   useEffect(() => {
     function syncFromHash() {
-      // Preserve legacy links such as /#/markets by moving the route into the pathname.
-      if (window.location.hash.startsWith("#/")) {
-        const legacyPath = window.location.hash.slice(1) || "/";
-        window.history.replaceState({}, "", `${legacyPath}${window.location.search}`);
-      }
-      const route = parseRoutePath(window.location.pathname);
+      const route = parseHash();
       setPage(route.page);
       setSelectedMarketId(route.marketId);
       setVerificationMarketId(route.verificationMarketId);
       setMobileMenuOpen(false);
     }
 
-    window.addEventListener("popstate", syncFromHash);
+    window.addEventListener("hashchange", syncFromHash);
     syncFromHash();
 
-    return () => window.removeEventListener("popstate", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
   }, []);
 
   // Hash-based navigation can preserve the previous scroll position. Start
@@ -422,7 +412,7 @@ useEffect(() => {
   useEffect(() => {
     if (marketsLoading) return;
 
-    const route = parseRoutePath(window.location.pathname);
+    const route = parseHash();
     if (!route.marketId) return;
 
     const exists = publishedMarkets.some(
@@ -478,8 +468,7 @@ useEffect(() => {
         setPersonalReferralStats(stats);
         const url = new URL(window.location.href);
         url.searchParams.set("ref", code);
-        url.pathname = "/referrals";
-        url.hash = "";
+        url.hash = "/referrals";
         setReferralLink(url.toString());
       })
       .catch((error) => {
@@ -577,39 +566,39 @@ useEffect(() => {
     setSearch("");
     setActiveCategory("All Markets");
     setReferralMessage("");
-    navigatePath(pathForPage(nextPage));
+    window.location.hash = pathForPage(nextPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function rememberReturnLocation() {
-    const currentRoute = parseRoutePath(window.location.pathname);
+    const currentRoute = parseHash();
     // Avoid stacking detail pages as return destinations; direct links use the Markets fallback.
     if (currentRoute.marketId || currentRoute.verificationMarketId) {
       returnHashRef.current = null;
       return;
     }
-    returnHashRef.current = `${window.location.pathname}${window.location.search}` || "/";
+    returnHashRef.current = window.location.hash || "#/";
   }
 
   function openMarket(market: DisplayMarket) {
     // Open details for published markets regardless of lifecycle status.
     // On-chain status and deadline checks still disable staking on closed markets.
     rememberReturnLocation();
-    navigatePath(pathForPage("Markets", market.id));
+    window.location.hash = pathForPage("Markets", market.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function goBackToMarkets() {
     // Return to the actual originating route. A directly opened detail/verification link has no in-app origin.
-    const returnHash = returnHashRef.current || "/markets";
+    const returnHash = returnHashRef.current || "#/markets";
     returnHashRef.current = null;
-    navigatePath(returnHash);
+    window.location.hash = returnHash;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function openVerification(market: DisplayMarket) {
     rememberReturnLocation();
-    navigatePath(`/verify/${encodeURIComponent(market.id)}`);
+    window.location.hash = `/verify/${encodeURIComponent(market.id)}`;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -825,7 +814,7 @@ useEffect(() => {
       if (!market) return <div className="empty-state"><h3>Verification record unavailable</h3><p>This market has not been found in the published market records.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to settled markets</button></div>;
       const record = marketLifecycle.get(market.id);
       if (!record || record.status !== MARKET_STATUS.SETTLED) return <div className="empty-state"><h3>Market not confirmed as settled</h3><p>Verification details are shown only after the on-chain market status confirms settlement.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to markets</button></div>;
-      return <MarketVerificationPage market={market} outcome={record.outcome} resolvedAt={record.resolvedAt} evidenceHash={record.evidenceHash} evidenceSource={record.evidenceSource} managerAddress={market.onchainManagerAddress} onBack={goBackToMarkets} backLabel={returnHashRef.current === "/" ? "Back to home" : "Back to markets"} />;
+      return <MarketVerificationPage market={market} outcome={record.outcome} resolvedAt={record.resolvedAt} evidenceHash={record.evidenceHash} evidenceSource={record.evidenceSource} managerAddress={market.onchainManagerAddress} onBack={goBackToMarkets} backLabel={returnHashRef.current === "#/" ? "Back to home" : "Back to markets"} />;
     }
 
     if (selectedMarketId && marketsLoading) {
@@ -1119,7 +1108,7 @@ useEffect(() => {
         <button className="footer-legal-link footer-help-button" type="button" onClick={() => setHelpOpen(true)}>
           <CircleHelp size={15} aria-hidden="true" /> Help
         </button>
-        <a className="footer-legal-link" href="/terms">Terms of Service</a>
+        <a className="footer-legal-link" href="#/terms">Terms of Service</a>
 
         <div className="footer-socials" aria-label="Official social channels">
           <a
