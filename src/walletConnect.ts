@@ -80,6 +80,8 @@ export const wagmiAdapter = new WagmiAdapter({
         provider: () => getRabbyProvider() as never,
       },
     }),
+    // Generic injected connector supports wallets opened in their own DApp browsers.
+    injected(),
   ],
 });
 

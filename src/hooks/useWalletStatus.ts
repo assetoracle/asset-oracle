@@ -41,7 +41,17 @@ type Eip1193Provider = {
 type RabbyInjectedWindow = Window & {
   ethereum?: {
     isRabby?: boolean;
-    providers?: Array<{ isRabby?: boolean }>;
+    isMetaMask?: boolean;
+    isTrust?: boolean;
+    isOKXWallet?: boolean;
+    isBitgetWallet?: boolean;
+    providers?: Array<{
+      isRabby?: boolean;
+      isMetaMask?: boolean;
+      isTrust?: boolean;
+      isOKXWallet?: boolean;
+      isBitgetWallet?: boolean;
+    }>;
   };
 };
 
@@ -264,14 +274,29 @@ export function useWalletStatus() {
         injectedProvider?.isRabby ||
         injectedProvider?.providers?.some((provider) => provider.isRabby),
       );
-      // Prefer a connector explicitly identified as Rabby. Only fall back to the
-      // generic injected connector when the wallet browser exposes no named one.
-      const injectedConnector = connectors.find((item) => item.id === "rabby")
-        ?? connectors.find((item) => /rabby/i.test(item.name))
-        ?? connectors.find((item) => item.id === "injected");
-
-      if (rabbyBrowser && injectedConnector) {
-        await connectAsync({ connector: injectedConnector });
+      // Prefer the injected wallet when the site is opened inside a wallet app.
+      // In a normal browser, retain AppKit's chooser for extensions and mobile handoff.
+      const rabbyConnector = connectors.find((item) => item.id === "rabby")
+        ?? connectors.find((item) => /rabby/i.test(item.name));
+      const genericInjectedConnector = connectors.find((item) => item.id === "injected");
+      const userAgent = typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
+      const mobileDevice = /android|iphone|ipad|ipod/i.test(userAgent);
+      const namedInjectedWallet = Boolean(
+        injectedProvider?.isRabby ||
+        injectedProvider?.isMetaMask ||
+        injectedProvider?.isTrust ||
+        injectedProvider?.isOKXWallet ||
+        injectedProvider?.isBitgetWallet
+      );
+      // Avoid silently choosing a desktop browser extension just because it
+      // injected window.ethereum. Use direct connection for recognizable wallet
+      // DApp browsers, while normal browsers keep the wallet chooser.
+      const walletAppBrowser = /rabby|metamask|trustwallet|trust wallet|okx|bitget|coinbasewallet|zerion/i.test(userAgent)
+        || (mobileDevice && namedInjectedWallet);
+      if (rabbyBrowser && walletAppBrowser && rabbyConnector) {
+        await connectAsync({ connector: rabbyConnector });
+      } else if (walletAppBrowser && injectedProvider && genericInjectedConnector) {
+        await connectAsync({ connector: genericInjectedConnector });
       } else {
         await open({ view: "Connect" });
       }

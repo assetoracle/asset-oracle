@@ -10875,3 +10875,44 @@ select.brand-select option,
     padding-top: 12px;
   }
 }
+
+
+/* Mobile homepage density: reduce oversized vertical gaps without redesigning. */
+@media (max-width: 650px) {
+  .hero {
+    margin-top: 14px;
+    padding: 22px 18px;
+  }
+
+  .hero h1 {
+    margin-top: 16px;
+    margin-bottom: 12px;
+    line-height: 1.04;
+  }
+
+  .hero-description {
+    line-height: 1.55;
+  }
+
+  .hero-actions {
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .hero-footnote {
+    margin-top: 22px;
+    padding-top: 14px;
+  }
+
+  .markets-section {
+    margin-top: 30px;
+  }
+
+  .verification-banner {
+    margin-top: 28px;
+  }
+
+  .source-panel {
+    margin-bottom: 28px;
+  }
+}
