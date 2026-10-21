@@ -28,7 +28,7 @@ export const appKit = createAppKit({
   features: {
     analytics: false,
     email: false,
-    socials: [],
+    socials: false,
     allWallets: true,
   },
   themeMode: "dark",
