@@ -237,9 +237,9 @@ function AccountPage({
       {!walletConnected ? (
         <div className="account-empty-state">
           <CircleHelp size={25} />
-          <h2>Connect your wallet</h2>
+          <h2>Sign in to continue</h2>
           <p>Connect the wallet used to place predictions to load its verified account records.</p>
-          <button className="primary-button" type="button" onClick={onConnect}>Connect wallet</button>
+          <button className="primary-button" type="button" onClick={onConnect}>Sign in</button>
         </div>
       ) : (
         <>
