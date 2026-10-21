@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAppKit } from "@reown/appkit/react";
 import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
@@ -256,8 +256,7 @@ export default function App() {
   } = useWalletStatus();
 
   const { signMessageAsync } = useSignMessage();
-  const { login, ready: privyReady } = usePrivy();
-  const [loginError, setLoginError] = useState("");
+  const { open } = useAppKit();
   const isAdmin = useIsAdmin(address);
 
   const validatorStatusReads = useReadContracts({
@@ -810,20 +809,9 @@ useEffect(() => {
     }
   }
 
-  // Use Privy’s native sign-in UI directly; avoid stacking a custom modal
-  // in front of the same Privy chooser.
-  async function openWalletHelp() {
-    setLoginError("");
-    if (!privyReady) {
-      setLoginError("Secure sign-in is still initializing. Please wait a moment and tap Sign in again.");
-      return;
-    }
-    try {
-      await login();
-    } catch (error) {
-      console.error("Asset Oracle sign-in failed to open:", error);
-      setLoginError(error instanceof Error ? error.message : "Sign-in could not open. Please reload the page and try again.");
-    }
+  // Open Reown AppKit's external-wallet picker; no embedded wallet or social login.
+  function openWalletHelp() {
+    void open({ view: "AllWallets", namespace: "eip155" });
   }
 
   function renderContent() {

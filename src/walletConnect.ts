@@ -1,18 +1,42 @@
-import { createConfig } from "@privy-io/wagmi";
-import { http } from "wagmi";
+import { createAppKit } from "@reown/appkit/react";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { assetChainTestnet } from "./config/assetChain";
 
-// Privy is the single authentication and wallet-connection provider.
-// Keep Asset Chain Testnet configured for existing contract and signing flows.
-export const wagmiConfig = createConfig({
-  chains: [assetChainTestnet],
-  transports: {
-    [assetChainTestnet.id]: http("https://enugu-rpc.assetchain.org/"),
-  },
+const projectId = "31b59192af5764277976dd36db7754ba";
+
+const networks = [assetChainTestnet] as const;
+
+export const wagmiAdapter = new WagmiAdapter({
+  projectId,
+  networks: [...networks],
 });
 
-declare module "wagmi" {
-  interface Register {
-    config: typeof wagmiConfig;
-  }
-}
+export const wagmiConfig = wagmiAdapter.wagmiConfig;
+
+export const appKit = createAppKit({
+  adapters: [wagmiAdapter],
+  projectId,
+  networks: [...networks],
+  defaultNetwork: assetChainTestnet,
+  metadata: {
+    name: "Asset Oracle",
+    description: "Real-world prediction markets on Asset Chain",
+    url: "https://assetoracleapp.xyz",
+    icons: ["/asset-oracle-logo-transparent.svg"],
+  },
+  // External wallets only: no email/social login or embedded-wallet onboarding.
+  features: {
+    analytics: false,
+    email: false,
+    socials: [],
+    allWallets: true,
+  },
+  themeMode: "dark",
+  themeVariables: {
+    "--w3m-accent": "#12D9F5",
+    "--w3m-color-mix": "#071A24",
+    "--w3m-color-mix-strength": 38,
+    "--w3m-font-family": "'Bricolage Grotesque', sans-serif",
+    "--w3m-border-radius-master": "12px",
+  },
+});
