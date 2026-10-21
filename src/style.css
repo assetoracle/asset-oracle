@@ -11238,3 +11238,30 @@ select.brand-select option,
   .wallet-inline-help { padding: 14px; }
   .wallet-inline-help-heading h3 { font-size: 17px; }
 }
+
+
+/* Keep the original RainbowKit chooser; extend it with Asset Oracle onboarding. */
+[data-rk] [role="dialog"] {
+  color-scheme: dark;
+}
+[data-rk] [role="dialog"] .ao-rainbowkit-guide {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(18,217,245,.28);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #0b2a35, #071a24);
+  color: #f2fcff;
+  font-family: inherit;
+}
+.ao-rainbowkit-guide-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.ao-rainbowkit-guide-icon { display: grid; place-items: center; flex: 0 0 42px; width: 42px; height: 42px; border: 1px solid rgba(18,217,245,.35); border-radius: 50%; color: #12d9f5; font-size: 24px; }
+.ao-rainbowkit-guide h3 { margin: 0 0 4px; color: #f2fcff; font-size: 17px; font-weight: 750; }
+.ao-rainbowkit-guide-heading p { margin: 0; color: #8da9b3; font-size: 12px; }
+.ao-rainbowkit-guide > p { margin: 10px 0 0; color: #b7cbd1; font-size: 12px; line-height: 1.65; }
+.ao-rainbowkit-guide .ao-rainbowkit-guide-safety { padding-top: 10px; border-top: 1px solid rgba(18,217,245,.14); color: #63f3ff; }
+@media (max-width: 560px) {
+  [data-rk] [role="dialog"] .ao-rainbowkit-guide { padding: 14px; margin-top: 14px; }
+  .ao-rainbowkit-guide h3 { font-size: 15px; }
+}
