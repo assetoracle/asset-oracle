@@ -1,83 +1,95 @@
-# Privy authentication migration preparation
+# Dynamic authentication migration preparation
 
-Status: preparation only. The current Reown email/social flow remains active until a Privy app is configured and the frontend + backend integration is implemented and tested. Do not deploy a frontend that assumes a Privy App ID exists.
+Status: provider selection pivoted from Privy to Dynamic because Asset Oracle requires an explicitly configurable custom EVM network. The current Reown sign-in flow remains active until the Dynamic SDK is integrated and tested. This document is preparation, not a completed auth replacement.
 
-## 1. Create the Privy app
+## Why Dynamic
 
-1. Open the [Privy Dashboard](https://dashboard.privy.io/) and sign in or create a developer account.
-2. Create a new app named **Asset Oracle**.
-3. In the app's API keys / app overview area, copy the **App ID**. This is a public client identifier, not the App Secret.
-4. In the app's authentication settings, enable these methods:
-   - **Email** (one-time passcode / OTP).
-   - **Google**.
-   - **Twitter** (this is the provider name Privy uses for X).
-5. If the dashboard asks for OAuth credentials for Google or Twitter/X, follow its provider-specific instructions. Configure the correct client ID/secret and callback/redirect URLs exactly as shown by Privy. Do not put OAuth client secrets or the Privy App Secret in Vite variables or frontend source.
-6. In the app's allowed domains / origins / application URLs settings, allow:
-   - Production: `https://assetoracleapp.xyz`
-   - Local development: `http://localhost:5173`
-   - Any other real preview/staging host used for testing, added explicitly.
-7. Set the app's branding to Asset Oracle and use the public logo URL `https://assetoracleapp.xyz/asset-oracle-logo-transparent.svg` if the dashboard supports a logo.
-8. Save the changes and test each enabled method in Privy's own test environment before using the App ID in Asset Oracle.
+Dynamic documents support for custom EVM networks through `DynamicContextProvider`'s `overrides.evmNetworks`, including RPC and explorer configuration. It supports email and social sign-in including Google and Twitter/X, and can create embedded EVM wallets for users who authenticate without an existing wallet.
 
-Dashboard labels can change as Privy updates its UI. Use the app's Authentication / User management settings and the official [Privy authentication overview](https://docs.privy.io/authentication) if a label differs.
+Official docs:
+- [Dynamic custom EVM networks](https://docs.dynamic.xyz/chains/evmNetwork)
+- [Email and social authentication](https://docs.dynamic.xyz/authentication-methods/email-social-sms)
+- [Embedded wallet creation](https://docs.dynamic.xyz/wallets/embedded-wallets/create-embedded-wallets)
+- [Dynamic React quickstart](https://docs.dynamic.xyz/quickstart)
 
-## 2. Frontend environment variable
+## 1. Create the Dynamic environment
 
-Copy `.env.example` to a local `.env.local` file and set:
+1. Open the [Dynamic Dashboard](https://app.dynamic.xyz/) and create/sign in to your developer account.
+2. Create an application/environment named **Asset Oracle**.
+3. Copy its **Environment ID**.
+4. In login/authentication settings, enable **Email**, **Google**, and **Twitter** (the dashboard's name for X). Complete any provider-specific OAuth configuration and callback URLs shown in the dashboard.
+5. In the wallet settings, enable embedded wallet creation on sign-up for non-wallet login. Enable external wallet connectors and ensure EVM wallets are enabled.
+6. Configure the environment's allowed domains / application origins for:
+   - `https://assetoracleapp.xyz`
+   - `http://localhost:5173`
+   - Any actual preview/staging host used for testing.
+7. Use the dashboard's branded UI options if desired; Asset Oracle's own modal can remain custom. Save and test the methods in the Dynamic environment.
+
+## 2. Asset Chain Testnet custom EVM network
+
+Asset Chain is EVM-compatible. Add this network to Dynamic's custom EVM network configuration, and add the same viem/Wagmi chain to the frontend's Wagmi config:
+
+- Name: `Asset Chain Testnet`
+- Chain ID / network ID: `42421`
+- RPC: `https://enugu-rpc.assetchain.org/`
+- Native currency: `RWA`, 18 decimals
+- Explorer: `https://scan-testnet.assetchain.org`
+
+Dynamic's `EvmNetwork` object requires chainId, networkId, name, chainName, nativeCurrency, rpcUrls, blockExplorerUrls, and iconUrls. For the icon, use an approved public Asset Oracle/Asset Chain logo URL or a neutral supported icon URL; do not use a fabricated URL.
+
+Important: configuring a custom network in Dynamic does not, by itself, prove every embedded-wallet flow, chain switch, or transaction path works. Test embedded wallets and external wallets on chain 42421, including signing the backend's nonce message and submitting a harmless test transaction, before rollout.
+
+## 3. Frontend environment variable
+
+Copy `.env.example` to `.env.local` and set:
 
 ```dotenv
-VITE_PRIVY_APP_ID=your_public_privy_app_id
+VITE_DYNAMIC_ENVIRONMENT_ID=your_dynamic_environment_id
 ```
 
-Add the same variable to the frontend hosting environment (production and each preview environment that should support sign-in), then trigger a fresh build/deploy. Vite only exposes variables prefixed with `VITE_` to browser code, so this variable must contain the **App ID only**. Never use `VITE_PRIVY_APP_SECRET`, OAuth client secrets, or other server credentials.
+Set the same value in the frontend hosting environment for production and each preview environment that should support login, then rebuild. The environment ID is a public client identifier. Do not place server API keys or private credentials in `VITE_` variables.
 
-The application should fail closed or show a clear configuration message when the App ID is missing; it must not silently claim that Privy sign-in is available.
+## 4. Frontend integration requirements
 
-## 3. Planned frontend integration
+- Use compatible Dynamic React SDK packages at matching versions, including the Ethereum connector package.
+- Configure `DynamicContextProvider` with `VITE_DYNAMIC_ENVIRONMENT_ID`, the custom Asset Chain network, and the Ethereum wallet connectors.
+- Keep Asset Oracle's branded login surface for Email, Google, X and external wallets if the SDK supports the required headless flows. Otherwise style the provider UI consistently with Asset Oracle.
+- Integrate Dynamic wallets with Wagmi without maintaining a separate, conflicting Wagmi wallet state. Existing code uses Wagmi for the address, `useSignMessage`, chain reads, transactions, role checks and network switching.
+- Configure embedded wallet creation on signup for email/social users who do not have a wallet. Do not treat social login alone as proof of wallet ownership.
+- Keep external wallet login/connection, chain ID 42421, existing app session lifecycle and sign-out behavior working.
 
-The migration should use Privy's React SDK with a custom login UI to preserve Asset Oracle's branded modal. Enable only email, Google and Twitter/X for social/email authentication. Keep Reown/AppKit available for external-wallet selection while integrating Privy's wallet with Wagmi in a supported way.
+## 5. Backend verification required before rollout
 
-Important: Asset Oracle uses Wagmi's active EVM address and signer throughout the application, including wallet sessions, role checks, proposals and on-chain actions. Successful Privy authentication by itself does **not** automatically connect a Privy embedded wallet to Wagmi. Use the supported Privy-Wagmi integration (and test the exact versions together) so the selected embedded or external wallet is reflected consistently in Wagmi. Do not simulate a wallet connection by copying an address into UI state.
+The market frontend currently establishes a backend wallet session using `POST /api/markets/auth/nonce` and `POST /api/markets/auth/session`. Do not grant a session based only on a browser-provided email, social profile, or address.
 
-Relevant official docs:
-- [Privy React SDK setup](https://docs.privy.io/guide/guides/basics/react/basics/react/setup)
-- [Privy authentication methods](https://docs.privy.io/authentication)
-- [Privy access tokens](https://docs.privy.io/authentication/user-authentication/access-tokens)
-- [Privy + Wagmi integration](https://docs.privy.io/guide/react/wallets/embedded/third-party-auth)
+Two secure approaches are possible:
 
-## 4. Backend verification required before enabling social/email sign-in
+### Preferred identity-backed session
 
-The current frontend's market API uses `POST /api/markets/auth/nonce` and `POST /api/markets/auth/session` to establish a session from an EVM wallet signature. The frontend stores the returned wallet session in session storage and sends it as a bearer token. Do not replace this with a client-provided email, social profile, or wallet address.
+1. Frontend sends a Dynamic-issued user JWT to a backend endpoint over HTTPS, e.g. `POST /api/auth/dynamic/session` with `Authorization: Bearer <JWT>`.
+2. Backend verifies the JWT signature using Dynamic's documented JWKS/JWT verification method and validates issuer, expiry and expected environment/application claims. Never trust merely decoded JWT claims.
+3. Resolve/create the internal user by the verified Dynamic user ID, not by email alone. Email is a mutable profile attribute; do not merge accounts only because email strings match.
+4. Backend issues its own Asset Oracle session token. Every privileged action continues to enforce backend authorization and roles.
+5. Link a wallet to the authenticated identity only through a verified wallet-linking process. Verify wallet control with a fresh signature or supported provider proof; never trust an arbitrary browser-submitted address.
 
-Before the new flow is enabled, implement and deploy one of these secure patterns on the **backend service that actually serves** `https://asset-oracle-backend.onrender.com`:
+### Alternative wallet-signature session
 
-### Preferred: verify a Privy access token server-side
+Continue the current nonce/signature session endpoint only after proving that Dynamic's embedded wallet is connected to Wagmi and can sign the exact server-issued nonce. Verify signature recovery on the backend with real test accounts. This proves control of the wallet, but does not by itself establish a persistent mapping from Dynamic identity to wallet.
 
-1. After Privy login, the frontend obtains the current Privy access token using the SDK.
-2. Send it to a backend endpoint over HTTPS, e.g. `POST /api/auth/privy/session` with `Authorization: Bearer <Privy access token>`.
-3. The backend verifies the token with Privy's supported server SDK / verification library, checking signature, issuer, audience (the configured App ID), expiry and required claims. Never trust decoded JWT claims without signature verification.
-4. Resolve or create the application's internal user by stable Privy user ID (DID), not email alone. Treat email as a mutable profile attribute; do not merge accounts solely because an email string matches.
-5. Return an Asset Oracle session token using the backend's established signing/session mechanism. Authorize all privileged actions from that server-issued session, not from frontend state.
-6. Link a wallet to the authenticated identity only through a verified wallet-linking flow. Verify ownership by a fresh wallet signature or use a documented, supported Privy-linked-wallet proof. Never accept an arbitrary address sent by the browser.
-7. Preserve role and admin/validator checks on the backend. A new Privy identity must not inherit privileged wallet roles based on an unverified address.
+## 6. Rollout checklist
 
-### Alternative: continue wallet-signature sessions
+- [ ] Email OTP, Google and Twitter/X login work on desktop and Android Chrome.
+- [ ] OAuth returns to the Asset Oracle tab and does not hang on a provider loading screen.
+- [ ] Email/social users receive an embedded EVM wallet as configured.
+- [ ] External wallets connect and can sign messages.
+- [ ] Embedded and external wallets both work on chain ID 42421.
+- [ ] Wallet address/signer is consistent across Dynamic, Wagmi and Asset Oracle.
+- [ ] Backend rejects invalid, expired, wrong-environment and bad-signature Dynamic tokens.
+- [ ] Backend rejects arbitrary user IDs, emails and wallet addresses from the client.
+- [ ] Admin/validator permissions remain server-authorized.
+- [ ] Sign-out clears Dynamic state and the Asset Oracle backend session.
+- [ ] Production and preview domains are tested before rollout.
 
-If social/email users receive a Privy embedded EVM wallet, the app may retain the current nonce/signature session endpoint only after the embedded wallet is connected to Wagmi and can sign the backend's exact nonce message. Confirm the signature scheme and recovery behavior on the server with a real test wallet before relying on this path. This establishes wallet control, but does not by itself establish or persist the Privy identity-to-wallet account mapping.
+## Backend source clarification
 
-## 5. Verification and rollout checklist
-
-- [ ] Email OTP succeeds on desktop and Android Chrome.
-- [ ] Google OAuth returns to the original Asset Oracle tab without a stuck provider loading page.
-- [ ] X/Twitter OAuth returns to the app and completes the login callback.
-- [ ] A non-wallet user gets an embedded EVM wallet according to the chosen wallet-creation policy.
-- [ ] The active wallet address and signer are consistent across Privy, Wagmi and Asset Oracle.
-- [ ] Backend rejects missing, expired, malformed, wrong-audience and invalid-signature Privy tokens.
-- [ ] Backend rejects arbitrary client-supplied user IDs, emails and wallet addresses.
-- [ ] Existing external wallet connection, network switching to Asset Chain Testnet (42421), wallet-signature sessions and admin/validator authorization continue to work.
-- [ ] Sign-out clears both the Privy authentication state and the Asset Oracle backend session.
-- [ ] Test on production origin and the deployed preview origin before enabling the migration for all users.
-
-## Repository / backend note
-
-The frontend points at `https://asset-oracle-backend.onrender.com` for market-session APIs. The separately named public repository `Asset-Oracle/AssestOracle_Backend` exposes a different legacy `/api/auth/connect-wallet` route in its checked-in `server.js`; it does not show the market nonce/session routes consumed by this frontend. Confirm the source repository and deployment linked to the live Render service before implementing backend endpoints or environment variables. Do not assume changes to that legacy repository will affect the production market API.
+The frontend calls `https://asset-oracle-backend.onrender.com` for market-session APIs. The separately named public repository `Asset-Oracle/AssestOracle_Backend` exposes a legacy `/api/auth/connect-wallet` route but does not show the market nonce/session endpoints consumed by this frontend. Confirm the actual source repository connected to the live Render service before adding the Dynamic JWT endpoint. Do not assume edits to that legacy repository will change the production market API.
