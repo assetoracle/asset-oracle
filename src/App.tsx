@@ -681,7 +681,7 @@ useEffect(() => {
     const requestedAddress = addressRef.current;
 
     if (!requestedAddress) {
-      setMyProposalsError("Connect your wallet first.");
+      setMyProposalsError("Sign in to continue first.");
       return;
     }
 
@@ -740,7 +740,7 @@ useEffect(() => {
   async function handleGetReferralLink() {
     const requestedAddress = addressRef.current;
     if (!requestedAddress || !wallet) {
-      setReferralMessage("Connect your wallet before generating a referral link.");
+      setReferralMessage("Sign in to continue before generating a referral link.");
       return;
     }
     if (networkState !== "correct") {
@@ -775,7 +775,7 @@ useEffect(() => {
     const requestedAddress = addressRef.current;
     const referralCode = new URLSearchParams(window.location.search).get("ref");
     if (!requestedAddress || !wallet) {
-      setReferralMessage("Connect your wallet to register this referral.");
+      setReferralMessage("Sign in to continue to register this referral.");
       return;
     }
     if (networkState !== "correct") {
@@ -1207,7 +1207,7 @@ useEffect(() => {
               <article className="help-topic">
                 <span className="help-topic-number">03</span>
                 <div>
-                  <h3>Connect your wallet</h3>
+                  <h3>Sign in to continue</h3>
                   <p>Use a wallet you control and check every request before approving it. The app is configured for Asset Chain Testnet (Chain ID 42421). Never share your recovery phrase or private keys.</p>
                 </div>
               </article>
