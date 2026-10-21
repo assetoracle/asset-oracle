@@ -812,14 +812,14 @@ useEffect(() => {
 
   // Use Privy’s native sign-in UI directly; avoid stacking a custom modal
   // in front of the same Privy chooser.
-  function openWalletHelp() {
+  async function openWalletHelp() {
     setLoginError("");
     if (!privyReady) {
       setLoginError("Secure sign-in is still initializing. Please wait a moment and tap Sign in again.");
       return;
     }
     try {
-      login();
+      await login();
     } catch (error) {
       console.error("Asset Oracle sign-in failed to open:", error);
       setLoginError(error instanceof Error ? error.message : "Sign-in could not open. Please reload the page and try again.");
