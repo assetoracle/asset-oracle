@@ -41,7 +41,17 @@ type Eip1193Provider = {
 type RabbyInjectedWindow = Window & {
   ethereum?: {
     isRabby?: boolean;
-    providers?: Array<{ isRabby?: boolean }>;
+    isMetaMask?: boolean;
+    isTrust?: boolean;
+    isOKXWallet?: boolean;
+    isBitgetWallet?: boolean;
+    providers?: Array<{
+      isRabby?: boolean;
+      isMetaMask?: boolean;
+      isTrust?: boolean;
+      isOKXWallet?: boolean;
+      isBitgetWallet?: boolean;
+    }>;
   };
 };
 
