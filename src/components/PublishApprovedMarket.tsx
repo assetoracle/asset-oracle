@@ -181,7 +181,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     try {
       const events = parseEventLogs({
         abi: marketPublisherAbi,
-        logs: receipt.data.logs.filter((log) => log.address.toLowerCase() === manager.toLowerCase()),
+        logs: receipt.data.logs.filter((log: { address: string }) => log.address.toLowerCase() === manager.toLowerCase()),
         eventName: "MarketCreated",
         strict: true,
       });
