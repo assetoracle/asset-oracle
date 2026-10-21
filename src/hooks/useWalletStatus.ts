@@ -1,6 +1,6 @@
 import { friendlyError } from "../utils/friendlyError";
 import { useAppKit } from "@reown/appkit/react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { assetChainTestnet } from "../config/assetChain";
 import {
@@ -35,6 +35,12 @@ export type WalletConnection = {
 
 type Eip1193Provider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+};
+
+type RabbyInjectedWindow = Window & {
+  ethereum?: {
+    isRabby?: boolean;
+  };
 };
 
 async function requestAssetChainSwitch(
@@ -73,6 +79,7 @@ async function requestAssetChainSwitch(
 
 export function useWalletStatus() {
   const { open, close } = useAppKit();
+  const { connectors, connectAsync } = useConnect();
   const { address, chainId, isConnected, connector } = useAccount();
   const { disconnectAsync } = useDisconnect();
 
@@ -243,7 +250,21 @@ export function useWalletStatus() {
     setWalletMessage("");
 
     try {
-      await open({ view: "Connect" });
+      // Rabby's in-app browser exposes an injected provider. Connect to that
+      // provider directly instead of relying on AppKit's remote wallet list,
+      // which may remain loading in some mobile wallet browsers.
+      const rabbyBrowser =
+        typeof window !== "undefined" &&
+        Boolean((window as RabbyInjectedWindow).ethereum?.isRabby);
+      const injectedConnector = connectors.find(
+        (item) => item.id === "injected" || /rabby/i.test(item.name),
+      );
+
+      if (rabbyBrowser && injectedConnector) {
+        await connectAsync({ connector: injectedConnector });
+      } else {
+        await open({ view: "Connect" });
+      }
     } catch (error) {
       setWalletMessage(
         friendlyError(error, "Wallet unavailable."),
