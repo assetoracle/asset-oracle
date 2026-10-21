@@ -78,7 +78,7 @@ export default function Header({
 
           <ConnectButton
             chainStatus="none"
-            accountStatus={{ small: "avatar", large: "full" }}
+            accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
             showBalance={false}
           />
 
