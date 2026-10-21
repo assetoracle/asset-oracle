@@ -230,16 +230,16 @@ export default function Portfolio({
           <div className="account-empty-icon">
             <WalletCards size={25} />
           </div>
-          <h2>Connect your wallet</h2>
+          <h2>Sign in to continue</h2>
           <p>
-            Connect your wallet to read your USDC balance.
+            Sign in to continue to read your USDC balance.
           </p>
           <button
             className="primary-button"
             type="button"
             onClick={onConnect}
           >
-            Connect wallet
+            Sign in
           </button>
         </div>
       ) : (

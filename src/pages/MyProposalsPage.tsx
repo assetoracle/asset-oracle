@@ -42,7 +42,7 @@ export default function MyProposalsPage({
 
       {!walletConnected ? (
         <div className="empty-state">
-          <h3>Connect your wallet</h3>
+          <h3>Sign in to continue</h3>
           <p>
             Connect the wallet you used to submit your proposals.
           </p>
@@ -51,7 +51,7 @@ export default function MyProposalsPage({
             type="button"
             onClick={onConnect}
           >
-            Connect wallet
+            Sign in
           </button>
         </div>
       ) : (
