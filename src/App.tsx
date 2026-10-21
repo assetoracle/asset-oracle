@@ -827,10 +827,19 @@ useEffect(() => {
     const installWalletGuide = () => {
       const dialog = document.querySelector<HTMLElement>('[data-rk] [role="dialog"]');
       if (!dialog || dialog.querySelector(".ao-rainbowkit-guide")) return;
+      const heading = [...dialog.querySelectorAll<HTMLElement>("h1,h2,h3,h4,div,span,p")].find((element) => element.textContent?.trim() === "What is a Wallet?");
+      if (!heading) return;
+      // RainbowKit's mobile chooser lays out its wallet list and its "What is a Wallet?" panel side-by-side.
+      // Place the guide inside that existing lower panel, not as a sibling of the modal panels.
+      let panel: HTMLElement | null = heading.parentElement;
+      while (panel && panel !== dialog && !(panel.textContent?.includes("Get a Wallet") && panel.textContent?.includes("Learn More"))) {
+        panel = panel.parentElement;
+      }
+      if (!panel || panel === dialog) return;
       const guide = document.createElement("section");
       guide.className = "ao-rainbowkit-guide";
-      guide.innerHTML = '<div class="ao-rainbowkit-guide-heading"><span class="ao-rainbowkit-guide-icon">◎</span><div><h3>Wallet not connecting?</h3><p>New to wallets? Follow these quick steps.</p></div></div><p>On mobile, open Asset Oracle in your wallet app’s built-in Browser or Discover tab (MetaMask, Trust Wallet, or OKX Wallet), then tap Connect Wallet.</p><p class="ao-rainbowkit-guide-safety">Never share your recovery phrase or private keys.</p>';
-      dialog.appendChild(guide);
+      guide.innerHTML = '<div class="ao-rainbowkit-guide-heading"><span class="ao-rainbowkit-guide-icon">◎</span><div><h3>Wallet not connecting?</h3><p>Copy the site link and open it in your wallet browser.</p></div></div><p>Tap your browser address bar and copy <strong>https://asset-oracle.onrender.com</strong>. Then open MetaMask, Trust Wallet, or OKX Wallet, go to its Browser or Discover tab, and paste the link.</p><p class="ao-rainbowkit-guide-safety">Never share your recovery phrase or private keys.</p>';
+      panel.appendChild(guide);
     };
     installWalletGuide();
     const observer = new MutationObserver(installWalletGuide);

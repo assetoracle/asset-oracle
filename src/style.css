@@ -11265,3 +11265,30 @@ select.brand-select option,
   [data-rk] [role="dialog"] .ao-rainbowkit-guide { padding: 14px; margin-top: 14px; }
   .ao-rainbowkit-guide h3 { font-size: 15px; }
 }
+
+
+/* Brand the existing RainbowKit modal itself; do not replace its wallet chooser. */
+[data-rk] [role="dialog"] {
+  color-scheme: dark;
+}
+[data-rk] [role="dialog"] .ao-rainbowkit-guide {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  flex: 0 0 100%;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(18,217,245,.32);
+  border-radius: 14px;
+  background: linear-gradient(145deg, #0b2a35, #071a24);
+  color: #f2fcff;
+  font-family: inherit;
+}
+[data-rk] [role="dialog"] .ao-rainbowkit-guide-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+[data-rk] [role="dialog"] .ao-rainbowkit-guide-icon { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border: 1px solid rgba(18,217,245,.35); border-radius: 50%; color: #12d9f5; font-size: 22px; }
+[data-rk] [role="dialog"] .ao-rainbowkit-guide h3 { margin: 0 0 4px; color: #f2fcff; font-size: 16px; font-weight: 750; }
+[data-rk] [role="dialog"] .ao-rainbowkit-guide-heading p { margin: 0; color: #8da9b3; font-size: 12px; }
+[data-rk] [role="dialog"] .ao-rainbowkit-guide > p { margin: 10px 0 0; color: #b7cbd1; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+[data-rk] [role="dialog"] .ao-rainbowkit-guide > p strong { color: #63f3ff; }
+[data-rk] [role="dialog"] .ao-rainbowkit-guide .ao-rainbowkit-guide-safety { padding-top: 9px; border-top: 1px solid rgba(18,217,245,.14); color: #63f3ff; }
