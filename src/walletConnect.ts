@@ -1,6 +1,6 @@
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { createConfig } from "@privy-io/wagmi";
+import { createConfig } from "wagmi";
 import { http } from "wagmi";
 import { assetChainTestnet } from "./config/assetChain";
 
