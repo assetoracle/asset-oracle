@@ -264,14 +264,15 @@ export function useWalletStatus() {
         injectedProvider?.isRabby ||
         injectedProvider?.providers?.some((provider) => provider.isRabby),
       );
-      // Prefer a connector explicitly identified as Rabby. Only fall back to the
-      // generic injected connector when the wallet browser exposes no named one.
-      const injectedConnector = connectors.find((item) => item.id === "rabby")
-        ?? connectors.find((item) => /rabby/i.test(item.name))
-        ?? connectors.find((item) => item.id === "injected");
-
-      if (rabbyBrowser && injectedConnector) {
-        await connectAsync({ connector: injectedConnector });
+      // Prefer the injected wallet when the site is opened inside a wallet app.
+      // In a normal browser, retain AppKit's chooser for extensions and mobile handoff.
+      const rabbyConnector = connectors.find((item) => item.id === "rabby")
+        ?? connectors.find((item) => /rabby/i.test(item.name));
+      const genericInjectedConnector = connectors.find((item) => item.id === "injected");
+      if (rabbyBrowser && rabbyConnector) {
+        await connectAsync({ connector: rabbyConnector });
+      } else if (injectedProvider && genericInjectedConnector) {
+        await connectAsync({ connector: genericInjectedConnector });
       } else {
         await open({ view: "Connect" });
       }
