@@ -256,7 +256,8 @@ export default function App() {
   } = useWalletStatus();
 
   const { signMessageAsync } = useSignMessage();
-  const { login } = usePrivy();
+  const { login, ready: privyReady } = usePrivy();
+  const [loginError, setLoginError] = useState("");
   const isAdmin = useIsAdmin(address);
 
   const validatorStatusReads = useReadContracts({
@@ -812,7 +813,16 @@ useEffect(() => {
   // Use Privy’s native sign-in UI directly; avoid stacking a custom modal
   // in front of the same Privy chooser.
   function openWalletHelp() {
-    login();
+    setLoginError("");
+    if (!privyReady) {
+      setLoginError("Secure sign-in is still initializing. Please wait a moment and tap Sign in again.");
+      return;
+    }
+    try {
+      login();
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Sign-in could not open. Please reload the page and try again.");
+    }
   }
 
   function renderContent() {
@@ -1100,6 +1110,11 @@ useEffect(() => {
       {walletMessage && (
         <p className="wallet-message" role="status">
           {walletMessage}
+        </p>
+      )}
+      {loginError && (
+        <p className="wallet-message" role="alert">
+          {loginError}
         </p>
       )}
 
