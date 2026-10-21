@@ -26,7 +26,6 @@ createRoot(rootElement).render(
           appInfo={{
             appName: "Assets Oracle",
             learnMoreUrl: "https://assetoracleapp.xyz",
-            iconUrl: "https://assetoracleapp.xyz/asset-oracle-logo-transparent.svg",
           }}
         >
           <App />
