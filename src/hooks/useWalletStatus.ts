@@ -234,7 +234,7 @@ export function useWalletStatus() {
     setWalletMessage("");
     try {
       if (!ready) throw new Error("Secure sign-in is still loading. Please try again.");
-      login();
+      await login();
     } catch (error) {
       setWalletMessage(friendlyError(error, "Could not open secure sign-in."));
     } finally {
