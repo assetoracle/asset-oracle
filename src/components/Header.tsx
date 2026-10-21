@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
 import type { Page, NavItem } from "./Nav";
@@ -28,7 +29,22 @@ export default function Header({
   onDisconnect,
   onToggleMobileMenu,
 }: HeaderProps) {
-  const { login } = usePrivy();
+  const { login, ready: privyReady } = usePrivy();
+  const [signInError, setSignInError] = useState("");
+
+  function handleSignIn() {
+    setSignInError("");
+    if (!privyReady) {
+      setSignInError("Secure sign-in is still initializing. Please wait a moment and try again.");
+      return;
+    }
+    try {
+      login();
+    } catch (error) {
+      console.error("Asset Oracle sign-in failed to open:", error);
+      setSignInError(error instanceof Error ? error.message : "Sign-in could not open. Please reload the page and try again.");
+    }
+  }
 
   return (
     <>
@@ -106,10 +122,10 @@ export default function Header({
             <button
               className="connect-button"
               type="button"
-              onClick={login}
-              disabled={walletBusy}
+              onClick={handleSignIn}
+              disabled={walletBusy || !privyReady}
             >
-              {walletBusy ? "Opening sign-in..." : "Sign in"}
+              {walletBusy ? "Opening sign-in..." : !privyReady ? "Preparing sign-in..." : "Sign in"}
             </button>
           )}
 
@@ -124,6 +140,12 @@ export default function Header({
           </button>
         </div>
       </header>
+
+      {signInError && (
+        <p className="wallet-message" role="alert" style={{ margin: "8px 16px" }}>
+          {signInError}
+        </p>
+      )}
 
       {mobileMenuOpen && (
         <MobileNav
