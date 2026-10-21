@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   BriefcaseBusiness,
   ChartNoAxesCombined,
@@ -812,7 +812,7 @@ useEffect(() => {
 
   // Use Privy’s native sign-in UI directly; avoid stacking a custom modal
   // in front of the same Privy chooser.
-  function openWalletHelp(event?: React.MouseEvent<HTMLButtonElement>) {
+  function openWalletHelp(event?: ReactMouseEvent<HTMLButtonElement>) {
     setLoginError("");
     if (!privyReady) {
       setLoginError("Secure sign-in is still initializing. Please wait a moment and tap Sign in again.");
