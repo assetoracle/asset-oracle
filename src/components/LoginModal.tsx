@@ -82,7 +82,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           : "Complete sign-in in the secure browser window, then return to Asset Oracle.",
     );
     try {
-      await login({ loginMethod: method });
+      await login({ loginMethods: [method] });
       // Wallet activation runs when Privy publishes the newly available wallet.
       setStatusMessage("Sign-in complete. Connecting your wallet…");
     } catch (error) {
