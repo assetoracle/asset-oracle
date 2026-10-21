@@ -51,7 +51,7 @@ export default function MyProposalsPage({
             type="button"
             onClick={onConnect}
           >
-            Sign in
+            Connect wallet
           </button>
         </div>
       ) : (
