@@ -40,6 +40,7 @@ type Eip1193Provider = {
 type RabbyInjectedWindow = Window & {
   ethereum?: {
     isRabby?: boolean;
+    providers?: Array<{ isRabby?: boolean }>;
   };
 };
 
@@ -253,12 +254,17 @@ export function useWalletStatus() {
       // Rabby's in-app browser exposes an injected provider. Connect to that
       // provider directly instead of relying on AppKit's remote wallet list,
       // which may remain loading in some mobile wallet browsers.
-      const rabbyBrowser =
-        typeof window !== "undefined" &&
-        Boolean((window as RabbyInjectedWindow).ethereum?.isRabby);
-      const injectedConnector = connectors.find(
-        (item) => item.id === "injected" || /rabby/i.test(item.name),
+      const injectedProvider = typeof window !== "undefined"
+        ? (window as RabbyInjectedWindow).ethereum
+        : undefined;
+      const rabbyBrowser = Boolean(
+        injectedProvider?.isRabby ||
+        injectedProvider?.providers?.some((provider) => provider.isRabby),
       );
+      // Prefer a connector explicitly identified as Rabby. Only fall back to the
+      // generic injected connector when the wallet browser exposes no named one.
+      const injectedConnector = connectors.find((item) => /rabby/i.test(item.name))
+        ?? connectors.find((item) => item.id === "injected");
 
       if (rabbyBrowser && injectedConnector) {
         await connectAsync({ connector: injectedConnector });
