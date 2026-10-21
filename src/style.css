@@ -11174,3 +11174,35 @@ select.brand-select option,
     font-size: 11px !important;
   }
 }
+
+
+/* Browser-aware wallet connection recovery panel */
+.wallet-help-overlay {
+  position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  padding: 18px; background: rgba(2, 12, 18, .78); backdrop-filter: blur(8px);
+}
+.wallet-help-dialog {
+  position: relative; width: min(100%, 440px); max-height: min(88vh, 760px); overflow-y: auto;
+  padding: 28px; border: 1px solid var(--border); border-radius: 22px;
+  background: radial-gradient(ellipse at 100% 0%, #12D9F51a, transparent 45%), #0B202B;
+  color: var(--text); box-shadow: 0 24px 90px #0008;
+}
+.wallet-help-close {
+  position: absolute; top: 14px; right: 14px; display: grid; place-items: center;
+  width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); color: var(--text);
+}
+.wallet-help-brand { color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: 2px; }
+.wallet-help-eyebrow { margin: 24px 0 8px; color: var(--teal); font-size: 10px; font-weight: 800; letter-spacing: 1.6px; }
+.wallet-help-dialog h2 { margin: 0 36px 12px 0; font-size: clamp(25px, 6vw, 32px); line-height: 1.12; }
+.wallet-help-copy { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.wallet-help-steps { display: grid; gap: 12px; margin: 22px 0; }
+.wallet-help-steps > div { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid #1D667577; border-radius: 13px; background: #102F3A80; }
+.wallet-help-steps > div > span { display: grid; place-items: center; flex: 0 0 27px; height: 27px; border-radius: 9px; background: #12D9F51a; color: var(--accent); font-size: 12px; font-weight: 800; }
+.wallet-help-steps p { margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.wallet-help-steps strong { color: var(--text); }
+.wallet-help-primary, .wallet-help-secondary { width: 100%; min-height: 44px; border-radius: 11px; font-weight: 800; }
+.wallet-help-primary { border: 0; background: linear-gradient(110deg, var(--accent), var(--teal)); color: #071A24; }
+.wallet-help-secondary { margin-top: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); }
+.wallet-help-safety { margin: 16px 0 0; color: var(--muted); font-size: 10px; line-height: 1.6; text-align: center; }
+@media (max-width: 420px) { .wallet-help-dialog { padding: 23px 18px; border-radius: 18px; } }
