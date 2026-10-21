@@ -11,7 +11,7 @@ import {
   CircleHelp,
   X,
 } from "lucide-react";
-import { useReadContracts, useSignMessage } from "wagmi";
+import { useConnect, useReadContracts, useSignMessage } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
 import { isAddress } from "viem";
@@ -256,7 +256,7 @@ export default function App() {
   } = useWalletStatus();
 
   const { signMessageAsync } = useSignMessage();
-  const { openConnectModal } = useConnectModal();
+  const { connectors, connectAsync, isPending: walletConnectPending } = useConnect();
   const isAdmin = useIsAdmin(address);
 
   const validatorStatusReads = useReadContracts({
@@ -818,15 +818,23 @@ useEffect(() => {
     return Boolean(mobile && (ethereum?.isMetaMask || ethereum?.isTrust || ethereum?.isCoinbaseWallet || ethereum?.isTokenPocket));
   }, []);
   const [walletHelpOpen, setWalletHelpOpen] = useState(false);
+  const [walletChooserOpen, setWalletChooserOpen] = useState(false);
+  const [walletChooserError, setWalletChooserError] = useState("");
 
   function openWalletHelp() {
-    if (isWalletBrowser) openConnectModal?.();
-    else setWalletHelpOpen(true);
+    setWalletChooserError("");
+    setWalletChooserOpen(true);
   }
 
-  function continueToWalletChooser() {
-    setWalletHelpOpen(false);
-    openConnectModal?.();
+  async function chooseWallet(connector: (typeof connectors)[number]) {
+    setWalletChooserError("");
+    try {
+      await connectAsync({ connector });
+      setWalletChooserOpen(false);
+      setWalletHelpOpen(false);
+    } catch (error) {
+      setWalletChooserError(friendlyError(error, "Wallet connection could not be completed. Please try again or open Asset Oracle in your wallet app."));
+    }
   }
 
   function renderContent() {
@@ -1179,22 +1187,36 @@ useEffect(() => {
         </div>
       </footer>
 
-      {walletHelpOpen && !isWalletBrowser && (
-        <div className="wallet-help-overlay" role="presentation" onClick={() => setWalletHelpOpen(false)}>
-          <section className="wallet-help-dialog" role="dialog" aria-modal="true" aria-labelledby="wallet-help-title" onClick={(event) => event.stopPropagation()}>
-            <button className="wallet-help-close" type="button" onClick={() => setWalletHelpOpen(false)} aria-label="Close wallet help"><X size={20} /></button>
+      {walletChooserOpen && (
+        <div className="wallet-help-overlay" role="presentation" onClick={() => setWalletChooserOpen(false)}>
+          <section className="wallet-help-dialog wallet-chooser-dialog" role="dialog" aria-modal="true" aria-labelledby="wallet-chooser-title" onClick={(event) => event.stopPropagation()}>
+            <button className="wallet-help-close" type="button" onClick={() => setWalletChooserOpen(false)} aria-label="Close wallet chooser"><X size={20} /></button>
             <div className="wallet-help-brand">ASSET ORACLE</div>
-            <p className="wallet-help-eyebrow">CONNECTION SUPPORT</p>
-            <h2 id="wallet-help-title">Wallet not connecting?</h2>
-            <p className="wallet-help-copy">If you’re using Chrome, Brave, or another regular browser, open your wallet app and use its built-in browser to visit Asset Oracle. This often resolves mobile wallet connection issues.</p>
-            <div className="wallet-help-steps">
-              <div><span>1</span><p>Open your wallet app, such as MetaMask, Trust Wallet, or OKX Wallet.</p></div>
-              <div><span>2</span><p>Find the wallet’s Browser or Discover tab and visit <strong>assetoracleapp.xyz</strong>.</p></div>
-              <div><span>3</span><p>Tap Connect Wallet and approve only the connection request you recognize.</p></div>
+            <p className="wallet-help-eyebrow">SECURE WALLET CONNECTION</p>
+            <h2 id="wallet-chooser-title">Connect a Wallet</h2>
+            <p className="wallet-help-copy">Choose your preferred wallet to connect to Asset Oracle.</p>
+            <div className="wallet-chooser-grid">
+              {connectors.map((connector) => (
+                <button className="wallet-chooser-option" key={connector.uid} type="button" disabled={walletConnectPending} onClick={() => void chooseWallet(connector)}>
+                  <span className="wallet-chooser-icon" aria-hidden="true">{connector.name.slice(0, 1)}</span>
+                  <strong>{connector.name}</strong>
+                  {["WalletConnect", "MetaMask", "Injected"].includes(connector.name) && <small>Popular</small>}
+                </button>
+              ))}
             </div>
-            <button className="wallet-help-primary" type="button" onClick={continueToWalletChooser}>Try connecting in this browser</button>
-            <button className="wallet-help-secondary" type="button" onClick={() => setWalletHelpOpen(false)}>I’ll open my wallet app</button>
-            <p className="wallet-help-safety">Never share your recovery phrase or private keys. Asset Oracle will never ask for them.</p>
+            {walletConnectPending && <p className="wallet-chooser-status" role="status">Waiting for wallet approval…</p>}
+            {walletChooserError && <p className="wallet-chooser-error" role="alert">{walletChooserError}</p>}
+            {!isWalletBrowser && (
+              <div className="wallet-inline-help">
+                <div className="wallet-inline-help-heading"><span aria-hidden="true">◎</span><div><h3>Wallet not connecting?</h3><p>Open Asset Oracle inside your wallet app.</p></div></div>
+                <div className="wallet-inline-help-links">
+                  {["MetaMask", "Trust Wallet", "OKX Wallet", "Bitget Wallet", "Coinbase Wallet"].map((name) => (
+                    <div className="wallet-inline-help-chip" key={name}><span>{name.slice(0, 1)}</span>{name}</div>
+                  ))}
+                </div>
+                <p className="wallet-inline-help-note">You’re using a regular browser (e.g. Chrome or Brave). For the best experience on mobile, open your wallet app, find its Browser or Discover tab, and visit <strong>assetoracleapp.xyz</strong>. Never share your recovery phrase or private keys.</p>
+              </div>
+            )}
           </section>
         </div>
       )}
