@@ -1101,11 +1101,6 @@ useEffect(() => {
           {walletMessage}
         </p>
       )}
-      {loginError && (
-        <p className="wallet-message" role="alert">
-          {loginError}
-        </p>
-      )}
 
       <main key={page} className="page-content">
         {renderContent()}
