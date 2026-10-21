@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BriefcaseBusiness,
   ChartNoAxesCombined,
@@ -812,16 +812,14 @@ useEffect(() => {
 
   // Use Privy’s native sign-in UI directly; avoid stacking a custom modal
   // in front of the same Privy chooser.
-  function openWalletHelp(event?: ReactMouseEvent<HTMLButtonElement>) {
+  function openWalletHelp() {
     setLoginError("");
     if (!privyReady) {
       setLoginError("Secure sign-in is still initializing. Please wait a moment and tap Sign in again.");
       return;
     }
     try {
-      // Pass the original click event to Privy so its auth UI and any
-      // browser-mediated OAuth/popup actions stay attached to the user gesture.
-      login(event);
+      login();
     } catch (error) {
       console.error("Asset Oracle sign-in failed to open:", error);
       setLoginError(error instanceof Error ? error.message : "Sign-in could not open. Please reload the page and try again.");
