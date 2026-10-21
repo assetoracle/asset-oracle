@@ -32,14 +32,14 @@ export default function Header({
   const { login, ready: privyReady } = usePrivy();
   const [signInError, setSignInError] = useState("");
 
-  function handleSignIn() {
+  async function handleSignIn() {
     setSignInError("");
     if (!privyReady) {
       setSignInError("Secure sign-in is still initializing. Please wait a moment and try again.");
       return;
     }
     try {
-      login();
+      await login();
     } catch (error) {
       console.error("Asset Oracle sign-in failed to open:", error);
       setSignInError(error instanceof Error ? error.message : "Sign-in could not open. Please reload the page and try again.");
