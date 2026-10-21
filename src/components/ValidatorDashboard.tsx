@@ -7,7 +7,6 @@ import {
   ASSET_CHAIN_TESTNET_ID,
   assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
-  LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES,
   MARKET_STATUS,
 } from "../contracts/assetOracle";
 
@@ -66,7 +65,9 @@ function explorerTx(hash?: `0x${string}`) {
 export default function ValidatorDashboard() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const managers = useMemo(() => [...new Set([assetOracleMarketManagerAddress, ...LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES])], []);
+  // Validator reads and transactions must target only the canonical 2-of-3 manager.
+  // Legacy positions remain accessible through Account/Claims, not active settlement.
+  const managers = useMemo(() => [assetOracleMarketManagerAddress], []);
   const validatorReads = useReadContracts({
     contracts: address ? managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "isValidator" as const, args: [address] as const })) : [],
     query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
@@ -237,8 +238,8 @@ export default function ValidatorDashboard() {
       {error && <p role="alert">Transaction was not submitted: the wallet rejected it or the contract returned an error. If the closing transaction failed, refresh the market list and try again.</p>}
       {receipt.isSuccess && txHash && <p className="wallet-message" role="status">{actionType === "close" ? "Market close transaction confirmed. Refresh the list to load it for voting." : actionType === "finalize" ? "Market finalized on-chain. Participants can now claim eligible payouts." : "Vote transaction confirmed."} <a href={explorerTx(txHash)} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={13} /></a> <button type="button" className="secondary-button refresh-action-button" onClick={() => void refreshMarketData()} disabled={refreshingMarkets}><RefreshCw size={13} className={refreshingMarkets ? "refresh-action-spinning" : ""} /> {refreshingMarkets ? "Refreshing..." : "Refresh list"}</button></p>}
       {managerCountReads.isPending || marketReads.isPending ? <p>Loading on-chain markets…</p>
-        : managerCountReads.isError || marketReads.isError ? <p role="alert">Unable to load markets from the configured manager(s).</p>
-        : markets.length === 0 ? <div className="empty-state"><h3>No markets awaiting settlement</h3><p>Closed markets will appear here when they are ready for validator review.</p><div className="validator-market-meta" style={{ display: "grid", gap: "8px", marginTop: "16px", textAlign: "left" }}><strong>Market loading diagnostics</strong>{managerDiagnostics.map((item) => <div key={item.managerAddress}><span>{item.managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase() ? "Main manager" : "Legacy manager"}: </span><span>{item.count === null ? `marketCount read ${item.readStatus}` : `${item.count} markets returned`}</span><span>{item.failedMarketReads > 0 ? ` · ${item.failedMarketReads} market reads failed` : ""}</span></div>)}</div></div>
+        : managerCountReads.isError || marketReads.isError ? <p role="alert">Unable to load markets from the canonical manager.</p>
+        : markets.length === 0 ? <div className="empty-state"><h3>No markets awaiting settlement</h3><p>Closed markets will appear here when they are ready for validator review.</p><div className="validator-market-meta" style={{ display: "grid", gap: "8px", marginTop: "16px", textAlign: "left" }}><strong>Market loading diagnostics</strong>{managerDiagnostics.map((item) => <div key={item.managerAddress}><span>Main manager: </span><span>{item.count === null ? `marketCount read ${item.readStatus}` : `${item.count} markets returned`}</span><span>{item.failedMarketReads > 0 ? ` · ${item.failedMarketReads} market reads failed` : ""}</span></div>)}</div></div>
         : <div className="validator-market-list">
           {markets.map((market, index) => {
             const id = market.id.toString();
@@ -250,7 +251,7 @@ export default function ValidatorDashboard() {
             const matchingVotes = Number(voteCountReads.data?.[voteIndex]?.status === "success" ? voteCountReads.data[voteIndex].result ?? 0n : 0n);
             const evidence = market.evidenceSource.trim();
             return <article className="validator-market-card" key={`${market.managerAddress.toLowerCase()}-${id}`}>
-              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">{market.managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase() ? "Main manager" : "Legacy manager"}</span><span className="validator-status-pill">{market.status === MARKET_STATUS.DISPUTED ? (canFinalize ? "Challenge period ended · ready to finalize" : "In challenge period") : market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
+              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">Main manager</span><span className="validator-status-pill">{market.status === MARKET_STATUS.DISPUTED ? (canFinalize ? "Challenge period ended · ready to finalize" : "In challenge period") : market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
               <h2>{market.question}</h2>
               <p>{displayResolutionRules(market.resolutionRules)}</p>
               <div className="validator-market-meta"><span>Closed {new Date(Number(market.closeTime) * 1000).toLocaleString()}</span><span>Pool: {(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span></div>
