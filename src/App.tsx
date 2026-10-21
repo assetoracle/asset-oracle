@@ -392,7 +392,7 @@ useEffect(() => {
 
   // Resolve browser history and direct market-detail links after markets load.
   useEffect(() => {
-    function syncFromHash() {
+    function syncFromLocation() {
       // Preserve legacy links such as /#/markets by moving the route into the pathname.
       if (window.location.hash.startsWith("#/")) {
         const legacyPath = window.location.hash.slice(1) || "/";
@@ -405,13 +405,13 @@ useEffect(() => {
       setMobileMenuOpen(false);
     }
 
-    window.addEventListener("popstate", syncFromHash);
+    window.addEventListener("popstate", syncFromLocation);
     syncFromHash();
 
     return () => window.removeEventListener("popstate", syncFromHash);
   }, []);
 
-  // Hash-based navigation can preserve the previous scroll position. Start
+  // Browser-history navigation can preserve the previous scroll position. Start
   // the Terms page at its heading whenever it is opened, including via footer.
   useEffect(() => {
     if (page === "Terms of Service") {
@@ -858,7 +858,7 @@ useEffect(() => {
           onchainTxHash={selectedMarket.onchainTxHash}
           marketClosed={marketClosed}
           onBack={goBackToMarkets}
-          backLabel={returnHashRef.current === "#/" ? "Back to home" : "Back to markets"}
+          backLabel={returnHashRef.current === "/" ? "Back to home" : "Back to markets"}
         />
       );
     }
