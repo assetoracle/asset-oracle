@@ -3,6 +3,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { assetChainTestnet } from "../config/assetChain";
+import { discoverRabbyProvider } from "../walletConnect";
 import {
   displayChainId,
   isTestnet,
@@ -257,7 +258,9 @@ export function useWalletStatus() {
       const injectedProvider = typeof window !== "undefined"
         ? (window as RabbyInjectedWindow).ethereum
         : undefined;
+      const rabbyProvider = await discoverRabbyProvider();
       const rabbyBrowser = Boolean(
+        rabbyProvider ||
         injectedProvider?.isRabby ||
         injectedProvider?.providers?.some((provider) => provider.isRabby),
       );

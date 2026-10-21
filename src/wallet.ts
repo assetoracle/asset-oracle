@@ -67,7 +67,7 @@ let selectedProvider: EthereumProvider | null = null;
 
 const discoveredProviders = new Map<
   string,
-  EthereumProvider
+  EIP6963ProviderDetail
 >();
 
 function normalizeChainId(chainId: string): string {
@@ -164,7 +164,7 @@ async function discoverProviders(): Promise<void> {
       ) {
         discoveredProviders.set(
           detail.info.uuid,
-          detail.provider
+          detail
         );
       }
     };
@@ -197,7 +197,8 @@ export async function getAvailableWallets(): Promise<
   const wallets: AvailableWallet[] = [];
   const seenProviders = new Set<EthereumProvider>();
 
-  for (const [uuid, provider] of discoveredProviders) {
+  for (const detail of discoveredProviders.values()) {
+    const { provider } = detail;
     if (seenProviders.has(provider)) {
       continue;
     }
@@ -205,14 +206,7 @@ export async function getAvailableWallets(): Promise<
     seenProviders.add(provider);
 
     wallets.push({
-      name: getWalletName({
-        info: {
-          uuid,
-          name: "",
-          rdns: "",
-        },
-        provider,
-      }),
+      name: getWalletName(detail),
       provider,
     });
   }
