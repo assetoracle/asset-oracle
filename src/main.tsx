@@ -70,9 +70,10 @@ createRoot(rootElement).render(
           loginMethods: ["email", "google", "twitter", "wallet", "passkey"],
           appearance: {
             theme: "dark",
-            accentColor: "#12D9F5",
+            accentColor: "#22C55E",
             logo: "/asset-oracle-logo-transparent.svg",
             landingHeader: "Sign in to Asset Oracle",
+            walletChainType: "ethereum",
           },
           defaultChain: assetChainTestnet,
           supportedChains: [...privySupportedChains],
