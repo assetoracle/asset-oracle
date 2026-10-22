@@ -73,6 +73,13 @@ export const assetOracleMarketManagerAbi = [
   },
   {
     type: "function",
+    name: "disputeConsensusReached",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "hasVotedOnDispute",
     stateMutability: "view",
     inputs: [{ name: "marketId", type: "uint256" }, { name: "validator", type: "address" }],
