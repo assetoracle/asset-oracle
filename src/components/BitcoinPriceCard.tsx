@@ -69,7 +69,8 @@ export default function BitcoinPriceCard() {
         onClick={() => void loadPrice()}
         disabled={loading}
       >
-        <RefreshCw size={15} className={loading ? "refresh-action-spinning" : ""} />\n        {loading ? "Refreshing price..." : "Refresh price"}
+        <RefreshCw size={15} className={loading ? "refresh-action-spinning" : ""} />
+        {loading ? "Refreshing price..." : "Refresh price"}
       </button>
 
       <p className="price-disclaimer">
