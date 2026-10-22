@@ -394,10 +394,10 @@ useEffect(() => {
   // Resolve browser history and direct market-detail links after markets load.
   useEffect(() => {
     function syncFromHash() {
-      // Preserve legacy links such as /#/markets by moving the route into the pathname.
+      // Preserve hash-based links such as /#/markets by moving the route into the pathname.
       if (window.location.hash.startsWith("#/")) {
-        const legacyPath = window.location.hash.slice(1) || "/";
-        window.history.replaceState({}, "", `${legacyPath}${window.location.search}`);
+        const hashPath = window.location.hash.slice(1) || "/";
+        window.history.replaceState({}, "", `${hashPath}${window.location.search}`);
       }
       const route = parseRoutePath(window.location.pathname);
       setPage(route.page);
