@@ -7,6 +7,8 @@ import SportIcon from "./SportIcon";
 import {
   validateMarketProposal,
   createMarketProposal,
+  createPaidMarketProposal,
+  getPublicWalletRole,
   updateMarketProposal,
   type MarketProposalInput,
   type StoredMarketProposal,
@@ -151,8 +153,15 @@ export function MarketProposalForm({
         const result = await updateMarketProposal(initialProposal.id, proposal, address, signMessage);
         (onUpdated ?? onCreated)(result.proposal);
       } else {
-        const result = await createMarketProposal(proposal, address, signMessage);
-        onCreated(result.proposal);
+        const role = await getPublicWalletRole(address);
+        if (role.permissions.createMarketProposal) {
+          const result = await createMarketProposal(proposal, address, signMessage);
+          onCreated(result.proposal);
+        } else {
+          const result = await createPaidMarketProposal(proposal, address, signMessage);
+          setMessage(result.message);
+          onCreated(result.proposal);
+        }
       }
     } catch (error) {
       setMessage(
