@@ -2,7 +2,7 @@ const MARKET_TIME_ZONE = "Africa/Lagos";
 
 export function toIsoDate(value: string): string {
   // datetime-local values are WAT wall-clock time, regardless of device timezone.
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+  const match = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})(?::(\\d{2}))?$/.exec(value);
   if (!match) return "";
 
   const [, yearText, monthText, dayText, hourText, minuteText, secondText = "0"] = match;
@@ -33,7 +33,7 @@ export function toIsoDate(value: string): string {
     minute: "2-digit",
     second: "2-digit",
     hourCycle: "h23",
-  }).formatToParts(parsed);
+  }).formatToParts(new Date(targetUtc));
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   const displayedUtc = Date.UTC(
     Number(values.year),
