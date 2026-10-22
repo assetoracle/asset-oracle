@@ -131,7 +131,8 @@ export default function ValidatorDashboard() {
   });
   const voteCountReads = useReadContracts({
     contracts: markets.flatMap((market) => {
-      const evidence = market.evidenceSource.trim();
+      const key = market.managerAddress.toLowerCase() + "-" + market.id.toString();
+      const evidence = (sourceUrls[key] ?? "").trim() || market.evidenceSource.trim();
       const evidenceHash = evidence ? keccak256(toBytes(evidence)) : ("0x" + "00".repeat(32)) as `0x${string}`;
       return [1, 2, 3].map((outcome) => ({
         address: market.managerAddress,
@@ -228,7 +229,9 @@ export default function ValidatorDashboard() {
       setNotice("A valid HTTP or HTTPS source URL is required for your vote.");
       return;
     }
-    const evidenceHash = keccak256(toBytes(evidence));
+    // Commit the exact validator-provided source URL on-chain. The backend
+    // independently checks this hash before recording the public source link.
+    const evidenceHash = keccak256(toBytes(sourceUrl));
     setPendingSource({ managerAddress: market.managerAddress, marketId: market.id, outcome, sourceUrl });
     setNotice("");
     reset();
