@@ -1,6 +1,6 @@
 # Asset Oracle Enugu Testnet Tester Guide
 
-Asset Oracle is open for **testnet-only** participation at [asset-oracle.onrender.com](https://asset-oracle.onrender.com). All staking in this phase uses the dedicated Enugu testnet USDC contract. Test tokens have no real-world value.
+Asset Oracle is open for **testnet-only** participation at [asset-oracle.onrender.com](https://assetoracleapp.xyz). All staking in this phase uses the dedicated Enugu testnet USDC contract. Test tokens have no real-world value.
 
 ## 1. Add Asset Chain Enugu testnet
 
