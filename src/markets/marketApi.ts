@@ -241,6 +241,11 @@ export async function createPaidMarketProposal(
   const chainIdValue = await provider.request({ method: "eth_chainId" });
   const chainId = typeof chainIdValue === "string" ? Number.parseInt(chainIdValue, 16) : Number.NaN;
   if (chainId !== 42421) throw new Error("Switch your wallet to Asset Chain Testnet (chain ID 42421) before paying.");
+  const accountsValue = await provider.request({ method: "eth_accounts" });
+  if (!Array.isArray(accountsValue) ||
+      !accountsValue.some((account) => typeof account === "string" && account.toLowerCase() === address.toLowerCase())) {
+    throw new Error("The connected wallet account does not match the proposal creator.");
+  }
 
   const quote = await request<{
     quoteId: string;
@@ -292,6 +297,14 @@ export async function createPaidMarketProposal(
   if (!/^0x[0-9a-fA-F]{40}$/.test(intent.payment.treasuryAddress) ||
       !/^0x[0-9a-fA-F]{40}$/.test(intent.payment.tokenAddress)) {
     throw new Error("The configured testnet USDC contract or treasury address is invalid.");
+  }
+  // Recheck immediately before prompting the wallet in case the user changed accounts or networks.
+  const currentChainValue = await provider.request({ method: "eth_chainId" });
+  const currentChainId = typeof currentChainValue === "string" ? Number.parseInt(currentChainValue, 16) : Number.NaN;
+  const currentAccounts = await provider.request({ method: "eth_accounts" });
+  if (currentChainId !== 42421 || !Array.isArray(currentAccounts) ||
+      !currentAccounts.some((account) => typeof account === "string" && account.toLowerCase() === address.toLowerCase())) {
+    throw new Error("Wallet account or network changed. Reconnect to the proposal wallet on Asset Chain Testnet and try again.");
   }
   const amountHex = BigInt(intent.payment.amountAtomic).toString(16).padStart(64, "0");
   const transferData = `0xa9059cbb${recipient.padStart(64, "0")}${amountHex}`;
