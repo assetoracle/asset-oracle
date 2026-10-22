@@ -39,16 +39,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
-  const manager = managerAddress == null
+  const manager = managerAddress == null ||
+    (isAddress(managerAddress) && managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase())
     ? assetOracleMarketManagerAddress
-    : isAddress(managerAddress)
-      ? (managerAddress as Address)
-      : undefined;
-  const isCurrentManager = Boolean(
-    manager && assetOracleMarketManagerAddress &&
-    manager.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase()
-  );
-  const isLegacyManager = Boolean(manager && !isCurrentManager);
+    : undefined;
+  const isCurrentManager = Boolean(manager);
 
   const managerCode = useMemo(() => manager, [manager]);
   useEffect(() => {
@@ -153,9 +148,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount > 0n &&
     balance.data !== undefined && parsedAmount <= balance.data;
-  const stakeDisabledReason = isLegacyManager
-    ? "This market uses an earlier manager deployment. Your on-chain position is read-only here; trading and settlement actions are disabled to avoid sending transactions to the wrong contract."
-    : !isConnected
+  const stakeDisabledReason = !isConnected
     ? "Connect your wallet to stake."
     : chainId !== ASSET_CHAIN_TESTNET_ID
       ? "Switch your wallet to Asset Chain Testnet (Chain ID 42421)."
@@ -323,22 +316,10 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       </div>
       <span className="onchain-market-asset">USDC · TESTNET</span>
     </div>
-      {!manager ? <p>Transactions are disabled: no verified market-manager address is configured.</p>
+      {!manager ? <p>Transactions are disabled: this market belongs to a retired deployment or has no verified manager.</p>
       : chainId !== ASSET_CHAIN_TESTNET_ID ? <p>Switch to Asset Chain Testnet (Chain ID 42421).</p>
       : !codeCheckDone ? <p>Verifying deployed contract bytecode…</p>
       : !codeVerified ? <p>Transactions blocked: market manager or USDC contract has no deployed bytecode at the configured address.</p>
-      : isLegacyManager ? market.isPending || (address && position.isPending) ? <p>Reading the original market contract and wallet position…</p>
-        : market.isError || !marketData || marketData.id !== marketId || (address && position.isError) ? <p>Unable to verify the market or read the wallet position from its original contract. No transaction has been submitted.</p>
-        : <>
-            <p className="disabled-note">Legacy market contract detected. This view reads your position from the original deployment. Trading, claims, refunds, and settlement actions are disabled; no funds or transactions have been moved.</p>
-            {!isConnected ? <p>Connect the wallet that made the original stake to inspect its position.</p> : <>
-              <div className="market-detail-grid">
-                <article className="detail-info-card"><span>Your YES stake</span><strong>{formatUnits(positionYes, 6)} USDC</strong></article>
-                <article className="detail-info-card"><span>Your NO stake</span><strong>{formatUnits(positionNo, 6)} USDC</strong></article>
-                <article className="detail-info-card"><span>Position status</span><strong>{claimed ? (hasPosition ? "Already claimed" : "No active position") : hasPosition ? "Unclaimed" : "No position recorded for this wallet"}</strong></article>
-              </div>
-            </>}
-          </>
       : tokenConfig.isPending || tokenDecimals.isPending || market.isPending || (address && position.isPending) ? <p>Verifying on-chain market, USDC configuration, and wallet position…</p>
       : !stablecoinVerified ? <p>Transactions blocked: the manager must explicitly enable the approved testnet USDC address with 6 decimals.</p>
       : !marketVerified ? <p>Transactions blocked: on-chain market ID, USDC asset, or close time does not match the displayed market record.</p>
