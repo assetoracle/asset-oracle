@@ -52,6 +52,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     let cancelled = false;
     setCodeCheckDone(false);
     setCodeVerified(false);
+    setManagerCompatible(false);
     if (!client || !managerCode || chainId !== ASSET_CHAIN_TESTNET_ID || !isAddress(TESTNET_USDC_ADDRESS)) {
       setCodeCheckDone(true);
       return;
