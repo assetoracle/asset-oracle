@@ -24,6 +24,13 @@ export const isAssetOracleContractConfigured = true;
 export const assetOracleMarketManagerAbi = [
   {
     type: "function",
+    name: "DISPUTE_RESOLUTION_TIMEOUT",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint64" }],
+  },
+  {
+    type: "function",
     name: "owner",
     stateMutability: "view",
     inputs: [],
