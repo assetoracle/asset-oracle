@@ -7,7 +7,6 @@ import {
   ASSET_CHAIN_TESTNET_EXPLORER,
   assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
-  LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES,
   erc20TestnetAbi,
 } from "../contracts/assetOracle";
 import type { WalletAccountData, WalletHistoryRecord, WalletPositionRecord } from "../markets/marketApi";
@@ -96,13 +95,10 @@ function AccountPage({
     }
     // Backward-compatible during rollout: old API responses only describe the current manager.
     const managerAddress = position.managerAddress ?? assetOracleMarketManagerAddress;
-    const allowedManagers = [
-      assetOracleMarketManagerAddress,
-      ...LEGACY_ASSET_ORACLE_MARKET_MANAGER_ADDRESSES,
-    ].filter((value): value is Address => Boolean(value));
+    const allowedManagers = [assetOracleMarketManagerAddress];
     if (!managerAddress || !isAddress(managerAddress) ||
         !allowedManagers.some((value) => value.toLowerCase() === managerAddress.toLowerCase())) {
-      setActionError("This position's manager is not on the verified manager allowlist. No transaction was sent.");
+      setActionError("This position belongs to a retired testnet deployment and cannot be claimed here.");
       return;
     }
     const claimManager = managerAddress as Address;
