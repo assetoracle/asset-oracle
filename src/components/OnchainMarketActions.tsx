@@ -34,6 +34,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const [amount, setAmount] = useState("");
   const [yesSide, setYesSide] = useState(true);
   const [codeVerified, setCodeVerified] = useState(false);
+  const [managerCompatible, setManagerCompatible] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
   const [message, setMessage] = useState("");
   const [lastAction, setLastAction] = useState<"approve" | "stake" | "close" | "claim" | "refund" | "timeout" | null>(null);
@@ -58,29 +59,37 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     Promise.all([
       client.getBytecode({ address: managerCode }),
       client.getBytecode({ address: TESTNET_USDC_ADDRESS as Address }),
-      client.readContract({
-        address: managerCode as Address,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "DISPUTE_RESOLUTION_TIMEOUT",
-      }),
-      client.readContract({
-        address: managerCode as Address,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "disputeConsensusReached",
-        args: [0n],
-      }),
-    ]).then(([managerBytecode, tokenBytecode, disputeTimeout, disputeConsensusProbe]) => {
+    ]).then(([managerBytecode, tokenBytecode]) => {
       if (cancelled) return;
-      setCodeVerified(Boolean(
-        managerBytecode && managerBytecode !== "0x" &&
-        tokenBytecode && tokenBytecode !== "0x" &&
-        disputeTimeout === 604800n &&
-        typeof disputeConsensusProbe === "boolean"
-      ));
+      const codeExists = Boolean(managerBytecode && managerBytecode !== "0x" && tokenBytecode && tokenBytecode !== "0x");
+      setCodeVerified(codeExists);
       setCodeCheckDone(true);
+      if (!codeExists) {
+        setManagerCompatible(false);
+        return;
+      }
+      return Promise.all([
+        client.readContract({
+          address: managerCode as Address,
+          abi: assetOracleMarketManagerAbi,
+          functionName: "DISPUTE_RESOLUTION_TIMEOUT",
+        }),
+        client.readContract({
+          address: managerCode as Address,
+          abi: assetOracleMarketManagerAbi,
+          functionName: "disputeConsensusReached",
+          args: [0n],
+        }),
+      ]).then(([disputeTimeout, disputeConsensusProbe]) => {
+        if (cancelled) return;
+        setManagerCompatible(disputeTimeout === 604800n && typeof disputeConsensusProbe === "boolean");
+      }).catch(() => {
+        if (!cancelled) setManagerCompatible(false);
+      });
     }).catch(() => {
       if (cancelled) return;
       setCodeVerified(false);
+      setManagerCompatible(false);
       setCodeCheckDone(true);
     });
     return () => { cancelled = true; };
@@ -161,7 +170,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError &&
     balance.data !== undefined && allowance.data !== undefined
   );
-  const canStake = safe && isConnected && Boolean(address) &&
+  const canStake = safe && managerCompatible && isConnected && Boolean(address) &&
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount > 0n &&
     balance.data !== undefined && parsedAmount <= balance.data;
@@ -173,6 +182,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         ? "Verifying the market and USDC contracts…"
         : !codeVerified
           ? "Staking is blocked because the configured market manager or USDC contract could not be verified."
+          : !managerCompatible
+            ? "New stakes and market closing are blocked until the audited manager is deployed. Existing claims and refunds remain available."
           : market.isPending || tokenConfig.isPending || tokenDecimals.isPending
             ? "Waiting for on-chain market and USDC verification…"
             : !stablecoinVerified
@@ -192,7 +203,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
                           : balance.data !== undefined && parsedAmount > balance.data
                             ? "Your USDC balance is too low for this stake."
                             : "Staking is temporarily unavailable. Check your wallet and market status.";
-  const canClose = safe && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
+  const canClose = safe && managerCompatible && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 >= closeTime;
   const canClaim = safe && isConnected && hasPosition && !claimed &&
     Number(marketData?.status) === MARKET_STATUS.SETTLED;
@@ -337,6 +348,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       : chainId !== ASSET_CHAIN_TESTNET_ID ? <p>Switch to Asset Chain Testnet (Chain ID 42421).</p>
       : !codeCheckDone ? <p>Verifying deployed contract bytecode…</p>
       : !codeVerified ? <p>Transactions blocked: market manager or USDC contract has no deployed bytecode at the configured address.</p>
+      : !managerCompatible ? <p>New stakes and market closing are blocked until the audited manager is deployed and verified. Existing claims and refunds remain available.</p>
       : tokenConfig.isPending || tokenDecimals.isPending || market.isPending || (address && position.isPending) ? <p>Verifying on-chain market, USDC configuration, and wallet position…</p>
       : !stablecoinVerified ? <p>Transactions blocked: the manager must explicitly enable the approved testnet USDC address with 6 decimals.</p>
       : !marketVerified ? <p>Transactions blocked: on-chain market ID, USDC asset, or close time does not match the displayed market record.</p>
