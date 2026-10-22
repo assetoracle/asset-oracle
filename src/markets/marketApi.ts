@@ -210,6 +210,118 @@ export async function createMarketProposal(
   });
 }
 
+type InjectedWalletProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+};
+
+async function signedWalletAuth(
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const { message } = await requestWalletNonce(address);
+  const signature = await signMessage(message);
+  return { address, message, signature };
+}
+
+/**
+ * Submit a regular user's proposal after paying exactly 10 USDC on Asset Chain Testnet.
+ * The backend independently verifies the token, amount, recipient, chain, receipt and confirmations.
+ */
+export async function createPaidMarketProposal(
+  proposal: MarketProposalInput,
+  address: string,
+  signMessage: (message: string) => Promise<string>,
+) {
+  const provider = (window as Window & { ethereum?: InjectedWalletProvider }).ethereum;
+  if (!provider) throw new Error("Connect a wallet that supports Asset Chain Testnet payments.");
+  const chainIdValue = await provider.request({ method: "eth_chainId" });
+  const chainId = typeof chainIdValue === "string" ? Number.parseInt(chainIdValue, 16) : Number.NaN;
+  if (chainId !== 42421) throw new Error("Switch your wallet to Asset Chain Testnet (chain ID 42421) before paying.");
+
+  const quote = await request<{
+    quoteId: string;
+    network: "TESTNET";
+    token: "USDC";
+    tokenAddress: string;
+    tokenDecimals: number;
+    amountAtomic: string;
+    expiresAtMs: number;
+  }>("/api/markets/paid-submissions/quote", {
+    method: "POST",
+    body: JSON.stringify({ token: "USDC", walletAuth: await signedWalletAuth(address, signMessage) }),
+  });
+  if (quote.network !== "TESTNET" || quote.token !== "USDC" ||
+      quote.tokenDecimals !== 6 || quote.amountAtomic !== "10000000") {
+    throw new Error("The server returned an invalid testnet USDC proposal fee quote.");
+  }
+
+  const intent = await request<{
+    submissionId: string;
+    proposal: { id: string; question: string; status: "PENDING_APPROVAL"; submittedAt: string };
+    payment: {
+      network: "TESTNET";
+      token: "USDC";
+      tokenAddress: string;
+      tokenDecimals: number;
+      amountAtomic: string;
+      treasuryAddress: string;
+      expiresAtMs: number;
+    };
+  }>("/api/markets/paid-submissions/intent", {
+    method: "POST",
+    body: JSON.stringify({
+      proposal,
+      quoteId: quote.quoteId,
+      walletAuth: await signedWalletAuth(address, signMessage),
+    }),
+  });
+
+  if (intent.payment.network !== "TESTNET" || intent.payment.token !== "USDC" ||
+      intent.payment.tokenAddress.toLowerCase() !== quote.tokenAddress.toLowerCase() ||
+      intent.payment.amountAtomic !== "10000000" || intent.payment.tokenDecimals !== 6) {
+    throw new Error("The payment intent does not match the 10 USDC testnet quote.");
+  }
+
+  const recipient = intent.payment.treasuryAddress.toLowerCase().replace(/^0x/, "");
+  if (!/^0x[0-9a-fA-F]{40}$/.test(intent.payment.treasuryAddress) ||
+      !/^0x[0-9a-fA-F]{40}$/.test(intent.payment.tokenAddress)) {
+    throw new Error("The configured testnet USDC contract or treasury address is invalid.");
+  }
+  const amountHex = BigInt(intent.payment.amountAtomic).toString(16).padStart(64, "0");
+  const transferData = `0xa9059cbb${recipient.padStart(64, "0")}${amountHex}`;
+  const transactionHash = await provider.request({
+    method: "eth_sendTransaction",
+    params: [{
+      from: address,
+      to: intent.payment.tokenAddress,
+      data: transferData,
+      value: "0x0",
+    }],
+  });
+  if (typeof transactionHash !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(transactionHash)) {
+    throw new Error("Wallet did not return a valid USDC payment transaction hash.");
+  }
+
+  await request<{ status: string; message: string }>("/api/markets/paid-submissions/verify-payment", {
+    method: "POST",
+    body: JSON.stringify({
+      submissionId: intent.submissionId,
+      transactionHash,
+      walletAuth: await signedWalletAuth(address, signMessage),
+    }),
+  });
+
+  return {
+    message: "10 USDC payment verified. Your proposal is pending admin review.",
+    proposal: {
+      ...proposal,
+      id: intent.proposal.id,
+      status: "PENDING_APPROVAL" as const,
+      submittedAt: intent.proposal.submittedAt,
+    } satisfies StoredMarketProposal,
+  };
+}
+
 export async function updateMarketProposal(
   id: string,
   proposal: MarketProposalInput,
