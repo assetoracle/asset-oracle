@@ -70,6 +70,7 @@ import {
 } from "./utils/format";
 import type { MarketFilter } from "./types";
 import { friendlyError } from "./utils/friendlyError";
+import { parseRoutePath } from "./utils/routes";
 import "./style.css";
 
 const categories: MarketFilter[] = [
@@ -126,59 +127,6 @@ function pathForPage(page: Page, marketId?: string): string {
 function navigatePath(path: string): void {
   window.history.pushState({}, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
-}
-
-function decodeRoutePath(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    // Keep malformed URL encoding from crashing route parsing.
-    return value;
-  }
-}
-
-function parseRoutePath(pathname: string): {
-  page: Page;
-  marketId: string | null;
-  verificationMarketId: string | null;
-} {
-  const raw = pathname || "/";
-  const parts = raw.split("/").filter(Boolean);
-
-  if (parts[0] === "verify" && parts[1]) {
-    return {
-      page: "Markets",
-      marketId: null,
-      verificationMarketId: decodeRoutePath(parts.slice(1).join("/")),
-    };
-  }
-
-  if (parts[0] === "markets" && parts[1]) {
-    return {
-      page: "Markets",
-      marketId: decodeRoutePath(parts.slice(1).join("/")),
-      verificationMarketId: null,
-    };
-  }
-
-  const routes: Record<string, Page> = {
-    "": "Home",
-    markets: "Markets",
-    "my-proposals": "My Proposals",
-    portfolio: "Portfolio",
-    claims: "Claims",
-    history: "History",
-    referrals: "Referrals",
-    admin: "Admin",
-    validators: "Validators",
-    terms: "Terms of Service",
-  };
-
-  return {
-    page: routes[parts[0] ?? ""] ?? "Home",
-    marketId: null,
-    verificationMarketId: null,
-  };
 }
 
 export default function App() {
