@@ -351,6 +351,7 @@ const loadMarkets = useCallback(async () => {
         /^0x[0-9a-fA-F]{64}$/.test(market.onchainTxHash) &&
         typeof market.onchainManagerAddress === "string" &&
         isAddress(market.onchainManagerAddress) &&
+        market.onchainManagerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase() &&
         market.onchainChainId === ASSET_CHAIN_TESTNET_ID
       )
       .map((market) => ({
