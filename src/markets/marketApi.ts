@@ -1,5 +1,4 @@
-const API_BASE_URL =
-  "https://asset-oracle-backend.onrender.com";
+import { API_BASE_URL } from "../config/env";
 
 export type MarketProposalInput = {
   question: string;
