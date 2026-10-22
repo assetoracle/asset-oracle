@@ -1,4 +1,5 @@
 import { defineChain } from "viem";
+import { ASSET_CHAIN_RPC_URL } from "./env";
 
 export const ASSET_CHAIN_ID = 42421;
 
@@ -12,7 +13,7 @@ export const assetChainTestnet = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ["https://enugu-rpc.assetchain.org"],
+      http: [ASSET_CHAIN_RPC_URL],
     },
   },
   blockExplorers: {
