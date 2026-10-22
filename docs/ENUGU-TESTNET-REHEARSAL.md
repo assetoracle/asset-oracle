@@ -74,7 +74,6 @@ Only run this scenario on a dedicated test market whose timing and lifecycle are
 - [ ] Confirm a second distinct authorized validator can reach quorum, and duplicate voting by the same validator is rejected.
 - [ ] Verify dispute and timeout/refund paths only in separately prepared test markets where the path can be safely exercised.
 - [ ] Verify claims/refunds are available only when contract state permits them, and balances update after confirmation.
-- [ ] Verify legacy positions remain claimable from the legacy manager rather than being redirected to the current manager.
 
 Expected: contract state and explorer receipts agree with UI state. Record the exact tested path; do not infer untested branches passed.
 
