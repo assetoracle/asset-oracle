@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import BrandedSelect from "./BrandedSelect";
 import { encodeAbiParameters, keccak256, toBytes, type Address } from "viem";
-import { useAccount, useChainId, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, useChainId, useReadContracts, useWaitForTransactionReceipt, useWriteContract, useSignMessage } from "wagmi";
+import { recordValidatorSourceLink } from "../markets/marketApi";
 import { ArrowUpRight, RefreshCw, ShieldCheck } from "lucide-react";
 import {
   ASSET_CHAIN_TESTNET_ID,
@@ -65,6 +66,7 @@ function explorerTx(hash?: `0x${string}`) {
 export default function ValidatorDashboard() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  const { signMessageAsync } = useSignMessage();
   // Validator reads and transactions must target only the canonical 2-of-3 manager.
   const managers = useMemo(() => [assetOracleMarketManagerAddress], []);
   const validatorReads = useReadContracts({
@@ -87,6 +89,10 @@ export default function ValidatorDashboard() {
   const { writeContract, data: txHash, isPending, error, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
   const [outcomes, setOutcomes] = useState<Record<string, 1 | 2 | 3>>({});
+  const [sourceUrls, setSourceUrls] = useState<Record<string, string>>({});
+  const [pendingSource, setPendingSource] = useState<{ managerAddress: Address; marketId: bigint; outcome: 1 | 2 | 3; sourceUrl: string } | null>(null);
+  const [savingSource, setSavingSource] = useState(false);
+  const handledEvidenceHash = useRef<string | null>(null);
   const [notice, setNotice] = useState("");
   const [refreshingMarkets, setRefreshingMarkets] = useState(false);
   const [actionType, setActionType] = useState<"close" | "vote" | "finalize" | null>(null);
@@ -151,6 +157,32 @@ export default function ValidatorDashboard() {
     setPendingVote(null);
     setNotice("Market closed on-chain. Confirm the follow-up vote transaction in your wallet.");
   }, [receipt.isSuccess, actionType, pendingVote, txHash, reset, writeContract]);
+  
+  useEffect(() => {
+    if (!receipt.isSuccess || actionType !== "vote" || !pendingSource || !address || !txHash || handledEvidenceHash.current === txHash) return;
+    handledEvidenceHash.current = txHash;
+    let cancelled = false;
+    setSavingSource(true);
+    void recordValidatorSourceLink({
+      address,
+      marketId: pendingSource.marketId.toString(),
+      managerAddress: pendingSource.managerAddress,
+      outcome: pendingSource.outcome,
+      sourceUrl: pendingSource.sourceUrl,
+      transactionHash: txHash,
+      signMessage: async (message) => await signMessageAsync({ message }),
+    }).then(() => {
+      if (!cancelled) setNotice("Vote confirmed on-chain and source link saved for public verification.");
+    }).catch(() => {
+      if (!cancelled) setNotice("Vote confirmed on-chain, but the source link could not be saved. The on-chain vote remains unchanged.");
+    }).finally(() => {
+      if (!cancelled) {
+        setSavingSource(false);
+        setPendingSource(null);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [receipt.isSuccess, actionType, pendingSource, address, txHash, signMessageAsync]);
 
   async function refreshMarketData() {
     if (refreshingMarkets) return;
@@ -186,8 +218,18 @@ export default function ValidatorDashboard() {
       setNotice(`Market #${market.id.toString()} cannot be voted on because its published evidence source is missing.`);
       return;
     }
-    const outcome = outcomes[`${market.managerAddress.toLowerCase()}-${market.id.toString()}`] ?? 1;
+    const key = market.managerAddress.toLowerCase() + "-" + market.id.toString();
+    const outcome = outcomes[key] ?? 1;
+    const sourceUrl = (sourceUrls[key] ?? "").trim();
+    try {
+      const parsedSource = new URL(sourceUrl);
+      if (!sourceUrl || (parsedSource.protocol !== "https:" && parsedSource.protocol !== "http:")) throw new Error("invalid");
+    } catch {
+      setNotice("A valid HTTP or HTTPS source URL is required for your vote.");
+      return;
+    }
     const evidenceHash = keccak256(toBytes(evidence));
+    setPendingSource({ managerAddress: market.managerAddress, marketId: market.id, outcome, sourceUrl });
     setNotice("");
     reset();
     if (market.status === MARKET_STATUS.OPEN && market.closeTime <= BigInt(Math.floor(Date.now() / 1000))) {
@@ -268,8 +310,22 @@ export default function ValidatorDashboard() {
                 disabled={hasVoted || isPending || receipt.isLoading}
                 ariaLabel="Your decision"
               />
+              {!hasVoted && market.status !== MARKET_STATUS.DISPUTED && <>
+                <label htmlFor={"validator-source-" + id}>Source URL used to verify this outcome</label>
+                <input
+                  id={"validator-source-" + id}
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  placeholder="https://example.com/source"
+                  value={sourceUrls[market.managerAddress.toLowerCase() + "-" + id] ?? ""}
+                  onChange={(event) => setSourceUrls((current) => ({ ...current, [market.managerAddress.toLowerCase() + "-" + id]: event.target.value }))}
+                  disabled={isPending || receipt.isLoading || savingSource}
+                  required
+                />
+              </>}
               <p className="validator-vote-count">{market.status === MARKET_STATUS.DISPUTED ? `Challenge period ends ${new Date(Number(challengeEndsAt) * 1000).toLocaleString()}` : `Matching votes: ${matchingVotes}/2`}</p>
-              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || isPending || receipt.isLoading} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : `Vote ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
+              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || !(sourceUrls[market.managerAddress.toLowerCase() + "-" + id] ?? "").trim() || isPending || receipt.isLoading || savingSource} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : savingSource ? "Saving source link…" : `Vote ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
             </article>;
           })}
         </div>}

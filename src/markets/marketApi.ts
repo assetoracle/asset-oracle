@@ -390,3 +390,43 @@ export async function recordMarketPublication(
     body: JSON.stringify({ txHash, marketId, address }),
   });
 }
+
+
+export type ValidatorSourceLink = {
+  marketId: string;
+  managerAddress: string;
+  validatorAddress: string;
+  outcome: number;
+  sourceUrl: string;
+  transactionHash: string;
+  recordedAt: string;
+};
+
+export async function recordValidatorSourceLink(input: {
+  address: string;
+  marketId: string;
+  managerAddress: string;
+  outcome: number;
+  sourceUrl: string;
+  transactionHash: string;
+  signMessage: (message: string) => Promise<string>;
+}) {
+  await ensureWalletSession(input.address, input.signMessage);
+  return request<{ link: ValidatorSourceLink }>("/api/validator-evidence", {
+    method: "POST",
+    body: JSON.stringify({
+      address: input.address,
+      marketId: input.marketId,
+      managerAddress: input.managerAddress,
+      outcome: input.outcome,
+      sourceUrl: input.sourceUrl,
+      transactionHash: input.transactionHash,
+    }),
+  });
+}
+
+export async function getValidatorSourceLinks(marketId: string, managerAddress: string) {
+  return request<{ links: ValidatorSourceLink[] }>(
+    `/api/validator-evidence/${encodeURIComponent(marketId)}?managerAddress=${encodeURIComponent(managerAddress)}`,
+  );
+}
