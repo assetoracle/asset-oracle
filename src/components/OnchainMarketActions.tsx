@@ -290,7 +290,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     
     void (async () => {
       try {
-        const base = "https://asset-oracle-backend.onrender.com";
+        const base = API_BASE_URL;
         const session = await ensureWalletSession(address, (message) => signMessageAsync({ message }));
         const qualificationResponse = await fetch(`${base}/api/referrals/qualify/session`, {
           method: "POST",
