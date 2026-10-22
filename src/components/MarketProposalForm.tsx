@@ -476,7 +476,7 @@ export function MarketProposalForm({
 
           <p style={{ color: "#8DA9B3", fontSize: 12, lineHeight: 1.7 }}>
             Submissions are subject to review. Submitting a proposal
-            does not publish a market or guarantee approval. {initialProposal ? "Saving changes returns it to pending approval." : ""}
+            does not publish a market or guarantee approval. For new proposals, configured market makers submit for free; regular users pay exactly 10 USDC on Asset Chain Testnet. {initialProposal ? "Saving changes returns it to pending approval." : ""}
           </p>
         </form>
       </section>
