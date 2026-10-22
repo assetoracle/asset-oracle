@@ -1,5 +1,6 @@
 
-export { ASSET_CHAIN_ID } from "../config/assetChain";
+import { ASSET_CHAIN_ID } from "../config/assetChain";
+export { ASSET_CHAIN_ID };
 
 export function normalizeChainId(
   chainId: string | number | undefined,
@@ -32,7 +33,7 @@ export function isTestnet(chainId: string | null): boolean {
     return false;
   }
 
-  return normalizeChainId(chainId) === "0xa5b5";
+  return normalizeChainId(chainId) === `0x${ASSET_CHAIN_ID.toString(16)}`;
 }
 
 export function displayChainId(
