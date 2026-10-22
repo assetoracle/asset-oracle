@@ -58,9 +58,25 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     Promise.all([
       client.getBytecode({ address: managerCode }),
       client.getBytecode({ address: TESTNET_USDC_ADDRESS as Address }),
-    ]).then(([managerBytecode, tokenBytecode]) => {
+      client.readContract({
+        address: managerCode as Address,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "DISPUTE_RESOLUTION_TIMEOUT",
+      }),
+      client.readContract({
+        address: managerCode as Address,
+        abi: assetOracleMarketManagerAbi,
+        functionName: "disputeConsensusReached",
+        args: [0n],
+      }),
+    ]).then(([managerBytecode, tokenBytecode, disputeTimeout, disputeConsensusProbe]) => {
       if (cancelled) return;
-      setCodeVerified(Boolean(managerBytecode && managerBytecode !== "0x" && tokenBytecode && tokenBytecode !== "0x"));
+      setCodeVerified(Boolean(
+        managerBytecode && managerBytecode !== "0x" &&
+        tokenBytecode && tokenBytecode !== "0x" &&
+        disputeTimeout === 604800n &&
+        typeof disputeConsensusProbe === "boolean"
+      ));
       setCodeCheckDone(true);
     }).catch(() => {
       if (cancelled) return;
