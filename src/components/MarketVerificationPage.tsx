@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, ShieldCheck, FileCheck2, WalletCards } from "lucide-react";
+import { getValidatorSourceLinks, type ValidatorSourceLink } from "../markets/marketApi";
 import { useAccount, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import { assetOracleMarketManagerAbi, MARKET_OUTCOME, ASSET_CHAIN_TESTNET_EXPLORER, TESTNET_USDC_DECIMALS } from "../contracts/assetOracle";
@@ -54,6 +56,19 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
   const outcomeLabel = outcome === MARKET_OUTCOME.YES ? "YES" : outcome === MARKET_OUTCOME.NO ? "NO" : outcome === MARKET_OUTCOME.INVALID ? "INVALID" : "UNAVAILABLE";
   const sourceLink = normalizedHttpUrl(evidenceSource);
   const hasEvidenceHash = Boolean(evidenceHash && evidenceHash !== "0x" + "0".repeat(64));
+  const [validatorLinks, setValidatorLinks] = useState<ValidatorSourceLink[]>([]);
+  const [validatorLinksLoading, setValidatorLinksLoading] = useState(false);
+
+  useEffect(() => {
+    if (marketId === undefined || !managerAddress) return;
+    let cancelled = false;
+    setValidatorLinksLoading(true);
+    void getValidatorSourceLinks(marketId.toString(), managerAddress)
+      .then((result) => { if (!cancelled) setValidatorLinks(result.links); })
+      .catch(() => { if (!cancelled) setValidatorLinks([]); })
+      .finally(() => { if (!cancelled) setValidatorLinksLoading(false); });
+    return () => { cancelled = true; };
+  }, [market.onchainMarketId, managerAddress]);
 
   return (
     <section className="verification-details-page page-section">
@@ -103,7 +118,23 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
       </section>
 
       <section className="verification-section">
-        <div className="verification-section-title"><span className="verification-section-icon"><WalletCards size={19} /></span><div><span className="eyebrow">03</span><h2>Your Position</h2></div></div>
+        <div className="verification-section-title"><span className="verification-section-icon"><FileCheck2 size={19} /></span><div><span className="eyebrow">03</span><h2>Validator Source Links</h2></div></div>
+        <div className="verification-detail-grid">
+          {validatorLinksLoading ? <article className="verification-detail-card"><p>Loading validator source links…</p></article>
+            : validatorLinks.length === 0 ? <article className="verification-detail-card"><strong>No validator source links recorded</strong><p>Older votes remain valid; source links are available for votes recorded after this feature is enabled.</p></article>
+            : validatorLinks.map((link) => (
+              <article className="verification-detail-card" key={link.validatorAddress}>
+                <span className="verification-detail-label">Validator {link.validatorAddress.slice(0, 6)}…{link.validatorAddress.slice(-4)}</span>
+                <strong>{link.outcome === 1 ? "YES" : link.outcome === 2 ? "NO" : "INVALID"} vote evidence</strong>
+                <a href={normalizedHttpUrl(link.sourceUrl) ?? undefined} target="_blank" rel="noreferrer">{link.sourceUrl} <ExternalLink size={14} /></a>
+                <p>Vote transaction: <a href={ASSET_CHAIN_TESTNET_EXPLORER + "/tx/" + link.transactionHash} target="_blank" rel="noreferrer">{shortHash(link.transactionHash)} <ExternalLink size={13} /></a></p>
+                <p>Recorded {new Date(link.recordedAt).toLocaleString()}</p>
+              </article>
+            ))}
+        </div>
+      </section>
+      <section className="verification-section">
+        <div className="verification-section-title"><span className="verification-section-icon"><WalletCards size={19} /></span><div><span className="eyebrow">04</span><h2>Your Position</h2></div></div>
         {!address ? <div className="verification-empty-position"><p>Connect your wallet to view your position in this market.</p></div> : position.isLoading ? <div className="verification-empty-position"><p>Loading your on-chain position…</p></div> : position.isError ? <div className="verification-empty-position"><p>Your position could not be loaded. Try again later.</p></div> : totalPosition === 0n ? <div className="verification-empty-position"><p>You did not stake in this market with the connected wallet.</p></div> : (
           <div className="verification-position-grid">
             <article className="verification-detail-card"><span className="verification-detail-label">Your prediction</span><strong>{userPrediction}</strong></article>
