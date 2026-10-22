@@ -107,6 +107,21 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     query: { enabled: Boolean(txHash) },
   });
 
+  const pendingPublicationStorageKey = "asset-oracle:pending-publication:" + proposal.id;
+
+  useEffect(() => {
+    if (txHash || proposal.onchainTxHash || typeof window === "undefined") return;
+    try {
+      const savedHash = window.localStorage.getItem(pendingPublicationStorageKey);
+      if (savedHash && /^0x[0-9a-fA-F]{64}$/.test(savedHash)) {
+        setTxHash(savedHash as `0x${string}`);
+        setError("Restored a pending publication transaction. Checking its receipt; do not submit another transaction.");
+      }
+    } catch {
+      // Storage can be disabled by browser policy; the current session can still proceed.
+    }
+  }, [pendingPublicationStorageKey, proposal.onchainTxHash, txHash]);
+
   const tokenConfig = useReadContract({
     address: manager,
     abi: marketPublisherAbi,
@@ -165,6 +180,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       await recordMarketPublication(proposal.id, hash, resolvedMarketId, address, signMessage);
       setPublicationSaved(true);
       setError("");
+      try {
+        if (typeof window !== "undefined") window.localStorage.removeItem(pendingPublicationStorageKey);
+      } catch {
+        // Failure to clear recovery metadata must not invalidate a verified publication.
+      }
       // Keep the administrator in the current publishing workflow after a successful save.
     } catch (err) {
       setPublicationSaved(false);
@@ -296,6 +316,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
         ],
       });
       setTxHash(hash);
+      try {
+        if (typeof window !== "undefined") window.localStorage.setItem(pendingPublicationStorageKey, hash);
+      } catch {
+        setError("Transaction submitted. Keep this page open until the receipt is confirmed; browser recovery storage is unavailable.");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wallet rejected or failed to submit the transaction.");
     } finally {
