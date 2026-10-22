@@ -5,12 +5,21 @@ import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
 import { friendlyError } from "../utils/friendlyError";
+import { API_BASE_URL } from "../config/env";
+
+function formatProposalTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+  const wat = new Intl.DateTimeFormat("en-NG", { timeZone: "Africa/Lagos", dateStyle: "medium", timeStyle: "short", hour12: false }).format(date);
+  const utc = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", dateStyle: "medium", timeStyle: "short", hour12: false }).format(date);
+  return `${wat} WAT (${utc} UTC)`;
+}
 import {
   ensureWalletSession,
   type StoredMarketProposal,
 } from "../markets/marketApi";
 
-const API = "https://asset-oracle-backend.onrender.com";
+const API = API_BASE_URL;
 
 type Props = {
   address?: string;
@@ -210,6 +219,8 @@ export default function AdminDashboard({
 
             <h3>{proposal.question}</h3>
             <p className="market-description">{proposal.description}</p>
+            <div className="market-meta"><span>Resolution rule</span><span>{proposal.resolutionRule?.description || "Not provided"}</span></div>
+            <div className="market-meta"><span>Evidence source ID</span><span>{proposal.resolutionRule?.sourceId || "Not provided"}</span></div>
 
             {proposal.status === "APPROVED" && (
               <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />
@@ -221,11 +232,11 @@ export default function AdminDashboard({
             </div>
             <div className="market-meta">
               <span>Closes</span>
-              <span>{new Date(proposal.closesAt).toLocaleDateString()}</span>
+              <span>{formatProposalTime(proposal.closesAt)}</span>
             </div>
             <div className="market-meta">
               <span>Resolves</span>
-              <span>{new Date(proposal.resolvesAt).toLocaleDateString()}</span>
+              <span>{formatProposalTime(proposal.resolvesAt)}</span>
             </div>
 
           </article>

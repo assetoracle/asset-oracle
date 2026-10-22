@@ -1,4 +1,5 @@
 import { friendlyError } from "../utils/friendlyError";
+import { API_BASE_URL } from "../config/env";
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useSignMessage } from "wagmi";
@@ -218,7 +219,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     if (referralCode && !referralAttributionReady && address) {
       setReferralPreparing(true);
       try {
-        const base = "https://asset-oracle-backend.onrender.com";
+        const base = API_BASE_URL;
         const session = await ensureWalletSession(address, (message) => signMessageAsync({ message }));
         const attributionResponse = await fetch(`${base}/api/referrals/attribute`, {
           method: "POST",

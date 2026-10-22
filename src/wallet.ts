@@ -1,3 +1,4 @@
+import { ASSET_CHAIN_RPC_URL } from "./config/env";
 export type WalletConnection = {
   address: string;
   chainId: string;
@@ -57,7 +58,7 @@ export const ASSET_CHAIN_TESTNET = {
     symbol: "RWA",
     decimals: 18,
   },
-  rpcUrls: ["https://enugu-rpc.assetchain.org"],
+  rpcUrls: [ASSET_CHAIN_RPC_URL],
   blockExplorerUrls: [
     "https://scan-testnet.assetchain.org",
   ],

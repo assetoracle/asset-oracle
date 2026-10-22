@@ -14,6 +14,7 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import { createConfig, http } from "wagmi";
 import { assetChainTestnet } from "./config/assetChain";
+import { ASSET_CHAIN_RPC_URL } from "./config/env";
 
 const projectId =
   import.meta.env.VITE_REOWN_PROJECT_ID || "31b59192af5764277976dd36db7754ba";
@@ -39,14 +40,14 @@ const connectors = connectorsForWallets(
       ],
     },
   ],
-  { appName: "Assets Oracle", projectId },
+  { appName: "Asset Oracle", projectId },
 );
 
 export const wagmiConfig = createConfig({
   chains,
   connectors,
   transports: {
-    [assetChainTestnet.id]: http("https://enugu-rpc.assetchain.org"),
+    [assetChainTestnet.id]: http(ASSET_CHAIN_RPC_URL),
   },
   ssr: false,
 });

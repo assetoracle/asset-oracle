@@ -1,7 +1,8 @@
 import type { Address } from "viem";
+import { ASSET_CHAIN_RPC_URL } from "../config/env";
 
 export const ASSET_CHAIN_TESTNET_ID = 42421;
-export const ASSET_CHAIN_TESTNET_RPC = "https://enugu-rpc.assetchain.org";
+export const ASSET_CHAIN_TESTNET_RPC = ASSET_CHAIN_RPC_URL;
 export const ASSET_CHAIN_TESTNET_EXPLORER = "https://scan-testnet.assetchain.org";
 
 /** Approved Enugu testnet USDC. Contract deployment must independently verify code and decimals. */

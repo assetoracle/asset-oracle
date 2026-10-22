@@ -758,7 +758,8 @@ useEffect(() => {
       setPersonalReferralStats(stats);
       const url = new URL(window.location.href);
       url.searchParams.set("ref", code);
-      url.hash = "/referrals";
+      url.pathname = "/referrals";
+      url.hash = "";
       setReferralLink(url.toString());
       setReferralMessage("Your referral link is ready. Copy it to share.");
     } catch (error) {
@@ -908,7 +909,7 @@ useEffect(() => {
           onchainTxHash={selectedMarket.onchainTxHash}
           marketClosed={marketClosed}
           onBack={goBackToMarkets}
-          backLabel={returnHashRef.current === "#/" ? "Back to home" : "Back to markets"}
+          backLabel={returnHashRef.current === "/" ? "Back to home" : "Back to markets"}
         />
       );
     }
