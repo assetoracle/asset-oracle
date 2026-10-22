@@ -66,7 +66,6 @@ export default function ValidatorDashboard() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   // Validator reads and transactions must target only the canonical 2-of-3 manager.
-  // Legacy positions remain accessible through Account/Claims, not active settlement.
   const managers = useMemo(() => [assetOracleMarketManagerAddress], []);
   const validatorReads = useReadContracts({
     contracts: address ? managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "isValidator" as const, args: [address] as const })) : [],
