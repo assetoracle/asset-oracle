@@ -1,5 +1,6 @@
 
-export { ASSET_CHAIN_ID } from "../config/assetChain";
+import { ASSET_CHAIN_ID } from "../config/assetChain";
+export { ASSET_CHAIN_ID };
 
 export function normalizeChainId(
   chainId: string | number | undefined,
