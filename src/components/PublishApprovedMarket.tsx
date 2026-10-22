@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import {
   isAddress,
   keccak256,
-  parseEventLogs,
+  decodeEventLog,
   toBytes,
   type Address,
 } from "viem";
@@ -179,15 +179,25 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
   useEffect(() => {
     if (!receipt.isSuccess || !receipt.data || !txHash || marketId) return;
     try {
-      const events = parseEventLogs({
-        abi: marketPublisherAbi,
-        logs: receipt.data.logs.filter((log: { address: string }) => log.address.toLowerCase() === manager.toLowerCase()),
-        eventName: "MarketCreated",
-        strict: true,
+      const events = receipt.data.logs.flatMap((log) => {
+        if (log.address.toLowerCase() !== manager.toLowerCase()) return [];
+
+        try {
+          const decoded = decodeEventLog({
+            abi: marketPublisherAbi,
+            data: log.data,
+            topics: log.topics,
+            eventName: "MarketCreated",
+            strict: true,
+          });
+          return [{ args: decoded.args }];
+        } catch {
+          return [];
+        }
       });
       const matching = events.find((event) =>
         event.args.question === proposal.question &&
-        (!address || event.args.creator?.toLowerCase() === address.toLowerCase())
+        (!address || event.args.creator.toLowerCase() === address.toLowerCase())
       );
       if (!matching || matching.args.marketId === undefined) {
         setError("Transaction confirmed, but the MarketCreated event could not be matched. Verify the transaction on the explorer before retrying.");
