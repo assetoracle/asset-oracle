@@ -24,7 +24,7 @@ createRoot(rootElement).render(
         <RainbowKitProvider
           theme={rainbowKitTheme}
           appInfo={{
-            appName: "Assets Oracle",
+            appName: "Asset Oracle",
             learnMoreUrl: "https://assetoracleapp.xyz",
           }}
         >
