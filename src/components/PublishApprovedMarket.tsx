@@ -179,8 +179,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
   useEffect(() => {
     if (!receipt.isSuccess || !receipt.data || !txHash || marketId) return;
     try {
-      const events = receipt.data.logs.flatMap((log) => {
-        if (log.address.toLowerCase() !== manager.toLowerCase()) return [];
+      const events: Array<{
+        args: { marketId: bigint; creator: Address; question: string };
+      }> = [];
+      for (const log of receipt.data.logs) {
+        if (log.address.toLowerCase() !== manager.toLowerCase()) continue;
 
         try {
           const decoded = decodeEventLog({
@@ -190,11 +193,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
             eventName: "MarketCreated",
             strict: true,
           });
-          return [{ args: decoded.args }];
+          events.push({ args: decoded.args });
         } catch {
-          return [];
+          // Ignore logs that are not valid MarketCreated events from this manager.
         }
-      });
+      }
       const matching = events.find((event) =>
         event.args.question === proposal.question &&
         (!address || event.args.creator.toLowerCase() === address.toLowerCase())
