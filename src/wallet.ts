@@ -1,3 +1,4 @@
+import { ASSET_CHAIN_RPC_URL } from "./config/env";
 export type WalletConnection = {
   address: string;
   chainId: string;
