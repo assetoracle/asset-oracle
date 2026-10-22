@@ -69,11 +69,24 @@ export default function ValidatorDashboard() {
   const { signMessageAsync } = useSignMessage();
   // Validator reads and transactions must target only the canonical 2-of-3 manager.
   const managers = useMemo(() => [assetOracleMarketManagerAddress], []);
+  const managerCompatibilityReads = useReadContracts({
+    contracts: [
+      { address: assetOracleMarketManagerAddress, abi: assetOracleMarketManagerAbi, functionName: "DISPUTE_RESOLUTION_TIMEOUT" as const },
+      { address: assetOracleMarketManagerAddress, abi: assetOracleMarketManagerAbi, functionName: "disputeConsensusReached" as const, args: [0n] as const },
+    ],
+    query: { enabled: chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 60_000 },
+  });
+  const timeoutRead = managerCompatibilityReads.data?.[0];
+  const disputeRead = managerCompatibilityReads.data?.[1];
+  const managerCompatible = timeoutRead?.status === "success" &&
+    timeoutRead.result === 604800n &&
+    disputeRead?.status === "success" &&
+    typeof disputeRead.result === "boolean";
   const validatorReads = useReadContracts({
     contracts: address ? managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "isValidator" as const, args: [address] as const })) : [],
     query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
   });
-  const authorizedValidator = Boolean(address && validatorReads.data?.some((read) => read.status === "success" && read.result === true));
+  const authorizedValidator = Boolean(managerCompatible && address && validatorReads.data?.some((read) => read.status === "success" && read.result === true));
   const managerCountReads = useReadContracts({
     contracts: managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "marketCount" as const })),
     query: { enabled: Boolean(authorizedValidator && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
@@ -259,6 +272,8 @@ export default function ValidatorDashboard() {
 
   if (!isConnected) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Connect an authorized validator wallet to continue.</p></section>;
   if (chainId !== ASSET_CHAIN_TESTNET_ID) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Switch to Asset Chain Testnet (Chain ID 42421).</p></section>;
+  if (managerCompatibilityReads.isLoading) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Verifying the audited Enugu manager before enabling settlement actions.</p></section>;
+  if (!managerCompatible) return <section className="validator-dashboard page-section"><h1>Settlement actions blocked</h1><p>The configured manager does not expose the audited dispute lifecycle. Settlement remains disabled until the updated manager is deployed and verified on Enugu testnet.</p></section>;
   if (!authorizedValidator) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This dashboard is available only to the designated validator wallets. Connect one of the authorized validator wallets.</p></section>;
 
   return (

@@ -20,6 +20,7 @@ import {
   ASSET_CHAIN_TESTNET_EXPLORER,
   ASSET_CHAIN_TESTNET_ID,
   assetOracleMarketManagerAddress,
+  assetOracleMarketManagerAbi,
   TESTNET_USDC_ADDRESS,
   TESTNET_USDC_DECIMALS,
 } from "../contracts/assetOracle";
@@ -158,8 +159,26 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
         return;
       }
       try {
-        const code = await client.getBytecode({ address: manager });
-        if (!cancelled) setContractVerified(Boolean(code && code !== "0x"));
+        const [code, disputeTimeout, disputeConsensusProbe] = await Promise.all([
+          client.getBytecode({ address: manager }),
+          client.readContract({
+            address: manager as Address,
+            abi: assetOracleMarketManagerAbi,
+            functionName: "DISPUTE_RESOLUTION_TIMEOUT",
+          }),
+          client.readContract({
+            address: manager as Address,
+            abi: assetOracleMarketManagerAbi,
+            functionName: "disputeConsensusReached",
+            args: [0n],
+          }),
+        ]);
+        const compatible = Boolean(
+          code && code !== "0x" &&
+          disputeTimeout === 604800n &&
+          typeof disputeConsensusProbe === "boolean"
+        );
+        if (!cancelled) setContractVerified(compatible);
       } catch {
         if (!cancelled) setContractVerified(false);
       } finally {
@@ -270,7 +289,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     }
     if (checkingContract || !contractVerified) {
       setPublishConfirmation(false);
-      setError("The configured market-manager contract has not been verified on this network. Wait for the contract check to finish, then retry.");
+      setError("The configured market manager is not compatible with the audited dispute lifecycle. Publishing is blocked until the audited manager is deployed and verified on Enugu testnet.");
       return;
     }
     if (tokenConfig.isLoading || validatorRoster.isLoading || marketCreatorRole.isLoading) {

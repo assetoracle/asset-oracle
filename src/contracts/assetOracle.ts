@@ -24,6 +24,13 @@ export const isAssetOracleContractConfigured = true;
 export const assetOracleMarketManagerAbi = [
   {
     type: "function",
+    name: "DISPUTE_RESOLUTION_TIMEOUT",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint64" }],
+  },
+  {
+    type: "function",
     name: "owner",
     stateMutability: "view",
     inputs: [],
@@ -63,6 +70,13 @@ export const assetOracleMarketManagerAbi = [
     stateMutability: "view",
     inputs: [{ name: "marketId", type: "uint256" }, { name: "voteKey", type: "bytes32" }],
     outputs: [{ name: "", type: "uint8" }],
+  },
+  {
+    type: "function",
+    name: "disputeConsensusReached",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [{ name: "", type: "bool" }],
   },
   {
     type: "function",
