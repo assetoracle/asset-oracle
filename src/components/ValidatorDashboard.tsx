@@ -170,7 +170,7 @@ export default function ValidatorDashboard() {
       outcome: pendingSource.outcome,
       sourceUrl: pendingSource.sourceUrl,
       transactionHash: txHash,
-      signMessage: signMessageAsync,
+      signMessage: async (message) => await signMessageAsync({ message }),
     }).then(() => {
       if (!cancelled) setNotice("Vote confirmed on-chain and source link saved for public verification.");
     }).catch(() => {
