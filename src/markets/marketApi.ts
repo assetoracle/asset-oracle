@@ -227,6 +227,10 @@ async function signedWalletAuth(
  * Submit a regular user's proposal after paying exactly 10 USDC on Asset Chain Testnet.
  * The backend independently verifies the token, amount, recipient, chain, receipt and confirmations.
  */
+/** Project-approved Asset Chain Enugu testnet USDC. Do not replace without explicit approval. */
+export const ASSET_CHAIN_TESTNET_USDC_ADDRESS =
+  "0xc33741fddEBeA854d265db6F9707900Efb0211a2";
+
 export async function createPaidMarketProposal(
   proposal: MarketProposalInput,
   address: string,
@@ -251,8 +255,9 @@ export async function createPaidMarketProposal(
     body: JSON.stringify({ token: "USDC", walletAuth: await signedWalletAuth(address, signMessage) }),
   });
   if (quote.network !== "TESTNET" || quote.token !== "USDC" ||
+      quote.tokenAddress.toLowerCase() !== ASSET_CHAIN_TESTNET_USDC_ADDRESS.toLowerCase() ||
       quote.tokenDecimals !== 6 || quote.amountAtomic !== "10000000") {
-    throw new Error("The server returned an invalid testnet USDC proposal fee quote.");
+    throw new Error("The server returned an invalid or unapproved testnet USDC proposal fee quote.");
   }
 
   const intent = await request<{
@@ -277,6 +282,7 @@ export async function createPaidMarketProposal(
   });
 
   if (intent.payment.network !== "TESTNET" || intent.payment.token !== "USDC" ||
+      intent.payment.tokenAddress.toLowerCase() !== ASSET_CHAIN_TESTNET_USDC_ADDRESS.toLowerCase() ||
       intent.payment.tokenAddress.toLowerCase() !== quote.tokenAddress.toLowerCase() ||
       intent.payment.amountAtomic !== "10000000" || intent.payment.tokenDecimals !== 6) {
     throw new Error("The payment intent does not match the 10 USDC testnet quote.");
