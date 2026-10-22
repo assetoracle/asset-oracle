@@ -7,6 +7,14 @@ describe("market time helpers", () => {
   it("converts WAT wall-clock input to UTC ISO time", () => {
     expect(toIsoDate("2025-01-15T12:30")).toBe("2025-01-15T11:30:00.000Z");
   });
+  it("preserves seconds when converting WAT wall-clock input", () => {
+    expect(toIsoDate("2025-01-15T12:30:45")).toBe("2025-01-15T11:30:45.000Z");
+  });
+  it("rejects invalid wall-clock input", () => {
+    expect(toIsoDate("not-a-date")).toBe("");
+    expect(toIsoDate("2025-02-30T12:30")).toBe("");
+    expect(toIsoDate("2025-01-15T25:30")).toBe("");
+  });
   it("formats UTC instants as WAT datetime-local values", () => {
     expect(toLocalDateTime("2025-01-15T11:30:00.000Z")).toBe("2025-01-15T12:30");
   });
