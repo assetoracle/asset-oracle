@@ -11340,3 +11340,40 @@ select.brand-select option,
 .page-section-tabs button:focus-visible{outline:2px solid rgba(99,243,255,.85);outline-offset:2px}
 @media(max-width:560px){.page-section-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}.page-section-tabs button{width:100%;min-width:0;padding:10px 8px;font-size:13px}}
 @media(max-width:360px){.page-section-tabs{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Global layout safeguards: cards and tables must stay inside their own sections. */
+.page-section, .page-section > *, .market-grid, .market-card, .account-summary-grid,
+.account-summary-card, .referral-overview-grid, .referral-stat-card, .referral-link-card,
+.referral-leaderboard-card, .referral-rules-card, .verification-section,
+.verification-detail-card, .refund-subsection {
+  min-width: 0;
+  max-width: 100%;
+}
+.market-grid, .account-summary-grid, .referral-overview-grid, .verification-position-grid {
+  align-items: stretch;
+  gap: 16px;
+}
+.market-card, .account-summary-card, .referral-stat-card, .verification-detail-card {
+  height: auto;
+  overflow-wrap: anywhere;
+}
+.market-card img, .market-card table, .market-card input, .market-card textarea,
+.market-card select, .page-section table, .page-section input, .page-section textarea {
+  max-width: 100%;
+}
+.market-meta { min-width: 0; gap: 12px; align-items: flex-start; }
+.market-meta > :last-child { min-width: 0; overflow-wrap: anywhere; }
+.refund-subsection { margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(99,243,255,.16); }
+.refund-subsection > h3 { margin: 0 0 14px; }
+.admin-proposal-grid { align-items: stretch; }
+.admin-proposal-grid > .market-card { margin: 0; }
+@media (max-width: 560px) {
+  .market-grid, .account-summary-grid, .referral-overview-grid, .verification-position-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .market-meta { flex-wrap: wrap; }
+  .market-meta > :last-child { text-align: left; }
+  .refund-subsection { margin-top: 18px; padding-top: 16px; }
+}

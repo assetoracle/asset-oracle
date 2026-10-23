@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Check, RefreshCw, ShieldAlert } from "lucide-react";
 import { ensureWalletSession } from "../markets/marketApi";
 import { friendlyError } from "../utils/friendlyError";
@@ -55,6 +55,10 @@ export default function ReferralReviewPanel({ address, signMessage }: Props) {
     }
   }, [address, authenticate]);
 
+  useEffect(() => {
+    if (address) void loadQueue();
+  }, [address, loadQueue]);
+
   async function review(item: FlaggedReferral, decision: "APPROVE" | "KEEP_FLAGGED") {
     setBusyWallet(item.invitedWallet);
     setError("");
@@ -95,7 +99,7 @@ export default function ReferralReviewPanel({ address, signMessage }: Props) {
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
       {!address && <p>Connect the configured owner wallet to access review controls.</p>}
-      {address && !loading && items.length === 0 && <p>No flagged referrals loaded. Select the button to check the review queue.</p>}
+      {address && !loading && !error && items.length === 0 && <div className="empty-state"><h3>No referrals awaiting review</h3><p>The review queue loaded successfully. Stake-verified referrals flagged for manual review will appear here.</p><button className="text-action" type="button" onClick={() => void loadQueue()}>Refresh review queue</button></div>}
       {items.map((item) => (
         <article className="market-card" key={item.invitedWallet}>
           <div className="market-card-top">

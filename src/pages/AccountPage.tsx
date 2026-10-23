@@ -69,9 +69,16 @@ function AccountPage({
   const [activeAccountSection, setActiveAccountSection] = useState<"primary" | "secondary">("primary");
 
   const isClaims = page === "Claims";
-  const history = accountData?.history ?? [];
-  const positions = accountData?.positions ?? [];
-  const claimable = accountData?.claimable ?? [];
+  const history = (accountData?.history ?? []).slice().sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const positions = (accountData?.positions ?? []).slice().sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime());
+  const claimable = (accountData?.claimable ?? []).slice().sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime()).filter((item) => {
+    // Winning positions alone may claim pool payouts. Cancelled/refundable
+    // markets remain eligible for their separate refund path.
+    if ([4, 5].includes(item.status)) return Number.parseFloat(item.yesStake) + Number.parseFloat(item.noStake) > 0;
+    if (item.status !== 3 || Number.parseFloat(item.claimableAmount) <= 0) return false;
+    return (item.outcome === 1 && Number.parseFloat(item.yesStake) > 0) ||
+      (item.outcome === 2 && Number.parseFloat(item.noStake) > 0);
+  });
   const completedClaims = history.filter((item) => item.type === "Claimed" || item.type === "Refunded");
   const summary = isClaims
     ? [
@@ -266,7 +273,7 @@ function AccountPage({
               {activeAccountSection === "primary" && <>
               <h2>Available claims and refunds</h2>
               {claimable.length === 0 && !loading ? (
-                <div className="empty-state"><h3>No claimable payouts found</h3><p>Claimable amounts appear after verified settlement or cancellation/refund status is available on-chain.</p></div>
+                <div className="empty-state"><h3>No eligible claims</h3><p>Only winning predictions with a positive payout appear here. Losing predictions are not shown. Eligible cancelled-market refunds appear when available.</p></div>
               ) : (
                 <div className="market-grid">
                   {claimable.map((item) => {
@@ -281,9 +288,12 @@ function AccountPage({
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
                       <small>Original manager: {itemManagerAddress === "unknown" ? "Unavailable" : `${itemManagerAddress.slice(0, 8)}…${itemManagerAddress.slice(-6)}`}</small>
-                      <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
-                        {busyMarketKey === itemKey ? "Confirming…" : item.status === 2 ? "Finalize & claim" : item.status === 3 ? (Number(item.claimableAmount) === 0 ? "Confirm zero-payout claim" : "Claim payout") : "Claim refund"}
-                      </button>
+                      {(item.status === 4 || item.status === 5 || (item.status === 3 && Number.parseFloat(item.claimableAmount) > 0 &&
+                        ((item.outcome === 1 && Number.parseFloat(item.yesStake) > 0) || (item.outcome === 2 && Number.parseFloat(item.noStake) > 0)))) && (
+                        <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
+                          {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? "Claim payout" : "Claim refund"}
+                        </button>
+                      )}
                     </article>
                     );
                   })}

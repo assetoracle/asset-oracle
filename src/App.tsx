@@ -442,7 +442,8 @@ useEffect(() => {
 
   useEffect(() => {
     setReferralMessage("");
-    setReferralLink("");
+    const cachedReferralLink = address ? window.localStorage.getItem("asset-oracle-referral-link:" + address.toLowerCase()) : null;
+    setReferralLink(cachedReferralLink ?? "");
     setPersonalReferralStats(null);
     setAccountData(null);
     setAccountDataError("");
@@ -482,6 +483,7 @@ useEffect(() => {
         url.pathname = "/referrals";
         url.hash = "";
         setReferralLink(url.toString());
+        window.localStorage.setItem("asset-oracle-referral-link:" + address.toLowerCase(), url.toString());
       })
       .catch((error) => {
         if (!active) return;
@@ -675,7 +677,7 @@ useEffect(() => {
     .sort((a, b) => {
       const idA = a.onchainMarketId ? Number(a.onchainMarketId) : Number.MAX_SAFE_INTEGER;
       const idB = b.onchainMarketId ? Number(b.onchainMarketId) : Number.MAX_SAFE_INTEGER;
-      return idA - idB;
+      return idB - idA;
     });
 
   async function handleLoadMyProposals() {
@@ -704,7 +706,7 @@ useEffect(() => {
         return;
       }
 
-      setMyProposals(result.proposals);
+      setMyProposals(result.proposals.slice().sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
       setMyProposalsLoaded(true);
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
@@ -742,7 +744,7 @@ useEffect(() => {
   function handleProposalUpdated(proposal: StoredMarketProposal) {
     setProposalFormOpen(false);
     setProposalBeingEdited(null);
-    setMyProposals((current) => current.map((item) => item.id === proposal.id ? proposal : item));
+    setMyProposals((current) => current.map((item) => item.id === proposal.id ? proposal : item).sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
     setMyProposalsLoaded(true);
     setProposalMessage(`Proposal updated and resubmitted for approval. Status: ${proposal.status}. Reference: ${proposal.id}`);
   }
@@ -771,6 +773,7 @@ useEffect(() => {
       url.pathname = "/referrals";
       url.hash = "";
       setReferralLink(url.toString());
+      window.localStorage.setItem("asset-oracle-referral-link:" + requestedAddress.toLowerCase(), url.toString());
       setReferralMessage("Your referral link is ready. Copy it to share.");
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) return;

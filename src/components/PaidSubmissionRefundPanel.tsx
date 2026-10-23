@@ -31,6 +31,8 @@ function shortAddress(value: string) {
 
 export default function PaidSubmissionRefundPanel({ address, signMessage }: Props) {
   const [refunds, setRefunds] = useState<RefundItem[]>([]);
+  const pendingRefunds = refunds.filter((item) => item.status !== "REFUNDED");
+  const completedRefunds = refunds.filter((item) => item.status === "REFUNDED");
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [hashes, setHashes] = useState<Record<string, string>>({});
@@ -62,7 +64,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load refund queue.");
-      setRefunds(Array.isArray(data.refunds) ? data.refunds : []);
+      setRefunds((Array.isArray(data.refunds) ? data.refunds : []).sort((a: RefundItem, b: RefundItem) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setHasLoaded(true);
     } catch (err) {
       setError(friendlyError(err, "Unable to load refund queue."));
@@ -99,6 +101,9 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Refund verification failed.");
       setHashes((current) => ({ ...current, [item.id]: transactionHash }));
+      setRefunds((current) => current.map((entry) => entry.id === item.id
+        ? { ...entry, status: "REFUNDED", refundTxHash: transactionHash }
+        : entry));
       setLastVerified({ recipient: item.walletAddress, hash: transactionHash });
       await loadRefunds(true);
       setNotice(`SUCCESS — refund verified on-chain and recorded as REFUNDED. Recipient: ${shortAddress(item.walletAddress)}. Transaction: ${shortAddress(transactionHash)}. The item has been removed from the pending queue.`);
@@ -123,7 +128,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       <div className="account-summary-grid admin-summary-grid">
         <article className="account-summary-card">
           <span>Refunds awaiting verification</span>
-          <strong>{refunds.length}</strong>
+          <strong>{pendingRefunds.length}</strong>
         </article>
         <article className="account-summary-card">
           <span>Network</span>
@@ -148,7 +153,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       {address && !hasLoaded && !loading && !error && <p>Select “Load refund queue” to check current refund records.</p>}
 
       <div className="market-grid admin-proposal-grid">
-        {refunds.map((item) => (
+        {pendingRefunds.map((item) => (
           <article className="market-card" key={item.id}>
             <div className="market-card-top">
               <span className="market-category">{item.network} · {item.token}</span>
@@ -179,6 +184,25 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
           </article>
         ))}
       </div>
+      <section className="refund-subsection" aria-labelledby="completed-refunds-heading">
+        <h3 id="completed-refunds-heading">Refunded ({completedRefunds.length})</h3>
+        {completedRefunds.length === 0 ? (
+          <div className="empty-state"><p>No verified refunds recorded yet.</p></div>
+        ) : (
+          <div className="market-grid admin-proposal-grid">
+            {completedRefunds.map((item) => (
+              <article className="market-card refunded-card" key={item.id}>
+                <div className="market-card-top"><span className="market-category">{item.network} · {item.token}</span><span className="market-status">REFUNDED</span></div>
+                <h3>Refund verified</h3>
+                <div className="market-meta"><span>Refund amount</span><strong>{Number(item.amountAtomic) / 1000000} USDC</strong></div>
+                <div className="market-meta"><span>Recipient</span><span title={item.walletAddress}>{shortAddress(item.walletAddress)}</span></div>
+                <div className="market-meta"><span>Refund transaction</span>{item.refundTxHash ? <a href={"https://scan-testnet.assetchain.org/tx/" + item.refundTxHash} target="_blank" rel="noreferrer">{shortAddress(item.refundTxHash)}</a> : <span>Not recorded</span>}</div>
+                <p role="status">Successfully verified and recorded. No further action is required.</p>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 }

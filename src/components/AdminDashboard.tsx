@@ -69,7 +69,7 @@ export default function AdminDashboard({
         throw new Error(data.error || "Unable to load proposals.");
       }
 
-      setProposals(data.proposals ?? []);
+      setProposals((data.proposals ?? []).slice().sort((a: StoredMarketProposal, b: StoredMarketProposal) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
     } catch (err) {
       setError(friendlyError(err, "Request failed."));
     } finally {
@@ -115,9 +115,8 @@ export default function AdminDashboard({
       }
 
       setProposals((current) =>
-        current.map((proposal) =>
-          proposal.id === id ? data.proposal : proposal,
-        ),
+        current.map((proposal) => proposal.id === id ? data.proposal : proposal)
+          .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()),
       );
 
       setNotice(`Proposal ${status.toLowerCase()} successfully.`);
