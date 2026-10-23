@@ -11377,3 +11377,7 @@ select.brand-select option,
   .market-meta > :last-child { text-align: left; }
   .refund-subsection { margin-top: 18px; padding-top: 16px; }
 }
+
+
+/* Refund verification failures must be visible beside the action that failed. */
+.refund-verification-error { margin: 12px 0; padding: 14px; border: 1px solid rgba(255, 123, 123, .55); border-radius: 10px; background: rgba(255, 123, 123, .09); color: #ffb4a9; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
