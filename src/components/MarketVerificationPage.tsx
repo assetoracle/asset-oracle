@@ -137,7 +137,6 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
               </article>
             ))}
         </div>
-      </section>
       </section>}
       {activeVerificationSection === "position" && <section className="verification-section">
         <div className="verification-section-title"><span className="verification-section-icon"><WalletCards size={19} /></span><div><span className="eyebrow">04</span><h2>Your Position</h2></div></div>
