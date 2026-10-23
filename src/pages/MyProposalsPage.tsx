@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { StoredMarketProposal, WalletRoleResponse } from "../markets/marketApi";
 import { categoryLabel, formatDate } from "../utils/format";
 
