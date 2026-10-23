@@ -115,10 +115,9 @@ export default function AdminDashboard({
       }
 
       setProposals((current) =>
-        current.map((proposal) =>
-          proposal.id === id ? data.proposal : proposal,
-        ),
-      ).sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+        current.map((proposal) => proposal.id === id ? data.proposal : proposal)
+          .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()),
+      );
 
       setNotice(`Proposal ${status.toLowerCase()} successfully.`);
     } catch (err) {
