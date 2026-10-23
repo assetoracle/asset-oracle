@@ -94,8 +94,6 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
           <strong className={outcomeLabel === "YES" ? "outcome-yes" : outcomeLabel === "NO" ? "outcome-no" : ""}>{outcomeLabel}</strong>
           <p>{resolvedAt > 0 ? `Resolved ${new Date(resolvedAt * 1000).toLocaleString()}` : "Resolution timestamp not recorded in the market record."}</p>
         </div>
-      </section>
-
       </section>}
       {activeVerificationSection === "details" && <section className="verification-section">
         <div className="verification-section-title"><span className="verification-section-icon"><FileCheck2 size={19} /></span><div><span className="eyebrow">02</span><h2>Verification Details</h2></div></div>
@@ -123,8 +121,6 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
             <p>Market creation transaction: {market.onchainTxHash ? <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${market.onchainTxHash}`} target="_blank" rel="noreferrer">{shortHash(market.onchainTxHash)} <ExternalLink size={13} /></a> : "Not recorded"}</p>
           </article>
         </div>
-      </section>
-
       </section>}
       {activeVerificationSection === "sources" && <section className="verification-section">
         <div className="verification-section-title"><span className="verification-section-icon"><FileCheck2 size={19} /></span><div><span className="eyebrow">03</span><h2>Validator Source Links</h2></div></div>
@@ -153,8 +149,6 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
             <article className="verification-detail-card"><span className="verification-detail-label">Payout status</span><strong>{claimed ? "Claimed" : userResult === "WON" || userResult === "REFUNDED" ? "Available to claim, if contract rules permit" : "No winning payout"}</strong></article>
           </div>
         )}
-      </section>
-
       </section>}
       <p className="verification-disclaimer">Verification information is limited to data recorded by the connected Asset Oracle market contract. A source name or evidence hash is not represented as an independent audit. The resolution transaction is not available from the market record unless supplied by the indexer.</p>
     </section>
