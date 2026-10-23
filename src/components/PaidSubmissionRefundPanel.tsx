@@ -101,6 +101,9 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Refund verification failed.");
       setHashes((current) => ({ ...current, [item.id]: transactionHash }));
+      setRefunds((current) => current.map((entry) => entry.id === item.id
+        ? { ...entry, status: "REFUNDED", refundTxHash: transactionHash }
+        : entry));
       setLastVerified({ recipient: item.walletAddress, hash: transactionHash });
       await loadRefunds(true);
       setNotice(`SUCCESS — refund verified on-chain and recorded as REFUNDED. Recipient: ${shortAddress(item.walletAddress)}. Transaction: ${shortAddress(transactionHash)}. The item has been removed from the pending queue.`);
