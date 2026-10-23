@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowLeft,
   ShieldCheck,
@@ -58,6 +59,7 @@ function MarketDetailPage({
   const validCloseTime = typeof onchainCloseTime === "number" && Number.isSafeInteger(onchainCloseTime) && onchainCloseTime >= 0
     ? onchainCloseTime
     : undefined;
+  const [activeMarketDetailSection, setActiveMarketDetailSection] = useState<"status" | "timeline" | "rules">("status");
 
   return (
     <section className="market-detail-page page-section">
@@ -107,6 +109,12 @@ function MarketDetailPage({
         )}
       </header>
 
+      <nav className="page-section-tabs" aria-label="Market detail sections">
+        <button type="button" className={activeMarketDetailSection === "status" ? "active" : ""} aria-pressed={activeMarketDetailSection === "status"} onClick={() => setActiveMarketDetailSection("status")}>Market status</button>
+        <button type="button" className={activeMarketDetailSection === "timeline" ? "active" : ""} aria-pressed={activeMarketDetailSection === "timeline"} onClick={() => setActiveMarketDetailSection("timeline")}>Timeline</button>
+        <button type="button" className={activeMarketDetailSection === "rules" ? "active" : ""} aria-pressed={activeMarketDetailSection === "rules"} onClick={() => setActiveMarketDetailSection("rules")}>Resolution rules</button>
+      </nav>
+      {activeMarketDetailSection === "status" && <>
       <div className="market-detail-onchain">
         <OnchainMarketStatus />
         {validOnchainMarketId && validCloseTime !== undefined && (
@@ -128,7 +136,8 @@ function MarketDetailPage({
         </div>
       )}
 
-      <section className="market-detail-schedule" aria-label="Market schedule and record">
+      </>}
+      {activeMarketDetailSection === "timeline" && <section className="market-detail-schedule" aria-label="Market schedule and record">
         <div className="market-detail-section-heading">
           <span className="eyebrow">AT A GLANCE</span>
           <h2>Market timeline</h2>
@@ -152,7 +161,8 @@ function MarketDetailPage({
         </div>
       </section>
 
-      <section className="resolution-preview">
+      </section>}
+      {activeMarketDetailSection === "rules" && <section className="resolution-preview">
         <div className="market-detail-section-heading">
           <span className="eyebrow">RESOLUTION CRITERIA</span>
           <h2>What decides YES or NO?</h2>
@@ -180,6 +190,7 @@ function MarketDetailPage({
         )}
       </section>
 
+      </section>}
       <p className="market-disclaimer">
         Transparency notice: this interface does not claim that a market has been deployed, verified, or settled. Confirmed results and transaction details must come from the implemented verification workflow and on-chain records.
       </p>
