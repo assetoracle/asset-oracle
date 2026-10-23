@@ -37,6 +37,7 @@ export default function AdminDashboard({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [confirmation, setConfirmation] = useState<{ id: string; status: "APPROVED" | "REJECTED" } | null>(null);
+  const [activeSection, setActiveSection] = useState<"proposals" | "referrals" | "refunds">("proposals");
 
   const authenticate = useCallback(async () => {
     if (!address) throw new Error("Connect your admin wallet first.");
@@ -142,6 +143,13 @@ export default function AdminDashboard({
         <ShieldCheck size={30} />
       </div>
 
+      <nav className="admin-section-nav" aria-label="Admin dashboard sections">
+        <button type="button" className={activeSection === "proposals" ? "primary-button" : "text-action"} aria-current={activeSection === "proposals" ? "page" : undefined} onClick={() => setActiveSection("proposals")}>Market proposals</button>
+        <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>
+        <button type="button" className={activeSection === "refunds" ? "primary-button" : "text-action"} aria-current={activeSection === "refunds" ? "page" : undefined} onClick={() => setActiveSection("refunds")}>Paid proposal refunds</button>
+      </nav>
+
+      {activeSection === "proposals" && <>
       <div className="account-summary-grid admin-summary-grid">
         <article className="account-summary-card">
           <span>Total proposals loaded</span>
@@ -243,8 +251,9 @@ export default function AdminDashboard({
           </article>
         ))}
       </div>
-      <ReferralReviewPanel address={address} signMessage={signMessage} />
-      <PaidSubmissionRefundPanel address={address} signMessage={signMessage} />
+      </>}
+      {activeSection === "referrals" && <ReferralReviewPanel address={address} signMessage={signMessage} />}
+      {activeSection === "refunds" && <PaidSubmissionRefundPanel address={address} signMessage={signMessage} />}
 
       {confirmation && createPortal((() => {
         const selectedProposal = proposals.find((proposal) => proposal.id === confirmation.id);
