@@ -37,6 +37,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
   const [busyId, setBusyId] = useState("");
   const [hashes, setHashes] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
+  const [verificationError, setVerificationError] = useState("");
   const [notice, setNotice] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
   const [lastVerified, setLastVerified] = useState<{ recipient: string; hash: string } | null>(null);
@@ -86,11 +87,14 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
   async function verifyRefund(item: RefundItem) {
     const transactionHash = (hashes[item.id] ?? "").trim();
     if (!HASH_PATTERN.test(transactionHash)) {
-      setError("Enter the complete refund transaction hash (0x followed by 64 hexadecimal characters).");
+      const message = "Enter the complete refund transaction hash (0x followed by 64 hexadecimal characters).";
+      setError(message);
+      setVerificationError(message);
       return;
     }
     setBusyId(item.id);
     setError("");
+    setVerificationError("");
     setNotice("");
     try {
       const token = await authenticate();
@@ -118,7 +122,9 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
     } catch (err) {
       const message = err instanceof Error ? err.message.trim() : "";
       // Do not collapse refund verification errors into the generic "Not found." label.
-      setError(message || "Refund verification failed. Please retry and check the transaction hash and network.");
+      const visibleMessage = message || "Refund verification failed. Please retry and check the transaction hash and network.";
+      setError(visibleMessage);
+      setVerificationError(visibleMessage);
     } finally {
       setBusyId("");
     }
@@ -194,6 +200,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
               {busyId === item.id ? <RefreshCw size={16} /> : <CheckCircle2 size={16} />}
               {busyId === item.id ? "Verifying on-chain…" : "Verify refund and mark REFUNDED"}
             </button>
+            {verificationError && <p className="refund-verification-error" role="alert" aria-live="assertive">{verificationError}</p>}
             <p className="market-description">The backend checks the chain, transaction success, treasury sender, approved USDC contract, exact amount, recipient, and confirmations. This button does not send funds.</p>
           </article>
         ))}
