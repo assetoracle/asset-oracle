@@ -74,10 +74,10 @@ function AccountPage({
   const claimable = (accountData?.claimable ?? []).slice().sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime()).filter((item) => {
     // Winning positions alone may claim pool payouts. Cancelled/refundable
     // markets remain eligible for their separate refund path.
-    if ([4, 5].includes(item.status)) return Number(item.yesStake) + Number(item.noStake) > 0;
-    if (item.status !== 3 || Number(item.claimableAmount) <= 0) return false;
-    return (item.outcome === 1 && Number(item.yesStake) > 0) ||
-      (item.outcome === 2 && Number(item.noStake) > 0);
+    if ([4, 5].includes(item.status)) return Number.parseFloat(item.yesStake) + Number.parseFloat(item.noStake) > 0;
+    if (item.status !== 3 || Number.parseFloat(item.claimableAmount) <= 0) return false;
+    return (item.outcome === 1 && Number.parseFloat(item.yesStake) > 0) ||
+      (item.outcome === 2 && Number.parseFloat(item.noStake) > 0);
   });
   const completedClaims = history.filter((item) => item.type === "Claimed" || item.type === "Refunded");
   const summary = isClaims
@@ -288,7 +288,7 @@ function AccountPage({
                       <div className="market-meta"><span>NO stake</span><span>{item.noStake}</span></div>
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
                       <small>Original manager: {itemManagerAddress === "unknown" ? "Unavailable" : `${itemManagerAddress.slice(0, 8)}…${itemManagerAddress.slice(-6)}`}</small>
-                      {(item.status === 4 || item.status === 5 || (item.status === 3 && Number(item.claimableAmount) > 0 &&
+                      {(item.status === 4 || item.status === 5 || (item.status === 3 && Number.parseFloat(item.claimableAmount) > 0 &&
                         ((item.outcome === 1 && Number(item.yesStake) > 0) || (item.outcome === 2 && Number(item.noStake) > 0)))) && (
                         <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
                           {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? "Claim payout" : "Claim refund"}
