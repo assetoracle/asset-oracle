@@ -721,6 +721,15 @@ useEffect(() => {
     }
   }
 
+  // Automatically load the connected wallet's proposals after its one-time
+  // backend session is ready. This avoids a misleading empty/error panel when
+  // users open My Proposals immediately after connecting on mobile.
+  useEffect(() => {
+    if (page !== "My Proposals" || !address || networkState !== "correct") return;
+    if (!getWalletSession(address) || myProposalsLoaded || myProposalsLoading) return;
+    void handleLoadMyProposals();
+  }, [page, address, networkState, walletRole, myProposalsLoaded, myProposalsLoading]);
+
   function handleProposalCreated(proposal: StoredMarketProposal) {
     setProposalFormOpen(false);
     setProposalBeingEdited(null);
