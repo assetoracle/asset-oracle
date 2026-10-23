@@ -159,8 +159,6 @@ function MarketDetailPage({
             <strong>{validOnchainMarketId ? `ID #${validOnchainMarketId}` : "Not linked"}</strong>
           </article>
         </div>
-      </section>
-
       </section>}
       {activeMarketDetailSection === "rules" && <section className="resolution-preview">
         <div className="market-detail-section-heading">
@@ -188,8 +186,6 @@ function MarketDetailPage({
             </div>
           </dl>
         )}
-      </section>
-
       </section>}
       <p className="market-disclaimer">
         Transparency notice: this interface does not claim that a market has been deployed, verified, or settled. Confirmed results and transaction details must come from the implemented verification workflow and on-chain records.
