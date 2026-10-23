@@ -181,6 +181,25 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
           </article>
         ))}
       </div>
+      <section className="refund-subsection" aria-labelledby="completed-refunds-heading">
+        <h3 id="completed-refunds-heading">Refunded ({completedRefunds.length})</h3>
+        {completedRefunds.length === 0 ? (
+          <div className="empty-state"><p>No verified refunds recorded yet.</p></div>
+        ) : (
+          <div className="market-grid admin-proposal-grid">
+            {completedRefunds.map((item) => (
+              <article className="market-card refunded-card" key={item.id}>
+                <div className="market-card-top"><span className="market-category">{item.network} · {item.token}</span><span className="market-status">REFUNDED</span></div>
+                <h3>Refund verified</h3>
+                <div className="market-meta"><span>Refund amount</span><strong>{Number(item.amountAtomic) / 1000000} USDC</strong></div>
+                <div className="market-meta"><span>Recipient</span><span title={item.walletAddress}>{shortAddress(item.walletAddress)}</span></div>
+                <div className="market-meta"><span>Refund transaction</span>{item.refundTxHash ? <a href={"https://scan-testnet.assetchain.org/tx/" + item.refundTxHash} target="_blank" rel="noreferrer">{shortAddress(item.refundTxHash)}</a> : <span>Not recorded</span>}</div>
+                <p role="status">Successfully verified and recorded. No further action is required.</p>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
