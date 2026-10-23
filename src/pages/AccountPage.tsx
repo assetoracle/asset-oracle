@@ -69,9 +69,9 @@ function AccountPage({
   const [activeAccountSection, setActiveAccountSection] = useState<"primary" | "secondary">("primary");
 
   const isClaims = page === "Claims";
-  const history = accountData?.history ?? [];
-  const positions = accountData?.positions ?? [];
-  const claimable = (accountData?.claimable ?? []).filter((item) => {
+  const history = (accountData?.history ?? []).slice().sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const positions = (accountData?.positions ?? []).slice().sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime());
+  const claimable = (accountData?.claimable ?? []).slice().sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime()).filter((item) => {
     // Winning positions alone may claim pool payouts. Cancelled/refundable
     // markets remain eligible for their separate refund path.
     if ([4, 5].includes(item.status)) return Number(item.yesStake) + Number(item.noStake) > 0;
