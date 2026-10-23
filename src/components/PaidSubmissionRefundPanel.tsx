@@ -31,6 +31,8 @@ function shortAddress(value: string) {
 
 export default function PaidSubmissionRefundPanel({ address, signMessage }: Props) {
   const [refunds, setRefunds] = useState<RefundItem[]>([]);
+  const pendingRefunds = refunds.filter((item) => item.status !== "REFUNDED");
+  const completedRefunds = refunds.filter((item) => item.status === "REFUNDED");
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [hashes, setHashes] = useState<Record<string, string>>({});
@@ -62,7 +64,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load refund queue.");
-      setRefunds(Array.isArray(data.refunds) ? data.refunds : []);
+      setRefunds((Array.isArray(data.refunds) ? data.refunds : []).sort((a: RefundItem, b: RefundItem) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setHasLoaded(true);
     } catch (err) {
       setError(friendlyError(err, "Unable to load refund queue."));
@@ -123,7 +125,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       <div className="account-summary-grid admin-summary-grid">
         <article className="account-summary-card">
           <span>Refunds awaiting verification</span>
-          <strong>{refunds.length}</strong>
+          <strong>{pendingRefunds.length}</strong>
         </article>
         <article className="account-summary-card">
           <span>Network</span>
@@ -148,7 +150,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       {address && !hasLoaded && !loading && !error && <p>Select “Load refund queue” to check current refund records.</p>}
 
       <div className="market-grid admin-proposal-grid">
-        {refunds.map((item) => (
+        {pendingRefunds.map((item) => (
           <article className="market-card" key={item.id}>
             <div className="market-card-top">
               <span className="market-category">{item.network} · {item.token}</span>
