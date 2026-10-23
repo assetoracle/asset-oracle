@@ -40,6 +40,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
   const [notice, setNotice] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
   const [lastVerified, setLastVerified] = useState<{ recipient: string; hash: string } | null>(null);
+  const [activeSection, setActiveSection] = useState<"pending" | "refunded">("pending");
 
   const authenticate = useCallback(async () => {
     if (!address) throw new Error("Connect the configured admin wallet first.");
@@ -99,14 +100,21 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
         body: JSON.stringify({ address, transactionHash }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Refund verification failed.");
+      if (!response.ok) {
+        const message = String(data.error || "Refund verification failed.");
+        if (/transaction(?: receipt)? .*could not be found|transactionnotfound|receipt not found/i.test(message)) {
+          throw new Error("The backend cannot find this transaction on the configured Asset Chain Testnet RPC. The refund has NOT been recorded yet. Confirm the hash opens on https://scan-testnet.assetchain.org and that it is on chain ID 42421.");
+        }
+        throw new Error(message);
+      }
       setHashes((current) => ({ ...current, [item.id]: transactionHash }));
       setRefunds((current) => current.map((entry) => entry.id === item.id
         ? { ...entry, status: "REFUNDED", refundTxHash: transactionHash }
         : entry));
       setLastVerified({ recipient: item.walletAddress, hash: transactionHash });
-      await loadRefunds(true);
+      setActiveSection("refunded");
       setNotice(`SUCCESS — refund verified on-chain and recorded as REFUNDED. Recipient: ${shortAddress(item.walletAddress)}. Transaction: ${shortAddress(transactionHash)}. The item has been removed from the pending queue.`);
+      void loadRefunds(true);
     } catch (err) {
       setError(friendlyError(err, "Refund verification failed."));
     } finally {
@@ -152,7 +160,11 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       {address && hasLoaded && !loading && refunds.length === 0 && !error && <div className="empty-state"><h3>No refunds awaiting verification</h3><p>The queue loaded successfully and has no pending refund records.</p>{lastVerified && <p role="status">Most recent success: REFUNDED · {shortAddress(lastVerified.recipient)} · transaction {shortAddress(lastVerified.hash)}</p>}</div>}
       {address && !hasLoaded && !loading && !error && <p>Select “Load refund queue” to check current refund records.</p>}
 
-      <div className="market-grid admin-proposal-grid">
+      <div className="page-section-tabs" role="tablist" aria-label="Refund status sections">
+        <button type="button" role="tab" aria-selected={activeSection === "pending"} className={activeSection === "pending" ? "active" : ""} onClick={() => setActiveSection("pending")}>Pending verification ({pendingRefunds.length})</button>
+        <button type="button" role="tab" aria-selected={activeSection === "refunded"} className={activeSection === "refunded" ? "active" : ""} onClick={() => setActiveSection("refunded")}>Refunded ({completedRefunds.length})</button>
+      </div>
+      {activeSection === "pending" && <div className="market-grid admin-proposal-grid">
         {pendingRefunds.map((item) => (
           <article className="market-card" key={item.id}>
             <div className="market-card-top">
@@ -183,8 +195,8 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
             <p className="market-description">The backend checks the chain, transaction success, treasury sender, approved USDC contract, exact amount, recipient, and confirmations. This button does not send funds.</p>
           </article>
         ))}
-      </div>
-      <section className="refund-subsection" aria-labelledby="completed-refunds-heading">
+      </div>}
+      {activeSection === "refunded" && <section className="refund-subsection" aria-labelledby="completed-refunds-heading">
         <h3 id="completed-refunds-heading">Refunded ({completedRefunds.length})</h3>
         {completedRefunds.length === 0 ? (
           <div className="empty-state"><p>No verified refunds recorded yet.</p></div>
@@ -202,7 +214,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
             ))}
           </div>
         )}
-      </section>
+      </section>}
     </section>
   );
 }
