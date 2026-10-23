@@ -706,7 +706,7 @@ useEffect(() => {
         return;
       }
 
-      setMyProposals(result.proposals);
+      setMyProposals(result.proposals.slice().sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
       setMyProposalsLoaded(true);
     } catch (error) {
       if (addressRef.current?.toLowerCase() !== requestedAddress.toLowerCase()) {
@@ -744,7 +744,7 @@ useEffect(() => {
   function handleProposalUpdated(proposal: StoredMarketProposal) {
     setProposalFormOpen(false);
     setProposalBeingEdited(null);
-    setMyProposals((current) => current.map((item) => item.id === proposal.id ? proposal : item));
+    setMyProposals((current) => current.map((item) => item.id === proposal.id ? proposal : item).sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
     setMyProposalsLoaded(true);
     setProposalMessage(`Proposal updated and resubmitted for approval. Status: ${proposal.status}. Reference: ${proposal.id}`);
   }
