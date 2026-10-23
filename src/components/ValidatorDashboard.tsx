@@ -293,6 +293,7 @@ export default function ValidatorDashboard() {
         : sectionMarkets.length === 0 ? <div className="empty-state"><h3>{activeValidatorSection === "finalization" ? "No markets awaiting finalization" : "No markets awaiting validation"}</h3><p>{activeValidatorSection === "finalization" ? "Markets in dispute appear here until the challenge period ends and they can be finalized." : "Closed or expired markets appear here when they are ready for validator review."}</p><div className="validator-market-meta" style={{ display: "grid", gap: "8px", marginTop: "16px", textAlign: "left" }}><strong>Market loading diagnostics</strong>{managerDiagnostics.map((item) => <div key={item.managerAddress}><span>Main manager: </span><span>{item.count === null ? `marketCount read ${item.readStatus}` : `${item.count} markets returned`}</span><span>{item.failedMarketReads > 0 ? ` · ${item.failedMarketReads} market reads failed` : ""}</span></div>)}</div></div>
         : <div className="validator-market-list">
           {sectionMarkets.map((market) => {
+            const index = markets.findIndex((entry) => entry.id === market.id && entry.managerAddress.toLowerCase() === market.managerAddress.toLowerCase());
             const id = market.id.toString();
             const hasVoted = votedReads.data?.[index]?.status === "success" && votedReads.data[index].result === true;
             const challengeEndsAt = market.resolvedAt + market.challengePeriod;
