@@ -116,7 +116,9 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       setNotice(`SUCCESS — refund verified on-chain and recorded as REFUNDED. Recipient: ${shortAddress(item.walletAddress)}. Transaction: ${shortAddress(transactionHash)}. The item has been removed from the pending queue.`);
       void loadRefunds(true);
     } catch (err) {
-      setError(friendlyError(err, "Refund verification failed."));
+      const message = err instanceof Error ? err.message.trim() : "";
+      // Do not collapse refund verification errors into the generic "Not found." label.
+      setError(message || "Refund verification failed. Please retry and check the transaction hash and network.");
     } finally {
       setBusyId("");
     }
