@@ -7,6 +7,8 @@ import SportIcon from "./SportIcon";
 import {
   validateMarketProposal,
   createMarketProposal,
+  createPaidMarketProposal,
+  getPublicWalletRole,
   updateMarketProposal,
   type MarketProposalInput,
   type StoredMarketProposal,
@@ -151,8 +153,15 @@ export function MarketProposalForm({
         const result = await updateMarketProposal(initialProposal.id, proposal, address, signMessage);
         (onUpdated ?? onCreated)(result.proposal);
       } else {
-        const result = await createMarketProposal(proposal, address, signMessage);
-        onCreated(result.proposal);
+        const role = await getPublicWalletRole(address);
+        if (role.permissions.createMarketProposal) {
+          const result = await createMarketProposal(proposal, address, signMessage);
+          onCreated(result.proposal);
+        } else {
+          const result = await createPaidMarketProposal(proposal, address, signMessage);
+          setMessage(result.message);
+          onCreated(result.proposal);
+        }
       }
     } catch (error) {
       setMessage(
@@ -467,7 +476,7 @@ export function MarketProposalForm({
 
           <p style={{ color: "#8DA9B3", fontSize: 12, lineHeight: 1.7 }}>
             Submissions are subject to review. Submitting a proposal
-            does not publish a market or guarantee approval. {initialProposal ? "Saving changes returns it to pending approval." : ""}
+            does not publish a market or guarantee approval. For new proposals, configured market makers submit for free; regular users pay exactly 10 USDC on Asset Chain Testnet. {initialProposal ? "Saving changes returns it to pending approval." : ""}
           </p>
         </form>
       </section>
