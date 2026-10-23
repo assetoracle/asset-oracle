@@ -289,7 +289,7 @@ function AccountPage({
                       <div className="market-meta"><span>Outcome</span><span>{outcomeLabels[item.outcome] ?? "Pending"}</span></div>
                       <small>Original manager: {itemManagerAddress === "unknown" ? "Unavailable" : `${itemManagerAddress.slice(0, 8)}…${itemManagerAddress.slice(-6)}`}</small>
                       {(item.status === 4 || item.status === 5 || (item.status === 3 && Number.parseFloat(item.claimableAmount) > 0 &&
-                        ((item.outcome === 1 && Number(item.yesStake) > 0) || (item.outcome === 2 && Number(item.noStake) > 0)))) && (
+                        ((item.outcome === 1 && Number.parseFloat(item.yesStake) > 0) || (item.outcome === 2 && Number.parseFloat(item.noStake) > 0)))) && (
                         <button className="primary-button" type="button" disabled={busyMarketKey !== null} onClick={() => void handleClaim(item)}>
                           {busyMarketKey === itemKey ? "Confirming…" : item.status === 3 ? "Claim payout" : "Claim refund"}
                         </button>
