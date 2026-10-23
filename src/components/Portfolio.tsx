@@ -90,6 +90,7 @@ export default function Portfolio({
   const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountError, setAccountError] = useState("");
+  const [activePortfolioSection, setActivePortfolioSection] = useState<"balance" | "positions">("balance");
 
   useEffect(() => {
     let active = true;
@@ -251,6 +252,11 @@ export default function Portfolio({
             </strong>
           </div>
 
+          <nav className="page-section-tabs" aria-label="Portfolio sections">
+            <button type="button" className={activePortfolioSection === "balance" ? "active" : ""} aria-pressed={activePortfolioSection === "balance"} onClick={() => setActivePortfolioSection("balance")}>Token balance</button>
+            <button type="button" className={activePortfolioSection === "positions" ? "active" : ""} aria-pressed={activePortfolioSection === "positions"} onClick={() => setActivePortfolioSection("positions")}>Market positions</button>
+          </nav>
+          {activePortfolioSection === "balance" && <>
           <div className="portfolio-token-heading">
             <div>
               <h2>Token balance</h2>
@@ -343,6 +349,8 @@ export default function Portfolio({
             </article>
           </div>
 
+          </>}
+          {activePortfolioSection === "positions" && <>
           <section className="account-record-section portfolio-positions-section" aria-busy={accountLoading}>
             <div className="section-heading">
               <div><h2>Your market positions</h2><p>Stakes, settlement outcomes, and payout status for this wallet.</p></div>
@@ -372,6 +380,7 @@ export default function Portfolio({
             <p className="portfolio-disclaimer">*Profit/loss is shown as available payout minus recorded YES/NO stake. Token amounts follow the original market's settlement token units. Testnet tokens may have no monetary value.</p>
           </section>
 
+          </>}
           <p className="portfolio-disclaimer">
             Balance is read from Asset Chain Testnet. Testnet tokens
             may have no monetary value.

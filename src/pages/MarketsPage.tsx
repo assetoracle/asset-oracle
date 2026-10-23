@@ -88,6 +88,7 @@ export default function MarketsPage({
   onOpenMarket,
 }: MarketsPageProps) {
   const [sortOrder, setSortOrder] = useState<"closing" | "newest" | "question">("closing");
+  const [activeMarketSection, setActiveMarketSection] = useState<"browse" | "propose">("browse");
   const selectedSubjectCategory =
     categories.includes(activeCategory) &&
     !["All Markets", "Live", "Settled Markets"].includes(activeCategory)
@@ -202,9 +203,14 @@ export default function MarketsPage({
           <h1>Markets</h1>
           <p>Browse approved markets by category.</p>
         </div>
-        <button className="primary-button" type="button" onClick={onPropose}>Propose a Market</button>
+
       </div>
 
+      <nav className="page-section-tabs" aria-label="Markets sections">
+        <button type="button" className={activeMarketSection === "browse" ? "active" : ""} aria-pressed={activeMarketSection === "browse"} onClick={() => setActiveMarketSection("browse")}>Browse markets</button>
+        <button type="button" className={activeMarketSection === "propose" ? "active" : ""} aria-pressed={activeMarketSection === "propose"} onClick={() => setActiveMarketSection("propose")}>Propose a market</button>
+      </nav>
+      {activeMarketSection === "browse" && <>
       {proposalMessage && (
         <div className="empty-state" role="status">
           <h3>Proposal received</h3>
@@ -329,6 +335,8 @@ export default function MarketsPage({
       <p className="market-disclaimer">
         Published proposals come from the approved public-market API. On-chain markets and participation are shown separately when the verified Enugu testnet contract is configured.
       </p>
+      </>}
+      {activeMarketSection === "propose" && <section className="empty-state market-propose-section"><h2>Propose a market</h2><p>Submit a new market question with clear resolution rules and a verifiable evidence source. Your proposal must be reviewed before it can be published.</p><button className="primary-button" type="button" onClick={onPropose}>Open proposal form</button></section>}
     </section>
   );
 }

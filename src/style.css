@@ -11330,3 +11330,13 @@ select.brand-select option,
 .admin-section-nav button[aria-current="page"]{box-shadow:0 0 0 1px rgba(99,243,255,.22),0 8px 24px rgba(0,0,0,.12)}
 .paid-refund-panel [role="status"]{overflow-wrap:anywhere;line-height:1.65}
 @media(max-width:560px){.admin-section-nav{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.admin-section-nav button{width:100%}}
+
+
+/* Consistent, responsive section navigation for multi-function pages. */
+.page-section-tabs{display:flex;flex-wrap:wrap;gap:9px;padding:10px;border:1px solid rgba(99,243,255,.15);border-radius:15px;background:rgba(7,27,37,.72);min-width:0}
+.page-section-tabs button{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 16px;border:1px solid rgba(99,243,255,.16);border-radius:11px;background:rgba(255,255,255,.025);color:inherit;font:inherit;font-weight:600;cursor:pointer;white-space:normal;text-align:center;transition:background .18s ease,border-color .18s ease}
+.page-section-tabs button:hover{border-color:rgba(99,243,255,.42)}
+.page-section-tabs button.active,.page-section-tabs button[aria-pressed="true"]{background:linear-gradient(135deg,rgba(18,217,245,.16),rgba(0,184,169,.12));border-color:rgba(99,243,255,.5);color:var(--text,#eefaff)}
+.page-section-tabs button:focus-visible{outline:2px solid rgba(99,243,255,.85);outline-offset:2px}
+@media(max-width:560px){.page-section-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}.page-section-tabs button{width:100%;min-width:0;padding:10px 8px;font-size:13px}}
+@media(max-width:360px){.page-section-tabs{grid-template-columns:minmax(0,1fr)}}

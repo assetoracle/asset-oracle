@@ -58,6 +58,7 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
   const hasEvidenceHash = Boolean(evidenceHash && evidenceHash !== "0x" + "0".repeat(64));
   const [validatorLinks, setValidatorLinks] = useState<ValidatorSourceLink[]>([]);
   const [validatorLinksLoading, setValidatorLinksLoading] = useState(false);
+  const [activeVerificationSection, setActiveVerificationSection] = useState<"outcome" | "details" | "sources" | "position">("outcome");
 
   useEffect(() => {
     if (marketId === undefined || !managerAddress) return;
@@ -80,16 +81,21 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
         <p>{market.label} · Market #{market.onchainMarketId ?? market.id}</p>
       </header>
 
-      <section className="verification-section outcome-section">
+      <nav className="page-section-tabs" aria-label="Market verification sections">
+        <button type="button" className={activeVerificationSection === "outcome" ? "active" : ""} aria-pressed={activeVerificationSection === "outcome"} onClick={() => setActiveVerificationSection("outcome")}>Outcome</button>
+        <button type="button" className={activeVerificationSection === "details" ? "active" : ""} aria-pressed={activeVerificationSection === "details"} onClick={() => setActiveVerificationSection("details")}>Verification details</button>
+        <button type="button" className={activeVerificationSection === "sources" ? "active" : ""} aria-pressed={activeVerificationSection === "sources"} onClick={() => setActiveVerificationSection("sources")}>Validator sources</button>
+        <button type="button" className={activeVerificationSection === "position" ? "active" : ""} aria-pressed={activeVerificationSection === "position"} onClick={() => setActiveVerificationSection("position")}>Your position</button>
+      </nav>
+      {activeVerificationSection === "outcome" && <section className="verification-section outcome-section">
         <div className="verification-section-title"><span className="verification-section-icon"><ShieldCheck size={19} /></span><div><span className="eyebrow">01</span><h2>Market Outcome</h2></div></div>
         <div className="verification-outcome-panel">
           <span>Final verified outcome</span>
           <strong className={outcomeLabel === "YES" ? "outcome-yes" : outcomeLabel === "NO" ? "outcome-no" : ""}>{outcomeLabel}</strong>
           <p>{resolvedAt > 0 ? `Resolved ${new Date(resolvedAt * 1000).toLocaleString()}` : "Resolution timestamp not recorded in the market record."}</p>
         </div>
-      </section>
-
-      <section className="verification-section">
+      </section>}
+      {activeVerificationSection === "details" && <section className="verification-section">
         <div className="verification-section-title"><span className="verification-section-icon"><FileCheck2 size={19} /></span><div><span className="eyebrow">02</span><h2>Verification Details</h2></div></div>
         <div className="verification-detail-grid">
           <article className="verification-detail-card">
@@ -115,9 +121,8 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
             <p>Market creation transaction: {market.onchainTxHash ? <a href={`${ASSET_CHAIN_TESTNET_EXPLORER}/tx/${market.onchainTxHash}`} target="_blank" rel="noreferrer">{shortHash(market.onchainTxHash)} <ExternalLink size={13} /></a> : "Not recorded"}</p>
           </article>
         </div>
-      </section>
-
-      <section className="verification-section">
+      </section>}
+      {activeVerificationSection === "sources" && <section className="verification-section">
         <div className="verification-section-title"><span className="verification-section-icon"><FileCheck2 size={19} /></span><div><span className="eyebrow">03</span><h2>Validator Source Links</h2></div></div>
         <div className="verification-detail-grid">
           {validatorLinksLoading ? <article className="verification-detail-card"><p>Loading validator source links…</p></article>
@@ -132,8 +137,8 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
               </article>
             ))}
         </div>
-      </section>
-      <section className="verification-section">
+      </section>}
+      {activeVerificationSection === "position" && <section className="verification-section">
         <div className="verification-section-title"><span className="verification-section-icon"><WalletCards size={19} /></span><div><span className="eyebrow">04</span><h2>Your Position</h2></div></div>
         {!address ? <div className="verification-empty-position"><p>Connect your wallet to view your position in this market.</p></div> : position.isLoading ? <div className="verification-empty-position"><p>Loading your on-chain position…</p></div> : position.isError ? <div className="verification-empty-position"><p>Your position could not be loaded. Try again later.</p></div> : totalPosition === 0n ? <div className="verification-empty-position"><p>You did not stake in this market with the connected wallet.</p></div> : (
           <div className="verification-position-grid">
@@ -143,8 +148,7 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
             <article className="verification-detail-card"><span className="verification-detail-label">Payout status</span><strong>{claimed ? "Claimed" : userResult === "WON" || userResult === "REFUNDED" ? "Available to claim, if contract rules permit" : "No winning payout"}</strong></article>
           </div>
         )}
-      </section>
-
+      </section>}
       <p className="verification-disclaimer">Verification information is limited to data recorded by the connected Asset Oracle market contract. A source name or evidence hash is not represented as an independent audit. The resolution transaction is not available from the market record unless supplied by the indexer.</p>
     </section>
   );

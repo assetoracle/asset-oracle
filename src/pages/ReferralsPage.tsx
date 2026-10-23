@@ -68,6 +68,7 @@ export default function ReferralsPage({
   const [activeLeaderboard, setActiveLeaderboard] = useState<"referral" | "points" | "total">("referral");
   const [walletSearch, setWalletSearch] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
+  const [activeReferralSection, setActiveReferralSection] = useState<"my-referrals" | "leaderboards">("my-referrals");
 
   async function copyReferralLink() {
     if (!referralLink) return;
@@ -97,6 +98,11 @@ export default function ReferralsPage({
         <div className="referral-heading-icon"><Trophy size={28} /></div>
       </div>
 
+      <nav className="page-section-tabs" aria-label="Referral sections">
+        <button type="button" className={activeReferralSection === "my-referrals" ? "active" : ""} aria-pressed={activeReferralSection === "my-referrals"} onClick={() => setActiveReferralSection("my-referrals")}>My referral link</button>
+        <button type="button" className={activeReferralSection === "leaderboards" ? "active" : ""} aria-pressed={activeReferralSection === "leaderboards"} onClick={() => setActiveReferralSection("leaderboards")}>Leaderboards & points</button>
+      </nav>
+      {activeReferralSection === "my-referrals" && <>
       <div className="referral-overview-grid">
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Users size={19} /></span>
@@ -150,6 +156,8 @@ export default function ReferralsPage({
         {message && <p className="referral-message" role="status">{message}</p>}
       </section>
 
+      </>}
+      {activeReferralSection === "leaderboards" && <>
       <section className="referral-leaderboard-card">
         <div className="referral-table-heading">
           <div><span className="eyebrow">COMMUNITY RANKINGS</span><h2>Leaderboard</h2></div>
@@ -230,6 +238,7 @@ export default function ReferralsPage({
         </div>
       </section>
 
+      </>}
       <p className="market-disclaimer">
         Referral qualification is verified by the backend. Points are separate from token payouts; no cash or token payout is implied by a points balance.
       </p>
