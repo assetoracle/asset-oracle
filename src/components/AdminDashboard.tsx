@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
+import PaidSubmissionRefundPanel from "./PaidSubmissionRefundPanel";
 import { friendlyError } from "../utils/friendlyError";
 import { API_BASE_URL } from "../config/env";
 
@@ -243,6 +244,7 @@ export default function AdminDashboard({
         ))}
       </div>
       <ReferralReviewPanel address={address} signMessage={signMessage} />
+      <PaidSubmissionRefundPanel address={address} signMessage={signMessage} />
 
       {confirmation && createPortal((() => {
         const selectedProposal = proposals.find((proposal) => proposal.id === confirmation.id);
