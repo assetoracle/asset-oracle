@@ -94,6 +94,7 @@ export default function ValidatorDashboard() {
   const [savingSource, setSavingSource] = useState(false);
   const handledEvidenceHash = useRef<string | null>(null);
   const [notice, setNotice] = useState("");
+  const [activeValidatorSection, setActiveValidatorSection] = useState<"voting" | "finalization">("voting");
   const [refreshingMarkets, setRefreshingMarkets] = useState(false);
   const [actionType, setActionType] = useState<"close" | "vote" | "finalize" | null>(null);
   const [pendingVote, setPendingVote] = useState<{ managerAddress: Address; marketId: bigint; outcome: 1 | 2 | 3; evidenceHash: `0x${string}` } | null>(null);
@@ -119,6 +120,8 @@ export default function ValidatorDashboard() {
       return isClosed || isExpiredOpen || market.status === MARKET_STATUS.DISPUTED;
     })
     .sort((a, b) => Number(a.closeTime - b.closeTime)), [marketReads.data, marketContracts]);
+
+  const sectionMarkets = markets.filter((market) => activeValidatorSection === "finalization" ? market.status === MARKET_STATUS.DISPUTED : market.status !== MARKET_STATUS.DISPUTED);
 
   const votedReads = useReadContracts({
     contracts: address ? markets.map((market) => ({
@@ -278,14 +281,18 @@ export default function ValidatorDashboard() {
         <strong>{address}</strong>
         <span>2 of 3 votes required · Asset Chain Testnet</span>
       </div>
+      <nav className="page-section-tabs" aria-label="Validator sections">
+        <button type="button" className={activeValidatorSection === "voting" ? "active" : ""} aria-pressed={activeValidatorSection === "voting"} onClick={() => setActiveValidatorSection("voting")}>Review & vote</button>
+        <button type="button" className={activeValidatorSection === "finalization" ? "active" : ""} aria-pressed={activeValidatorSection === "finalization"} onClick={() => setActiveValidatorSection("finalization")}>Challenge & finalization</button>
+      </nav>
       {notice && <p role="status">{notice}</p>}
       {error && <p role="alert">Transaction was not submitted: the wallet rejected it or the contract returned an error. If the closing transaction failed, refresh the market list and try again.</p>}
       {receipt.isSuccess && txHash && <p className="wallet-message" role="status">{actionType === "close" ? "Market close transaction confirmed. Refresh the list to load it for voting." : actionType === "finalize" ? "Market finalized on-chain. Participants can now claim eligible payouts." : "Vote transaction confirmed."} <a href={explorerTx(txHash)} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={13} /></a> <button type="button" className="secondary-button refresh-action-button" onClick={() => void refreshMarketData()} disabled={refreshingMarkets}><RefreshCw size={13} className={refreshingMarkets ? "refresh-action-spinning" : ""} /> {refreshingMarkets ? "Refreshing..." : "Refresh list"}</button></p>}
       {managerCountReads.isPending || marketReads.isPending ? <p>Loading on-chain markets…</p>
         : managerCountReads.isError || marketReads.isError ? <p role="alert">Unable to load markets from the canonical manager.</p>
-        : markets.length === 0 ? <div className="empty-state"><h3>No markets awaiting settlement</h3><p>Closed markets will appear here when they are ready for validator review.</p><div className="validator-market-meta" style={{ display: "grid", gap: "8px", marginTop: "16px", textAlign: "left" }}><strong>Market loading diagnostics</strong>{managerDiagnostics.map((item) => <div key={item.managerAddress}><span>Main manager: </span><span>{item.count === null ? `marketCount read ${item.readStatus}` : `${item.count} markets returned`}</span><span>{item.failedMarketReads > 0 ? ` · ${item.failedMarketReads} market reads failed` : ""}</span></div>)}</div></div>
+        : sectionMarkets.length === 0 ? <div className="empty-state"><h3>{activeValidatorSection === "finalization" ? "No markets awaiting finalization" : "No markets awaiting validation"}</h3><p>{activeValidatorSection === "finalization" ? "Markets in dispute appear here until the challenge period ends and they can be finalized." : "Closed or expired markets appear here when they are ready for validator review."}</p><div className="validator-market-meta" style={{ display: "grid", gap: "8px", marginTop: "16px", textAlign: "left" }}><strong>Market loading diagnostics</strong>{managerDiagnostics.map((item) => <div key={item.managerAddress}><span>Main manager: </span><span>{item.count === null ? `marketCount read ${item.readStatus}` : `${item.count} markets returned`}</span><span>{item.failedMarketReads > 0 ? ` · ${item.failedMarketReads} market reads failed` : ""}</span></div>)}</div></div>
         : <div className="validator-market-list">
-          {markets.map((market, index) => {
+          {sectionMarkets.map((market) => {
             const id = market.id.toString();
             const hasVoted = votedReads.data?.[index]?.status === "success" && votedReads.data[index].result === true;
             const challengeEndsAt = market.resolvedAt + market.challengePeriod;
