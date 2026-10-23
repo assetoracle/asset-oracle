@@ -140,7 +140,7 @@ export default function ReferralsPage({
             </button>
           ) : (
             <span className="referral-link-status" role="status">
-              {!address ? "Connect wallet to prepare your link" : actionLoading ? "Preparing your link…" : "Your link is being prepared"}
+              {!address ? "Connect your wallet to create your unique link" : "Your unique link will appear here once wallet verification completes"}
             </span>
           )}
         </div>
