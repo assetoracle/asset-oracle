@@ -66,6 +66,7 @@ function AccountPage({
   const [busyMarketKey, setBusyMarketKey] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
+  const [activeAccountSection, setActiveAccountSection] = useState<"primary" | "secondary">("primary");
 
   const isClaims = page === "Claims";
   const history = accountData?.history ?? [];
@@ -256,8 +257,13 @@ function AccountPage({
           {actionMessage && <p className="wallet-message" role="status">{actionMessage}</p>}
           {actionError && <p className="wallet-message" role="alert">{actionError}</p>}
 
+          <nav className="page-section-tabs" aria-label={isClaims ? "Claims sections" : "History sections"}>
+            <button type="button" className={activeAccountSection === "primary" ? "active" : ""} aria-pressed={activeAccountSection === "primary"} onClick={() => setActiveAccountSection("primary")}>{isClaims ? "Available claims" : "On-chain positions"}</button>
+            <button type="button" className={activeAccountSection === "secondary" ? "active" : ""} aria-pressed={activeAccountSection === "secondary"} onClick={() => setActiveAccountSection("secondary")}>{isClaims ? "Completed claims" : "Transaction history"}</button>
+          </nav>
           {isClaims ? (
             <section className="account-record-section">
+              {activeAccountSection === "primary" && <>
               <h2>Available claims and refunds</h2>
               {claimable.length === 0 && !loading ? (
                 <div className="empty-state"><h3>No claimable payouts found</h3><p>Claimable amounts appear after verified settlement or cancellation/refund status is available on-chain.</p></div>
@@ -283,11 +289,15 @@ function AccountPage({
                   })}
                 </div>
               )}
+              </>}
+              {activeAccountSection === "secondary" && <>
               <h2>Completed claims and refunds</h2>
               {completedClaims.length === 0 ? <p>No confirmed claim or refund transactions found in the indexed history.</p> : <div className="account-summary-grid">{completedClaims.map(renderHistoryRow)}</div>}
+              </>}
             </section>
           ) : (
             <section className="account-record-section">
+              {activeAccountSection === "primary" && <>
               <h2>Your on-chain positions</h2>
               {positions.length === 0 && !loading ? <div className="empty-state"><h3>No predictions found</h3><p>No positions were found for this wallet on the configured market manager.</p></div> : (
                 <div className="market-grid">
@@ -304,10 +314,13 @@ function AccountPage({
                   ))}
                 </div>
               )}
+              </>}
+              {activeAccountSection === "secondary" && <>
               <h2>Transaction history</h2>
               {accountData?.historyStatus !== "VERIFIED_ONCHAIN_EVENT_INDEX" ? (
                 <div className="empty-state"><h3>Transaction index unavailable</h3><p>Your current positions are read directly from the verified chain, but a complete transaction timeline requires the backend event indexer to be enabled and caught up.</p></div>
               ) : history.length === 0 ? <p>No indexed transactions found for this wallet.</p> : <div className="account-summary-grid">{history.map(renderHistoryRow)}</div>}
+              </>}
             </section>
           )}
         </>
