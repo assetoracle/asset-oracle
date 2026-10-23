@@ -36,6 +36,8 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
   const [hashes, setHashes] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [lastVerified, setLastVerified] = useState<{ recipient: string; hash: string } | null>(null);
 
   const authenticate = useCallback(async () => {
     if (!address) throw new Error("Connect the configured admin wallet first.");
@@ -43,14 +45,14 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
     return session.token;
   }, [address, signMessage]);
 
-  const loadRefunds = useCallback(async () => {
+  const loadRefunds = useCallback(async (preserveNotice = false) => {
     if (!address) {
       setError("Connect the configured admin wallet to load refund records.");
       return;
     }
     setLoading(true);
     setError("");
-    setNotice("");
+    if (!preserveNotice) setNotice("");
     try {
       const token = await authenticate();
       const response = await fetch(`${API}/api/markets/paid-submissions/admin/refunds/queue`, {
@@ -61,6 +63,7 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load refund queue.");
       setRefunds(Array.isArray(data.refunds) ? data.refunds : []);
+      setHasLoaded(true);
     } catch (err) {
       setError(friendlyError(err, "Unable to load refund queue."));
     } finally {
@@ -73,6 +76,8 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
     setHashes({});
     setError("");
     setNotice("");
+    setHasLoaded(false);
+    setLastVerified(null);
   }, [address]);
 
   async function verifyRefund(item: RefundItem) {
@@ -93,9 +98,10 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Refund verification failed.");
-      setNotice(`Refund verified on-chain. Status is now REFUNDED for ${shortAddress(item.walletAddress)}.`);
       setHashes((current) => ({ ...current, [item.id]: transactionHash }));
-      await loadRefunds();
+      setLastVerified({ recipient: item.walletAddress, hash: transactionHash });
+      await loadRefunds(true);
+      setNotice(`SUCCESS — refund verified on-chain and recorded as REFUNDED. Recipient: ${shortAddress(item.walletAddress)}. Transaction: ${shortAddress(transactionHash)}. The item has been removed from the pending queue.`);
     } catch (err) {
       setError(friendlyError(err, "Refund verification failed."));
     } finally {
@@ -138,7 +144,8 @@ export default function PaidSubmissionRefundPanel({ address, signMessage }: Prop
       {notice && <p role="status">{notice}</p>}
 
       {!address && <div className="empty-state"><h3>Connect your admin wallet</h3><p>Refund records are restricted to an authorized admin wallet.</p></div>}
-      {address && !loading && refunds.length === 0 && !error && <div className="empty-state"><h3>No refunds awaiting verification</h3><p>Load the queue to refresh. If a refund was already verified, it will no longer appear here.</p></div>}
+      {address && hasLoaded && !loading && refunds.length === 0 && !error && <div className="empty-state"><h3>No refunds awaiting verification</h3><p>The queue loaded successfully and has no pending refund records.</p>{lastVerified && <p role="status">Most recent success: REFUNDED · {shortAddress(lastVerified.recipient)} · transaction {shortAddress(lastVerified.hash)}</p>}</div>}
+      {address && !hasLoaded && !loading && !error && <p>Select “Load refund queue” to check current refund records.</p>}
 
       <div className="market-grid admin-proposal-grid">
         {refunds.map((item) => (
