@@ -30,6 +30,7 @@ export default function MyProposalsPage({
   onchainValidatorStatus,
   onchainValidatorRosterConfigured,
 }: MyProposalsPageProps) {
+  const [activeProposalsSection, setActiveProposalsSection] = useState<"submissions" | "permissions">("submissions");
   return (
     <section className="page-section account-page">
       <div className="section-heading">
@@ -40,6 +41,10 @@ export default function MyProposalsPage({
         </div>
       </div>
 
+      <nav className="page-section-tabs" aria-label="My proposals sections">
+        <button type="button" className={activeProposalsSection === "submissions" ? "active" : ""} aria-pressed={activeProposalsSection === "submissions"} onClick={() => setActiveProposalsSection("submissions")}>My submissions</button>
+        <button type="button" className={activeProposalsSection === "permissions" ? "active" : ""} aria-pressed={activeProposalsSection === "permissions"} onClick={() => setActiveProposalsSection("permissions")}>Wallet permissions</button>
+      </nav>
       {!walletConnected ? (
         <div className="empty-state">
           <h3>Sign in to continue</h3>
@@ -56,6 +61,7 @@ export default function MyProposalsPage({
         </div>
       ) : (
         <>
+          {activeProposalsSection === "permissions" && <>
           <div className="account-summary-grid">
             <article className="account-summary-card">
               <span>Wallet role</span>
@@ -87,6 +93,8 @@ export default function MyProposalsPage({
             </article>
           </div>
 
+          </>}
+          {activeProposalsSection === "submissions" && <>
           <div className="proposal-actions">
             <button
               className="primary-button"
@@ -198,6 +206,7 @@ export default function MyProposalsPage({
             ))}
           </div>
           ) : null}
+          </>}
         </>
       )}
     </section>
