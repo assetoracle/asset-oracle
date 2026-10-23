@@ -233,6 +233,32 @@ export function MarketProposalForm({
             <p style={{ color: "#8DA9B3", lineHeight: 1.7 }}>
               Create a clear market question and explain exactly what must happen for each outcome.
             </p>
+            {!initialProposal && (
+              <div
+                role="note"
+                aria-label="Proposal submission fee"
+                style={{
+                  marginTop: 14,
+                  padding: "14px 16px",
+                  border: "1px solid #12D9F5",
+                  borderRadius: 12,
+                  background: "linear-gradient(120deg, rgba(18,217,245,.12), rgba(0,184,169,.08))",
+                  color: "#F2FCFF",
+                  lineHeight: 1.65,
+                }}
+              >
+                <strong style={{ display: "block", color: "#63F3FF", fontSize: 15 }}>
+                  Proposal submission fee
+                </strong>
+                <span style={{ display: "block", marginTop: 4, fontSize: 14 }}>
+                  Regular users: <strong>10 USDC</strong> on Asset Chain Enugu Testnet.
+                  Configured market makers: <strong>Free</strong>.
+                </span>
+                <span style={{ display: "block", marginTop: 5, color: "#8DA9B3", fontSize: 12 }}>
+                  The fee is checked with the backend when you submit. Your wallet will request the USDC transfer only after the server returns a valid payment instruction. Your proposal remains pending review after payment.
+                </span>
+              </div>
+            )}
           </div>
 
           <button
