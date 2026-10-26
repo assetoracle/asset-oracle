@@ -25,6 +25,8 @@ import { ensureWalletSession } from "../markets/marketApi";
 
 type Props = { marketId: bigint; managerAddress?: string | null; closeTime: number };
 
+const MINIMUM_STAKE = 5_000_000n; // 5 USDC with the approved 6-decimal testnet token.
+
 
 export default function OnchainMarketActions({ marketId, managerAddress, closeTime }: Props) {
   const chainId = useChainId();
@@ -32,6 +34,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const { signMessageAsync } = useSignMessage();
   const client = usePublicClient();
   const [amount, setAmount] = useState("");
+  const [stakeSuccessHandled, setStakeSuccessHandled] = useState<string | null>(null);
   const [yesSide, setYesSide] = useState(true);
   const [codeVerified, setCodeVerified] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
@@ -147,7 +150,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   );
   const canStake = safe && isConnected && Boolean(address) &&
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
-    Date.now() / 1000 < closeTime && parsedAmount > 0n &&
+    Date.now() / 1000 < closeTime && parsedAmount >= MINIMUM_STAKE &&
     balance.data !== undefined && parsedAmount <= balance.data;
   const stakeDisabledReason = !isConnected
     ? "Connect your wallet to stake."
@@ -173,7 +176,9 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
                         ? ""
                         : parsedAmount <= 0n
                           ? "Enter a valid amount greater than zero (up to 6 decimal places)."
-                          : balance.data !== undefined && parsedAmount > balance.data
+                          : parsedAmount < MINIMUM_STAKE
+                            ? "Minimum stake is 5 USDC."
+                            : balance.data !== undefined && parsedAmount > balance.data
                             ? "Your USDC balance is too low for this stake."
                             : "Staking is temporarily unavailable. Check your wallet and market status.";
   const canClose = safe && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
@@ -189,8 +194,14 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
 
 
   useEffect(() => {
-    if (receipt.isSuccess) {
-      setMessage("Transaction confirmed. Refreshing your on-chain position and balance.");
+    if (receipt.isSuccess && receipt.data?.status === "success") {
+      if (lastAction === "stake" && txHash && stakeSuccessHandled !== txHash) {
+        setMessage(`Successfully staked ${formatUnits(parsedAmount, TESTNET_USDC_DECIMALS)} USDC on ${yesSide ? "YES" : "NO"}.`);
+        setAmount("");
+        setStakeSuccessHandled(txHash);
+      } else if (lastAction !== "stake" && lastAction !== "approve") {
+        setMessage("Transaction confirmed. Refreshing your on-chain position and balance.");
+      }
       void market.refetch();
       void position.refetch();
       void balance.refetch();
@@ -199,7 +210,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     } else if (receipt.isError) {
       setMessage("Transaction receipt failed. Check the transaction in the testnet explorer.");
     }
-  }, [receipt.isSuccess, receipt.isError]);
+  }, [receipt.isSuccess, receipt.isError, receipt.data?.status, lastAction, txHash, stakeSuccessHandled, parsedAmount, yesSide]);
 
   useEffect(() => {
     if (writeError) setMessage(friendlyError(writeError, "Transaction failed."));
@@ -335,8 +346,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
           </div>
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 < closeTime && <>
             {new URLSearchParams(window.location.search).get("ref") && <p>Referral link detected. By continuing to stake, you can sign once to record the referral attribution; it counts only after this wallet’s first confirmed prediction.</p>}
-            <label htmlFor={`onchain-amount-${marketId}`}>Stake amount (test USDC)</label>
-            <input id={`onchain-amount-${marketId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="e.g. 5.00" />
+            <label htmlFor={`onchain-amount-${marketId}`}>Stake amount (test USDC · minimum 5 USDC)</label>
+            <input id={`onchain-amount-${marketId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Minimum 5.00 USDC" />
             <div className="outcome-preview">
               <button className="outcome-choice-yes" type="button" aria-pressed={yesSide} onClick={() => setYesSide(true)}>YES</button>
               <button className="outcome-choice-no" type="button" aria-pressed={!yesSide} onClick={() => setYesSide(false)}>NO</button>
