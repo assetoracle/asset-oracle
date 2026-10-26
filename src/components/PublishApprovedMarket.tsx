@@ -381,9 +381,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
               validatorRoster.isLoading ? "Checking validator configuration…" :
               validatorRoster.isError ? "Unable to read validator configuration from the manager." :
               validatorRoster.data !== true ? "Blocked: the configured manager does not report a configured validator roster." :
-              marketCreatorRole.isLoading ? "Checking this wallet's market-creator permission…" :
-              marketCreatorRole.isError ? "Unable to verify this wallet's market-creator permission." :
-              marketCreatorRole.data !== true ? "Blocked: connected wallet lacks the on-chain market-creator role." :
+              requiredRole.isLoading ? "Checking this wallet's required market-creator permission…" :
+              requiredRole.isError ? "Unable to verify this wallet's required on-chain permission." :
+              requiredRole.data !== true ? (proposal.origin === "AUTOMATED"
+                ? "Blocked: connected wallet lacks the automated market-creator role on this contract."
+                : "Blocked: connected wallet lacks the on-chain market-creator role.") :
               proposal.status !== "APPROVED" ? "Only owner-approved proposals can be published." :
               !Number.isFinite(closeTimestamp) || closeTimestamp <= Math.floor(Date.now() / 1000) ? "The proposal closing time has passed; it cannot be published as-is." :
               "Ready to publish to the configured Asset Chain testnet market manager. Approval alone does not publish a market."}
