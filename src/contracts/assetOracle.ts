@@ -87,6 +87,13 @@ export const assetOracleMarketManagerAbi = [
   },
   {
     type: "function",
+    name: "participantCountByMarket",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
     name: "getMarket",
     stateMutability: "view",
     inputs: [{ name: "marketId", type: "uint256" }],
