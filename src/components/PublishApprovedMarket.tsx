@@ -42,6 +42,20 @@ const marketPublisherAbi = [
   },
   {
     type: "function",
+    name: "createAutomatedMarket",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "stablecoin", type: "uint8" },
+      { name: "question", type: "string" },
+      { name: "resolutionRules", type: "string" },
+      { name: "evidenceSource", type: "string" },
+      { name: "closeTime", type: "uint64" },
+      { name: "challengePeriod", type: "uint64" },
+    ],
+    outputs: [{ name: "marketId", type: "uint256" }],
+  },
+  {
+    type: "function",
     name: "validatorRosterConfigured",
     stateMutability: "view",
     inputs: [],
@@ -147,6 +161,19 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     ],
     query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
+
+  const automatedMarketCreatorRole = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "hasRole",
+    args: [
+      keccak256(toBytes("AUTOMATED_MARKET_CREATOR_ROLE")),
+      (address ?? "0x0000000000000000000000000000000000000000") as Address,
+    ],
+    query: { enabled: Boolean(manager && address && proposal.origin === "AUTOMATED") && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+  const requiredRole = proposal.origin === "AUTOMATED" ? automatedMarketCreatorRole : marketCreatorRole;
+
 
   useEffect(() => {
     let cancelled = false;
@@ -273,7 +300,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("The configured market-manager contract has not been verified on this network. Wait for the contract check to finish, then retry.");
       return;
     }
-    if (tokenConfig.isLoading || validatorRoster.isLoading || marketCreatorRole.isLoading) {
+    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading) {
       setPublishConfirmation(false);
       setError("The contract configuration is still loading. Wait a moment and click Publish again.");
       return;
@@ -288,9 +315,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("Cannot publish: validator roster verification failed on the configured manager.");
       return;
     }
-    if (marketCreatorRole.isError || marketCreatorRole.data !== true) {
+    if (requiredRole.isError || requiredRole.data !== true) {
       setPublishConfirmation(false);
-      setError("Cannot publish: the connected wallet does not have MARKET_CREATOR_ROLE on the canonical manager. This is an on-chain permission, not an admin dashboard permission.");
+      setError(proposal.origin === "AUTOMATED"
+        ? "Cannot publish: the connected wallet does not have AUTOMATED_MARKET_CREATOR_ROLE on the canonical manager."
+        : "Cannot publish: the connected wallet does not have MARKET_CREATOR_ROLE on the canonical manager. This is an on-chain permission, not an admin dashboard permission.");
       return;
     }
     publishInFlight.current = true;
@@ -305,7 +334,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       const hash = await writeContractAsync({
         address: manager as Address,
         abi: marketPublisherAbi,
-        functionName: "createMarket",
+        functionName: proposal.origin === "AUTOMATED" ? "createAutomatedMarket" : "createMarket",
         args: [
           0,
           proposal.question,
