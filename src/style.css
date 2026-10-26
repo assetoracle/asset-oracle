@@ -11468,3 +11468,39 @@ select.brand-select option,
     font-size: 12px;
   }
 }
+
+
+.market-card-statistics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  min-width: 0;
+  padding: 11px 0;
+  border-top: 1px solid rgba(141, 169, 179, 0.14);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.market-card-statistics span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.market-card-statistics svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .market-card-statistics {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+}
