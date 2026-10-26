@@ -60,6 +60,7 @@ import {
   type TotalLeaderboardEntry,
   type StoredMarketProposal,
   type WalletRoleResponse,
+  type WalletRole,
   type WalletAccountData,
   type PersonalReferralStats,
 } from "./markets/marketApi";
@@ -270,6 +271,7 @@ export default function App() {
   const { signMessageAsync } = useSignMessage();
   const { openConnectModal } = useConnectModal();
   const isAdmin = useIsAdmin(address);
+  const canAccessMarketOperations = isAdmin || walletRole?.role === "MARKET_CREATOR";
 
   const validatorStatusReads = useReadContracts({
     contracts: address && assetOracleMarketManagerAddress ? [
@@ -323,7 +325,7 @@ export default function App() {
       { label: "Referrals", icon: Trophy },
     ];
 
-    if (isAdmin) {
+    if (canAccessMarketOperations) {
       items.push({ label: "Admin", icon: ShieldCheck });
     }
     if (canAccessValidatorDashboard) {
@@ -331,7 +333,7 @@ export default function App() {
     }
 
     return items;
-  }, [isAdmin, canAccessValidatorDashboard]);
+  }, [canAccessMarketOperations, canAccessValidatorDashboard]);
 
   const isMountedRef = useRef(false);
 
@@ -1115,7 +1117,7 @@ useEffect(() => {
     }
 
     if (page === "Admin") {
-      if (!isAdmin) {
+      if (!canAccessMarketOperations) {
         return (
           <div className="empty-state">
             <h3>Admin access unavailable</h3>
@@ -1127,6 +1129,7 @@ useEffect(() => {
       return (
         <AdminDashboard
           address={address}
+          role={walletRole?.role ?? (isAdmin ? "OWNER" : "USER") as WalletRole}
           signMessage={(message) => signMessageAsync({ message })}
         />
       );
