@@ -302,8 +302,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   useEffect(() => {
     if (!receipt.isSuccess || receipt.data?.status !== "success" || !txHash ||
         lastAction !== "stake" || !address || referralQualificationAttempted === txHash) return;
-    const referralCode = new URLSearchParams(window.location.search).get("ref");
-    if (!referralCode) return;
+    // Qualify any existing attribution after the wallet's confirmed first stake.
+    // The referred wallet may have navigated away from the original ?ref= URL.
     setReferralQualificationAttempted(txHash);
     
     void (async () => {
@@ -317,9 +317,12 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         });
         const qualificationData = await qualificationResponse.json();
         if (!qualificationResponse.ok) throw new Error(qualificationData.error || "Referral qualification could not be verified.");
-        setMessage("Stake confirmed on-chain. " + (qualificationData.message || "Referral qualification checked."));
+        // Keep the stake-success confirmation visible; referral qualification runs in the background.
+        void qualificationData;
       } catch (error) {
-        setMessage("Referral verification pending.");
+        // A wallet without a referral attribution is expected to receive 404 here.
+        // Do not replace a successful stake confirmation with a referral warning.
+        void error;
       }
     })();
     
