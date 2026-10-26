@@ -233,6 +233,18 @@ export default function App() {
       refetchInterval: 15_000,
     },
   });
+  const marketParticipantReads = useReadContracts({
+    contracts: onchainPublishedMarkets.map((market) => ({
+      address: market.onchainManagerAddress as `0x${string}`,
+      abi: assetOracleMarketManagerAbi,
+      functionName: "participantCountByMarket" as const,
+      args: [BigInt(market.onchainMarketId!)] as const,
+    })),
+    query: {
+      enabled: onchainPublishedMarkets.length > 0,
+      refetchInterval: 15_000,
+    },
+  });
   const [marketsLoading, setMarketsLoading] = useState(true);
   const [marketsError, setMarketsError] = useState("");
 
@@ -618,7 +630,7 @@ useEffect(() => {
 
   const query = search.trim().toLowerCase();
 
-  const marketLifecycle = new Map<string, { status: number; closeTime: number; creator: string; outcome: number; resolvedAt: number; evidenceHash: string; evidenceSource: string; totalYes: bigint; totalNo: bigint }>();
+  const marketLifecycle = new Map<string, { status: number; closeTime: number; creator: string; outcome: number; resolvedAt: number; evidenceHash: string; evidenceSource: string; totalYes: bigint; totalNo: bigint; totalStaked: bigint; participantCount: number | null }>();
   onchainPublishedMarkets.forEach((market, index) => {
     const read = marketStatusReads.data?.[index];
     if (read?.status !== "success" || !read.result) return;
@@ -640,6 +652,10 @@ useEffect(() => {
       evidenceSource: String(onchainMarket.evidenceSource ?? onchainMarket[5] ?? ""),
       totalYes: BigInt(onchainMarket.totalYes ?? onchainMarket[9] ?? 0n),
       totalNo: BigInt(onchainMarket.totalNo ?? onchainMarket[10] ?? 0n),
+      totalStaked: BigInt((onchainMarket as { totalStaked?: bigint; 11?: bigint }).totalStaked ?? (onchainMarket as { 11?: bigint })[11] ?? 0n),
+      participantCount: marketParticipantReads.data?.[index]?.status === "success"
+        ? Number(marketParticipantReads.data[index].result)
+        : null,
     });
   });
 
@@ -684,6 +700,14 @@ useEffect(() => {
       const idA = a.onchainMarketId ? Number(a.onchainMarketId) : Number.MAX_SAFE_INTEGER;
       const idB = b.onchainMarketId ? Number(b.onchainMarketId) : Number.MAX_SAFE_INTEGER;
       return idB - idA;
+    })
+    .map((market) => {
+      const stats = marketLifecycle.get(market.id);
+      return {
+        ...market,
+        participantCount: stats?.participantCount ?? null,
+        totalStaked: stats ? stats.totalStaked.toString() : null,
+      };
     });
 
   async function handleLoadMyProposals() {
