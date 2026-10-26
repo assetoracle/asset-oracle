@@ -80,6 +80,13 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     args: [marketId],
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
   });
+  const participantCount = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "participantCountByMarket",
+    args: [marketId],
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 15_000 },
+  });
   const tokenConfig = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
@@ -339,6 +346,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       : !isConnected ? <p>Sign in on Asset Chain Testnet to check your position and participate.</p>
       : <>
           <div className="market-detail-grid">
+            <article className="detail-info-card"><span>Participants</span><strong>{participantCount.data === undefined ? "Unavailable" : participantCount.data.toString()}</strong></article>
+            <article className="detail-info-card"><span>Total amount staked</span><strong>{marketData?.totalStaked === undefined ? "Unavailable" : `${formatUnits(marketData.totalStaked, TESTNET_USDC_DECIMALS)} USDC`}</strong></article>
             <article className="detail-info-card"><span>Your YES stake</span><strong>{formatUnits(positionYes, 6)} USDC</strong></article>
             <article className="detail-info-card"><span>Your NO stake</span><strong>{formatUnits(positionNo, 6)} USDC</strong></article>
             <article className="detail-info-card"><span>USDC balance</span><strong>{balance.data === undefined ? "Unavailable" : formatUnits(balance.data, 6)}</strong></article>
