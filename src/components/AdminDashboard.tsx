@@ -95,14 +95,8 @@ export default function AdminDashboard({
     setLoading(true);
     setError("");
     try {
-      const session = await authenticate();
-      const response = await fetch(`${API}/api/markets/automated/private/session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-        body: JSON.stringify({ address }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to load private automated markets.");
+      await authenticate();
+      const data = await getPrivateAutomatedMarkets(address);
       setAutomatedProposals((data.proposals ?? []).slice().sort((a: StoredMarketProposal, b: StoredMarketProposal) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
     } catch (err) {
       setError(friendlyError(err, "Unable to load private automated markets."));
