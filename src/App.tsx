@@ -641,6 +641,7 @@ useEffect(() => {
     };
     const statusValue = onchainMarket.status ?? onchainMarket[13];
     const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[6];
+    const participantRead = marketParticipantReads.data?.[index];
     if (statusValue === undefined) return;
     marketLifecycle.set(market.id, {
       status: Number(statusValue),
@@ -653,8 +654,8 @@ useEffect(() => {
       totalYes: BigInt(onchainMarket.totalYes ?? onchainMarket[9] ?? 0n),
       totalNo: BigInt(onchainMarket.totalNo ?? onchainMarket[10] ?? 0n),
       totalStaked: BigInt((onchainMarket as { totalStaked?: bigint; 11?: bigint }).totalStaked ?? (onchainMarket as { 11?: bigint })[11] ?? 0n),
-      participantCount: marketParticipantReads.data?.[index]?.status === "success"
-        ? Number(marketParticipantReads.data[index].result)
+      participantCount: participantRead?.status === "success"
+        ? Number(participantRead.result)
         : null,
     });
   });
