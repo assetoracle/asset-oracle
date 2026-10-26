@@ -188,7 +188,8 @@ export async function validateMarketProposal(
 }
 
 export async function getPrivateAutomatedMarkets(address: string) {
-  await ensureWalletSession(address, async () => { throw new Error("Wallet session is not established."); });
+  const session = getWalletSession(address);
+  if (!session) throw new Error("Wallet session is not established.");
   return request<{ proposals: StoredMarketProposal[]; count: number }>("/api/markets/automated/private/session", {
     method: "POST",
     body: JSON.stringify({ address }),
