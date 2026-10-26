@@ -33,6 +33,8 @@ export type DisplayMarket = {
   onchainTxHash?: string | null;
   onchainManagerAddress?: string | null;
   onchainChainId?: number | null;
+  participantCount?: number | null;
+  totalStaked?: string | null;
 };
 
 type DashboardStats = {
