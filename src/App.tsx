@@ -691,7 +691,7 @@ useEffect(() => {
         market.description.toLowerCase().includes(query);
 
       const lifecycle = marketLifecycle.get(market.id);
-      const ownerOnlyStatuses = new Set([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
+      const ownerOnlyStatuses = new Set<number>([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
       const ownerOnly = lifecycle ? ownerOnlyStatuses.has(lifecycle.status) : false;
       const isMarketCreator = Boolean(address && lifecycle?.creator && lifecycle.creator.toLowerCase() === address.toLowerCase());
 
@@ -934,7 +934,7 @@ useEffect(() => {
 
     if (selectedMarket) {
       const lifecycle = marketLifecycle.get(selectedMarket.id);
-      const ownerOnlyStatuses = new Set([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
+      const ownerOnlyStatuses = new Set<number>([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
       const isOwnerOnlyMarket = Boolean(lifecycle && ownerOnlyStatuses.has(lifecycle.status));
       const isMarketCreator = Boolean(address && lifecycle?.creator && lifecycle.creator.toLowerCase() === address.toLowerCase());
       if (isOwnerOnlyMarket && !isMarketCreator) {
