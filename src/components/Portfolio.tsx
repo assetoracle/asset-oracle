@@ -27,10 +27,6 @@ const TESTNET_EXPLORER = "https://scan-testnet.assetchain.org";
 const USDC_ADDRESS =
   "0xc33741fddEBeA854d265db6F9707900Efb0211a2" as Address;
 
-// Set this to the verified RWA token contract on Asset Chain Enugu testnet.
-// The UI deliberately shows no fabricated balance when it is not configured.
-const RWA_ADDRESS = import.meta.env.VITE_TESTNET_RWA_ADDRESS as Address | undefined;
-
 const publicClient = createPublicClient({
   transport: http(TESTNET_RPC, {
     timeout: 12_000,
@@ -208,33 +204,16 @@ export default function Portfolio({
         setRwaData({ balance: "", loading: false, error: "" });
         return;
       }
-      if (!RWA_ADDRESS || !isAddress(RWA_ADDRESS)) {
-        setRwaData({ balance: "", loading: false, error: "RWA token address is not configured yet." });
-        return;
-      }
-
       setRwaData({ balance: "", loading: true, error: "" });
       try {
         const chainId = await publicClient.getChainId();
         if (chainId !== TESTNET_CHAIN_ID) {
           throw new Error(`RPC returned chain ID ${chainId}; expected ${TESTNET_CHAIN_ID}.`);
         }
-        const code = await publicClient.getBytecode({ address: RWA_ADDRESS });
-        if (!code || code === "0x") {
-          throw new Error("No contract code found at the configured RWA token address.");
-        }
-        const [rawBalance, decimals, symbol] = await Promise.all([
-          publicClient.readContract({ address: RWA_ADDRESS, abi: ERC20_ABI, functionName: "balanceOf", args: [address] }),
-          publicClient.readContract({ address: RWA_ADDRESS, abi: ERC20_ABI, functionName: "decimals" }),
-          publicClient.readContract({ address: RWA_ADDRESS, abi: ERC20_ABI, functionName: "symbol" }),
-        ]);
-        if (active) {
-          setRwaData({
-            balance: formatUnits(rawBalance, decimals),
-            loading: false,
-            error: symbol.trim().toUpperCase() === "RWA" ? "" : `Token symbol check failed (received ${symbol}).`,
-          });
-        }
+        // RWA is the native Asset Chain testnet gas asset, so read the wallet's
+        // native balance rather than querying an ERC-20 contract.
+        const rawBalance = await publicClient.getBalance({ address });
+        if (active) setRwaData({ balance: formatUnits(rawBalance, 18), loading: false, error: "" });
       } catch (error) {
         if (active) setRwaData({ balance: "", loading: false, error: friendlyError(error, "RWA balance unavailable.") });
       }
@@ -417,11 +396,7 @@ export default function Portfolio({
               {rwaData.error && (
                 <p className="portfolio-token-error" role="status">{rwaData.error}</p>
               )}
-              {RWA_ADDRESS && isAddress(RWA_ADDRESS) && (
-                <a className="portfolio-token-link" href={`${TESTNET_EXPLORER}/address/${RWA_ADDRESS}`} target="_blank" rel="noopener noreferrer">
-                  View contract <ExternalLink size={14} />
-                </a>
-              )}
+              <a className="portfolio-token-link" href={`${TESTNET_EXPLORER}/address/${address}`} target="_blank" rel="noopener noreferrer">View wallet <ExternalLink size={14} /></a>
             </article>
           </div>
 
