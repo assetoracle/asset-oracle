@@ -130,7 +130,7 @@ export default function AdminDashboard({
       const session = await authenticate();
       const selected = proposals.find((proposal) => proposal.id === id) ?? automatedProposals.find((proposal) => proposal.id === id);
       if (selected?.origin === "AUTOMATED") {
-        const result = await decideAutomatedMarket(id, address, status);
+        const result = await decideAutomatedMarket(id, address!, status);
         setAutomatedProposals((current) => current.map((proposal) => proposal.id === id ? result.proposal : proposal));
         setNotice(`Automated market ${status.toLowerCase()} successfully.`);
       } else {
@@ -336,12 +336,16 @@ export default function AdminDashboard({
               </div>
               <span className="approval-modal-eyebrow">ADMIN REVIEW · ASSET ORACLE</span>
               <h2 id="approval-modal-title">
-                {approving ? "Approve market proposal?" : "Reject market proposal?"}
+                {selectedProposal?.origin === "AUTOMATED"
+                  ? (approving ? "Approve automated market?" : "Reject automated market?")
+                  : (approving ? "Approve market proposal?" : "Reject market proposal?")}
               </h2>
               <p id="approval-modal-description">
                 {approving
-                  ? "This proposal will move to the approved stage and can then proceed to on-chain publication."
-                  : "This proposal will be marked as rejected and will not proceed to publication."}
+                  ? (selectedProposal?.origin === "AUTOMATED"
+                    ? "One authorized market maker can approve this API-generated market. It stays private until the on-chain publication is confirmed."
+                    : "This proposal will move to the approved stage and can then proceed to on-chain publication.")
+                  : "This market will be rejected and will remain private."}
               </p>
               {selectedProposal && (
                 <div className="approval-modal-proposal">
