@@ -104,6 +104,7 @@ export const assetOracleMarketManagerAbi = [
         components: [
           { name: "id", type: "uint256" },
           { name: "creator", type: "address" },
+          { name: "marketType", type: "uint8" },
           { name: "stablecoin", type: "uint8" },
           { name: "question", type: "string" },
           { name: "resolutionRules", type: "string" },
