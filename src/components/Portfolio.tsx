@@ -27,6 +27,10 @@ const TESTNET_EXPLORER = "https://scan-testnet.assetchain.org";
 const USDC_ADDRESS =
   "0xc33741fddEBeA854d265db6F9707900Efb0211a2" as Address;
 
+// Set this to the verified RWA token contract on Asset Chain Enugu testnet.
+// The UI deliberately shows no fabricated balance when it is not configured.
+const RWA_ADDRESS = import.meta.env.VITE_TESTNET_RWA_ADDRESS as Address | undefined;
+
 const publicClient = createPublicClient({
   transport: http(TESTNET_RPC, {
     timeout: 12_000,
@@ -86,6 +90,7 @@ export default function Portfolio({
     error: "",
   });
   const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+  const [rwaData, setRwaData] = useState<PortfolioData>({ balance: "", loading: false, error: "" });
   const [positionsRefreshKey, setPositionsRefreshKey] = useState(0);
   const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
   const [accountLoading, setAccountLoading] = useState(false);
@@ -195,6 +200,50 @@ export default function Portfolio({
     };
   }, [address, balanceRefreshKey]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadRwaBalance() {
+      if (!address || !isAddress(address)) {
+        setRwaData({ balance: "", loading: false, error: "" });
+        return;
+      }
+      if (!RWA_ADDRESS || !isAddress(RWA_ADDRESS)) {
+        setRwaData({ balance: "", loading: false, error: "RWA token address is not configured yet." });
+        return;
+      }
+
+      setRwaData({ balance: "", loading: true, error: "" });
+      try {
+        const chainId = await publicClient.getChainId();
+        if (chainId !== TESTNET_CHAIN_ID) {
+          throw new Error(`RPC returned chain ID ${chainId}; expected ${TESTNET_CHAIN_ID}.`);
+        }
+        const code = await publicClient.getBytecode({ address: RWA_ADDRESS });
+        if (!code || code === "0x") {
+          throw new Error("No contract code found at the configured RWA token address.");
+        }
+        const [rawBalance, decimals, symbol] = await Promise.all([
+          publicClient.readContract({ address: RWA_ADDRESS, abi: ERC20_ABI, functionName: "balanceOf", args: [address] }),
+          publicClient.readContract({ address: RWA_ADDRESS, abi: ERC20_ABI, functionName: "decimals" }),
+          publicClient.readContract({ address: RWA_ADDRESS, abi: ERC20_ABI, functionName: "symbol" }),
+        ]);
+        if (active) {
+          setRwaData({
+            balance: formatUnits(rawBalance, decimals),
+            loading: false,
+            error: symbol.trim().toUpperCase() === "RWA" ? "" : `Token symbol check failed (received ${symbol}).`,
+          });
+        }
+      } catch (error) {
+        if (active) setRwaData({ balance: "", loading: false, error: friendlyError(error, "RWA balance unavailable.") });
+      }
+    }
+
+    void loadRwaBalance();
+    return () => { active = false; };
+  }, [address, balanceRefreshKey]);
+
   return (
     <section className="page-section account-page">
       <div className="section-heading">
@@ -202,7 +251,7 @@ export default function Portfolio({
           <span className="eyebrow">YOUR ASSETS</span>
           <h1>Your portfolio</h1>
           <p>
-            View your USDC testnet balance on Asset Chain.
+            View your USDC and RWA testnet balances on Asset Chain.
           </p>
         </div>
         <div className="account-page-icon">
@@ -233,7 +282,7 @@ export default function Portfolio({
           </div>
           <h2>Sign in to continue</h2>
           <p>
-            Sign in to continue to read your USDC balance.
+            Sign in to view your USDC and RWA balances.
           </p>
           <button
             className="primary-button"
@@ -346,6 +395,33 @@ export default function Portfolio({
               >
                 View contract <ExternalLink size={14} />
               </a>
+            </article>
+
+            <article className="portfolio-token-card portfolio-token-card-rwa" aria-busy={rwaData.loading}>
+              <div className="portfolio-token-identity">
+                <div className="portfolio-token-icon portfolio-token-rwa">
+                  <img src="/rwa-logo.jpg" alt="RWA token logo" width="42" height="42" />
+                </div>
+                <div>
+                  <strong>RWA</strong>
+                  <p>Asset Chain testnet token</p>
+                </div>
+              </div>
+              <div className="portfolio-token-balance">
+                <span>Wallet balance</span>
+                <strong>
+                  {rwaData.loading ? "Loading..." : rwaData.error ? "Unavailable" : formatBalance(rwaData.balance)}
+                </strong>
+                {!rwaData.loading && !rwaData.error && <small>RWA</small>}
+              </div>
+              {rwaData.error && (
+                <p className="portfolio-token-error" role="status">{rwaData.error}</p>
+              )}
+              {RWA_ADDRESS && isAddress(RWA_ADDRESS) && (
+                <a className="portfolio-token-link" href={`${TESTNET_EXPLORER}/address/${RWA_ADDRESS}`} target="_blank" rel="noopener noreferrer">
+                  View contract <ExternalLink size={14} />
+                </a>
+              )}
             </article>
           </div>
 
