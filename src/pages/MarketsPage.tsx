@@ -3,7 +3,9 @@ import {
   ArrowUpRight,
   Search,
   ShieldCheck,
+  Users,
 } from "lucide-react";
+import { formatUnits } from "viem";
 import type { DisplayMarket } from "./HomePage";
 import type { MarketFilter } from "../types";
 import SportIcon, { type SportKind } from "../components/SportIcon";
@@ -175,6 +177,10 @@ export default function MarketsPage({
             </div>
           );
         })()}
+        <div className="market-card-statistics" aria-label="Market participation statistics">
+          <span><Users size={15} aria-hidden="true" /> {market.participantCount === null || market.participantCount === undefined ? "—" : market.participantCount.toLocaleString()} participants</span>
+          <span>Total staked: {market.totalStaked === null || market.totalStaked === undefined ? "—" : `${formatUnits(BigInt(market.totalStaked), 6)} USDC`}</span>
+        </div>
         <div className="market-card-bottom">
           <span className="market-status-note">{settledMarketIds.has(market.id) ? "Resolution confirmed on-chain" : `Closes ${formatMarketTime(market.closesAt)}`}</span>
           {settledMarketIds.has(market.id) ? (
