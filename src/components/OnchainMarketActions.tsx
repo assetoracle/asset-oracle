@@ -35,6 +35,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const client = usePublicClient();
   const [amount, setAmount] = useState("");
   const [stakeSuccessHandled, setStakeSuccessHandled] = useState<string | null>(null);
+  const [pendingStakeAmount, setPendingStakeAmount] = useState<bigint | null>(null);
+  const [pendingStakeSide, setPendingStakeSide] = useState<"YES" | "NO">("YES");
   const [yesSide, setYesSide] = useState(true);
   const [codeVerified, setCodeVerified] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
@@ -203,7 +205,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   useEffect(() => {
     if (receipt.isSuccess && receipt.data?.status === "success") {
       if (lastAction === "stake" && txHash && stakeSuccessHandled !== txHash) {
-        setMessage(`Successfully staked ${formatUnits(parsedAmount, TESTNET_USDC_DECIMALS)} USDC on ${yesSide ? "YES" : "NO"}.`);
+        setMessage(`Successfully staked ${formatUnits(pendingStakeAmount ?? parsedAmount, TESTNET_USDC_DECIMALS)} USDC on ${pendingStakeSide}.`);
         setAmount("");
         setStakeSuccessHandled(txHash);
       } else if (lastAction !== "stake" && lastAction !== "approve") {
@@ -217,7 +219,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     } else if (receipt.isError) {
       setMessage("Transaction receipt failed. Check the transaction in the testnet explorer.");
     }
-  }, [receipt.isSuccess, receipt.isError, receipt.data?.status, lastAction, txHash, stakeSuccessHandled, parsedAmount, yesSide]);
+  }, [receipt.isSuccess, receipt.isError, receipt.data?.status, lastAction, txHash, stakeSuccessHandled, pendingStakeAmount, pendingStakeSide, parsedAmount]);
 
   useEffect(() => {
     if (writeError) setMessage(friendlyError(writeError, "Transaction failed."));
@@ -259,6 +261,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       });
       return;
     }
+    setPendingStakeAmount(parsedAmount);
+    setPendingStakeSide(yesSide ? "YES" : "NO");
     setLastAction("stake");
     writeContract({
       address: manager,
@@ -359,7 +363,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 < closeTime && <>
             {new URLSearchParams(window.location.search).get("ref") && <p>Referral link detected. By continuing to stake, you can sign once to record the referral attribution; it counts only after this wallet’s first confirmed prediction.</p>}
             <label htmlFor={`onchain-amount-${marketId}`}>Stake amount (test USDC · minimum 5 USDC)</label>
-            <input id={`onchain-amount-${marketId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Minimum 5.00 USDC" />
+            <input id={`onchain-amount-${marketId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Minimum 5.00 USDC" disabled={isWalletPending || receipt.isLoading || referralPreparing} />
             <div className="outcome-preview">
               <button className="outcome-choice-yes" type="button" aria-pressed={yesSide} onClick={() => setYesSide(true)}>YES</button>
               <button className="outcome-choice-no" type="button" aria-pressed={!yesSide} onClick={() => setYesSide(false)}>NO</button>
