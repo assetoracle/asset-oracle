@@ -93,6 +93,21 @@ export default function Portfolio({
   const [accountError, setAccountError] = useState("");
   const [activePortfolioSection, setActivePortfolioSection] = useState<"balance" | "positions">("balance");
 
+  // Refresh wallet token balances periodically and when users return after claiming faucet tokens.
+  useEffect(() => {
+    const refreshBalances = () => {
+      if (document.visibilityState === "visible") {
+        setBalanceRefreshKey((value) => value + 1);
+      }
+    };
+    const interval = window.setInterval(refreshBalances, 15_000);
+    window.addEventListener("focus", refreshBalances);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshBalances);
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
     if (!address || !isAddress(address)) {
