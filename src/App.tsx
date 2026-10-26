@@ -233,6 +233,18 @@ export default function App() {
       refetchInterval: 15_000,
     },
   });
+  const marketParticipantReads = useReadContracts({
+    contracts: onchainPublishedMarkets.map((market) => ({
+      address: market.onchainManagerAddress as `0x${string}`,
+      abi: assetOracleMarketManagerAbi,
+      functionName: "participantCountByMarket" as const,
+      args: [BigInt(market.onchainMarketId!)] as const,
+    })),
+    query: {
+      enabled: onchainPublishedMarkets.length > 0,
+      refetchInterval: 15_000,
+    },
+  });
   const [marketsLoading, setMarketsLoading] = useState(true);
   const [marketsError, setMarketsError] = useState("");
 
@@ -618,27 +630,33 @@ useEffect(() => {
 
   const query = search.trim().toLowerCase();
 
-  const marketLifecycle = new Map<string, { status: number; closeTime: number; outcome: number; resolvedAt: number; evidenceHash: string; evidenceSource: string; totalYes: bigint; totalNo: bigint }>();
+  const marketLifecycle = new Map<string, { status: number; closeTime: number; creator: string; outcome: number; resolvedAt: number; evidenceHash: string; evidenceSource: string; totalYes: bigint; totalNo: bigint; totalStaked: bigint; participantCount: number | null }>();
   onchainPublishedMarkets.forEach((market, index) => {
     const read = marketStatusReads.data?.[index];
     if (read?.status !== "success" || !read.result) return;
     const onchainMarket = read.result as unknown as {
-      status?: bigint; closeTime?: bigint; outcome?: bigint; resolvedAt?: bigint;
+      creator?: string; status?: bigint; closeTime?: bigint; outcome?: bigint; resolvedAt?: bigint;
       evidenceHash?: string; evidenceSource?: string; totalYes?: bigint; totalNo?: bigint;
-      5?: string; 6?: bigint; 8?: bigint; 9?: bigint; 10?: bigint; 12?: bigint; 13?: bigint; 14?: string;
+      1?: string; 5?: string; 6?: bigint; 8?: bigint; 9?: bigint; 10?: bigint; 12?: bigint; 13?: bigint; 14?: string;
     };
     const statusValue = onchainMarket.status ?? onchainMarket[13];
     const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[6];
+    const participantRead = marketParticipantReads.data?.[index];
     if (statusValue === undefined) return;
     marketLifecycle.set(market.id, {
       status: Number(statusValue),
       closeTime: closeTimeValue === undefined ? 0 : Number(closeTimeValue),
+      creator: String(onchainMarket.creator ?? onchainMarket[1] ?? ""),
       outcome: Number(onchainMarket.outcome ?? onchainMarket[12] ?? 0n),
       resolvedAt: Number(onchainMarket.resolvedAt ?? onchainMarket[8] ?? 0n),
       evidenceHash: String(onchainMarket.evidenceHash ?? onchainMarket[14] ?? ""),
       evidenceSource: String(onchainMarket.evidenceSource ?? onchainMarket[5] ?? ""),
       totalYes: BigInt(onchainMarket.totalYes ?? onchainMarket[9] ?? 0n),
       totalNo: BigInt(onchainMarket.totalNo ?? onchainMarket[10] ?? 0n),
+      totalStaked: BigInt((onchainMarket as { totalStaked?: bigint; 11?: bigint }).totalStaked ?? (onchainMarket as { 11?: bigint })[11] ?? 0n),
+      participantCount: participantRead?.status === "success"
+        ? Number(participantRead.result)
+        : null,
     });
   });
 
@@ -672,12 +690,26 @@ useEffect(() => {
         market.label.toLowerCase().includes(query) ||
         market.description.toLowerCase().includes(query);
 
-      return matchesCategory && matchesSearch;
+      const lifecycle = marketLifecycle.get(market.id);
+      const ownerOnlyStatuses = new Set<number>([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
+      const ownerOnly = lifecycle ? ownerOnlyStatuses.has(lifecycle.status) : false;
+      const isMarketCreator = Boolean(address && lifecycle?.creator && lifecycle.creator.toLowerCase() === address.toLowerCase());
+
+      // Closed/review-state markets remain accessible to their creator and configured platform admins.
+      return matchesCategory && matchesSearch && (!ownerOnly || isMarketCreator || isAdmin);
     })
     .sort((a, b) => {
       const idA = a.onchainMarketId ? Number(a.onchainMarketId) : Number.MAX_SAFE_INTEGER;
       const idB = b.onchainMarketId ? Number(b.onchainMarketId) : Number.MAX_SAFE_INTEGER;
       return idB - idA;
+    })
+    .map((market) => {
+      const stats = marketLifecycle.get(market.id);
+      return {
+        ...market,
+        participantCount: stats?.participantCount ?? null,
+        totalStaked: stats ? stats.totalStaked.toString() : null,
+      };
     });
 
   async function handleLoadMyProposals() {
@@ -903,6 +935,12 @@ useEffect(() => {
 
     if (selectedMarket) {
       const lifecycle = marketLifecycle.get(selectedMarket.id);
+      const ownerOnlyStatuses = new Set<number>([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
+      const isOwnerOnlyMarket = Boolean(lifecycle && ownerOnlyStatuses.has(lifecycle.status));
+      const isMarketCreator = Boolean(address && lifecycle?.creator && lifecycle.creator.toLowerCase() === address.toLowerCase());
+      if (isOwnerOnlyMarket && !isMarketCreator && !isAdmin) {
+        return <div className="empty-state" role="status"><h3>Market access restricted</h3><p>This market is closed or under review and is visible only to its creator and the Asset Oracle platform owner/admin.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to markets</button></div>;
+      }
       const marketClosed = !(
         lifecycle &&
         lifecycle.status === MARKET_STATUS.OPEN &&

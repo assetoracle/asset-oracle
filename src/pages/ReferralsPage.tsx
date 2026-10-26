@@ -35,7 +35,7 @@ type TotalLeaderboardEntry = {
 
 type ReferralsPageProps = {
   address?: string;
-  personalStats: { verifiedReferrals: number; pendingReferrals: number; flaggedReferrals: number; leaderboardRank: number | null; rewardsEarned: number | null; rewardsAvailable: boolean } | null;
+  personalStats: { verifiedReferrals: number; pendingReferrals: number; flaggedReferrals: number; referralPoints: number; totalPoints: number; leaderboardRank: number | null; rewardsEarned: number | null; rewardsAvailable: boolean } | null;
   message: string;
   referralLink: string;
   referralCode: string;
@@ -118,9 +118,9 @@ export default function ReferralsPage({
         </article>
         <article className="referral-stat-card">
           <span className="referral-stat-icon"><Gift size={19} /></span>
-          <span>Referral points</span>
-          <strong>5 points per referral</strong>
-          <small>Points are awarded once per verified referral. Market proposal and trading points are shown in the points schedule below.</small>
+          <span>Referral points earned</span>
+          <strong>{personalStats ? personalStats.referralPoints.toLocaleString() : "Connect to load"}</strong>
+          <small>5 points are awarded for each verified referral. {personalStats ? `${personalStats.pendingReferrals} pending · ${personalStats.flaggedReferrals} flagged` : "Connect your wallet to load your personal referral totals."}</small>
         </article>
       </div>
 

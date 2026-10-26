@@ -86,11 +86,27 @@ export default function Portfolio({
     error: "",
   });
   const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+  const [rwaData, setRwaData] = useState<PortfolioData>({ balance: "", loading: false, error: "" });
   const [positionsRefreshKey, setPositionsRefreshKey] = useState(0);
   const [accountData, setAccountData] = useState<WalletAccountData | null>(null);
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountError, setAccountError] = useState("");
   const [activePortfolioSection, setActivePortfolioSection] = useState<"balance" | "positions">("balance");
+
+  // Refresh wallet token balances periodically and when users return after claiming faucet tokens.
+  useEffect(() => {
+    const refreshBalances = () => {
+      if (document.visibilityState === "visible") {
+        setBalanceRefreshKey((value) => value + 1);
+      }
+    };
+    const interval = window.setInterval(refreshBalances, 15_000);
+    window.addEventListener("focus", refreshBalances);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshBalances);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -195,6 +211,33 @@ export default function Portfolio({
     };
   }, [address, balanceRefreshKey]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadRwaBalance() {
+      if (!address || !isAddress(address)) {
+        setRwaData({ balance: "", loading: false, error: "" });
+        return;
+      }
+      setRwaData({ balance: "", loading: true, error: "" });
+      try {
+        const chainId = await publicClient.getChainId();
+        if (chainId !== TESTNET_CHAIN_ID) {
+          throw new Error(`RPC returned chain ID ${chainId}; expected ${TESTNET_CHAIN_ID}.`);
+        }
+        // RWA is the native Asset Chain testnet gas asset, so read the wallet's
+        // native balance rather than querying an ERC-20 contract.
+        const rawBalance = await publicClient.getBalance({ address });
+        if (active) setRwaData({ balance: formatUnits(rawBalance, 18), loading: false, error: "" });
+      } catch (error) {
+        if (active) setRwaData({ balance: "", loading: false, error: friendlyError(error, "RWA balance unavailable.") });
+      }
+    }
+
+    void loadRwaBalance();
+    return () => { active = false; };
+  }, [address, balanceRefreshKey]);
+
   return (
     <section className="page-section account-page">
       <div className="section-heading">
@@ -202,7 +245,7 @@ export default function Portfolio({
           <span className="eyebrow">YOUR ASSETS</span>
           <h1>Your portfolio</h1>
           <p>
-            View your USDC testnet balance on Asset Chain.
+            View your USDC and RWA testnet balances on Asset Chain.
           </p>
         </div>
         <div className="account-page-icon">
@@ -233,7 +276,7 @@ export default function Portfolio({
           </div>
           <h2>Sign in to continue</h2>
           <p>
-            Sign in to continue to read your USDC balance.
+            Sign in to view your USDC and RWA balances.
           </p>
           <button
             className="primary-button"
@@ -346,6 +389,29 @@ export default function Portfolio({
               >
                 View contract <ExternalLink size={14} />
               </a>
+            </article>
+
+            <article className="portfolio-token-card portfolio-token-card-rwa" aria-busy={rwaData.loading}>
+              <div className="portfolio-token-identity">
+                <div className="portfolio-token-icon portfolio-token-rwa">
+                  <img src="/rwa-logo.svg" alt="RWA token logo" width="42" height="42" />
+                </div>
+                <div>
+                  <strong>RWA</strong>
+                  <p>Asset Chain testnet token</p>
+                </div>
+              </div>
+              <div className="portfolio-token-balance">
+                <span>Wallet balance</span>
+                <strong>
+                  {rwaData.loading ? "Loading..." : rwaData.error ? "Unavailable" : formatBalance(rwaData.balance)}
+                </strong>
+                {!rwaData.loading && !rwaData.error && <small>RWA</small>}
+              </div>
+              {rwaData.error && (
+                <p className="portfolio-token-error" role="status">{rwaData.error}</p>
+              )}
+              <a className="portfolio-token-link" href={`${TESTNET_EXPLORER}/address/${address}`} target="_blank" rel="noopener noreferrer">View wallet <ExternalLink size={14} /></a>
             </article>
           </div>
 

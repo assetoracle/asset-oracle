@@ -454,6 +454,8 @@ export type PersonalReferralStats = {
   verifiedReferrals: number;
   pendingReferrals: number;
   flaggedReferrals: number;
+  referralPoints: number;
+  totalPoints: number;
   leaderboardRank: number | null;
   rewardsEarned: number | null;
   rewardsAvailable: boolean;
