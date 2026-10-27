@@ -369,13 +369,13 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       : chainId !== ASSET_CHAIN_TESTNET_ID ? <p>Switch to Asset Chain Testnet (Chain ID 42421).</p>
       : !codeCheckDone ? <p>Verifying deployed contract bytecode…</p>
       : !codeVerified ? <p>Transactions blocked: market manager or USDC contract has no deployed bytecode at the configured address.</p>
-      : !managerCompatible ? <p>New stakes and market closing are blocked because the configured manager does not expose the expected audited interface. Existing claims and refunds remain available.</p>
       : tokenConfig.isPending || tokenDecimals.isPending || market.isPending || (address && position.isPending) ? <p>Verifying on-chain market, USDC configuration, and wallet position…</p>
       : !stablecoinVerified ? <p>Transactions blocked: the manager must explicitly enable the approved testnet USDC address with 6 decimals.</p>
       : !marketVerified ? <p>Transactions blocked: on-chain market ID, USDC asset, or close time does not match the displayed market record.</p>
       : market.isError || tokenConfig.isError || tokenDecimals.isError || position.isError ? <p>Transactions blocked because one or more verification reads failed.</p>
       : !isConnected ? <p>Sign in on Asset Chain Testnet to check your position and participate.</p>
       : <>
+          {!managerCompatible && <p role="alert">New stakes and market closing are blocked because the configured manager does not expose the expected audited interface. Existing claims and refunds remain available.</p>}
           <div className="market-detail-grid">
             <article className="detail-info-card"><span>Participants</span><strong>{participantCount.data === undefined ? "Unavailable" : participantCount.data.toString()}</strong></article>
             <article className="detail-info-card"><span>Total amount staked</span><strong>{marketData?.totalStaked === undefined ? "Unavailable" : `${formatUnits(marketData.totalStaked, TESTNET_USDC_DECIMALS)} USDC`}</strong></article>
