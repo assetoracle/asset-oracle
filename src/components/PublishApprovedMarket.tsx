@@ -19,6 +19,7 @@ import {
 import {
   ASSET_CHAIN_TESTNET_EXPLORER,
   ASSET_CHAIN_TESTNET_ID,
+  assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
   TESTNET_USDC_ADDRESS,
   TESTNET_USDC_DECIMALS,
@@ -180,6 +181,15 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
 
+  // Decode getMarket with the canonical ABI to verify the current market tuple includes marketType.
+  const currentMarketShape = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "getMarket",
+    args: [0n],
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+
   const marketCreatorRole = useReadContract({
     address: manager,
     abi: marketPublisherAbi,
@@ -329,12 +339,19 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("The configured market-manager contract has not been verified on this network. Wait for the contract check to finish, then retry.");
       return;
     }
-    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading || disputeTimeout.isLoading || disputeConsensusProbe.isLoading) {
+    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading || disputeTimeout.isLoading || disputeConsensusProbe.isLoading || currentMarketShape.isLoading) {
       setPublishConfirmation(false);
       setError("The contract configuration is still loading. Wait a moment and click Publish again.");
       return;
     }
-    if (disputeTimeout.isError || disputeTimeout.data !== 604800n || disputeConsensusProbe.isError || typeof disputeConsensusProbe.data !== "boolean") {
+    const currentTupleVerified = Boolean(
+      currentMarketShape.data &&
+      typeof currentMarketShape.data === "object" &&
+      "marketType" in currentMarketShape.data &&
+      "stablecoin" in currentMarketShape.data &&
+      "evidenceHash" in currentMarketShape.data
+    );
+    if (disputeTimeout.isError || disputeTimeout.data !== 604800n || disputeConsensusProbe.isError || typeof disputeConsensusProbe.data !== "boolean" || currentMarketShape.isError || !currentTupleVerified) {
       setPublishConfirmation(false);
       setError("Cannot publish: the configured manager does not expose the expected audited contract interface. No transaction was submitted.");
       return;
