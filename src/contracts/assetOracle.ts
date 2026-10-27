@@ -41,7 +41,7 @@ export const assetOracleMarketManagerAbi = [
     name: "DISPUTE_RESOLUTION_TIMEOUT",
     stateMutability: "view",
     inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
+    outputs: [{ name: "", type: "uint64" }],
   },
   {
     type: "function",
@@ -160,6 +160,20 @@ export const assetOracleMarketManagerAbi = [
       { name: "decimals", type: "uint8" },
       { name: "enabled", type: "bool" },
     ],
+  },
+  {
+    type: "function",
+    name: "createAutomatedMarket",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "stablecoin", type: "uint8" },
+      { name: "question", type: "string" },
+      { name: "resolutionRules", type: "string" },
+      { name: "evidenceSource", type: "string" },
+      { name: "closeTime", type: "uint64" },
+      { name: "challengePeriod", type: "uint64" },
+    ],
+    outputs: [{ name: "marketId", type: "uint256" }],
   },
   {
     type: "function",
