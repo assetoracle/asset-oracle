@@ -72,7 +72,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       setCodeCheckDone(true);
       if (!codeExists) return;
       try {
-        const [disputeTimeout, disputeConsensusProbe] = await Promise.all([
+        const [disputeTimeout, disputeConsensusProbe, currentMarketShape] = await Promise.all([
           client.readContract({
             address: managerCode,
             abi: assetOracleMarketManagerAbi,
@@ -84,8 +84,27 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             functionName: "disputeConsensusReached",
             args: [0n],
           }),
+          client.readContract({
+            address: managerCode,
+            abi: assetOracleMarketManagerAbi,
+            functionName: "getMarket",
+            args: [0n],
+          }),
         ]);
-        if (!cancelled) setManagerCompatible(disputeTimeout === 604800n && typeof disputeConsensusProbe === "boolean");
+        const currentMarketTupleVerified = Boolean(
+          currentMarketShape &&
+          typeof currentMarketShape === "object" &&
+          "marketType" in currentMarketShape &&
+          "stablecoin" in currentMarketShape &&
+          "evidenceHash" in currentMarketShape
+        );
+        if (!cancelled) {
+          setManagerCompatible(
+            disputeTimeout === 604800n &&
+            typeof disputeConsensusProbe === "boolean" &&
+            currentMarketTupleVerified
+          );
+        }
       } catch {
         if (!cancelled) setManagerCompatible(false);
       }
