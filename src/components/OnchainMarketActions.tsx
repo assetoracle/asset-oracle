@@ -88,7 +88,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             address: managerCode,
             abi: assetOracleMarketManagerAbi,
             functionName: "getMarket",
-            args: [0n],
+            args: [marketId],
           }),
         ]);
         const currentMarketTupleVerified = Boolean(
