@@ -375,7 +375,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       : market.isError || tokenConfig.isError || tokenDecimals.isError || position.isError ? <p>Transactions blocked because one or more verification reads failed.</p>
       : !isConnected ? <p>Sign in on Asset Chain Testnet to check your position and participate.</p>
       : <>
-          {!managerCompatible && <p role="alert">New stakes and market closing are blocked because the configured manager does not expose the expected audited interface. Existing claims and refunds remain available.</p>}
+          {!managerCompatible && <p role="alert">Market actions are blocked because the configured manager does not match the current Asset Oracle contract interface. Legacy contracts are not supported; verify the canonical testnet manager before retrying.</p>}
           <div className="market-detail-grid">
             <article className="detail-info-card"><span>Participants</span><strong>{participantCount.data === undefined ? "Unavailable" : participantCount.data.toString()}</strong></article>
             <article className="detail-info-card"><span>Total amount staked</span><strong>{marketData?.totalStaked === undefined ? "Unavailable" : `${formatUnits(marketData.totalStaked, TESTNET_USDC_DECIMALS)} USDC`}</strong></article>
