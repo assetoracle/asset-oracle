@@ -57,6 +57,13 @@ const marketPublisherAbi = [
   },
   {
     type: "function",
+    name: "AUTOMATED_MARKET_CREATOR_ROLE",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bytes32" }],
+  },
+  {
+    type: "function",
     name: "DISPUTE_RESOLUTION_TIMEOUT",
     stateMutability: "view",
     inputs: [],
@@ -181,12 +188,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
 
-  // Decode getMarket with the canonical ABI to verify the current market tuple includes marketType.
-  const currentMarketShape = useReadContract({
+  // This role getter exists on the current manager and is absent from the retired interface.
+  const currentAutomatedRoleInterface = useReadContract({
     address: manager,
-    abi: assetOracleMarketManagerAbi,
-    functionName: "getMarket",
-    args: [0n],
+    abi: marketPublisherAbi,
+    functionName: "AUTOMATED_MARKET_CREATOR_ROLE",
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
 
@@ -339,19 +345,17 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("The configured market-manager contract has not been verified on this network. Wait for the contract check to finish, then retry.");
       return;
     }
-    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading || disputeTimeout.isLoading || disputeConsensusProbe.isLoading || currentMarketShape.isLoading) {
+    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading || disputeTimeout.isLoading || disputeConsensusProbe.isLoading || currentAutomatedRoleInterface.isLoading) {
       setPublishConfirmation(false);
       setError("The contract configuration is still loading. Wait a moment and click Publish again.");
       return;
     }
-    const currentTupleVerified = Boolean(
-      currentMarketShape.data &&
-      typeof currentMarketShape.data === "object" &&
-      "marketType" in currentMarketShape.data &&
-      "stablecoin" in currentMarketShape.data &&
-      "evidenceHash" in currentMarketShape.data
+    const currentRoleInterfaceVerified = Boolean(
+      typeof currentAutomatedRoleInterface.data === "string" &&
+      /^0x[0-9a-fA-F]{64}$/.test(currentAutomatedRoleInterface.data) &&
+      currentAutomatedRoleInterface.data !== `0x${"0".repeat(64)}`
     );
-    if (disputeTimeout.isError || disputeTimeout.data !== 604800n || disputeConsensusProbe.isError || typeof disputeConsensusProbe.data !== "boolean" || currentMarketShape.isError || !currentTupleVerified) {
+    if (disputeTimeout.isError || disputeTimeout.data !== 604800n || disputeConsensusProbe.isError || typeof disputeConsensusProbe.data !== "boolean" || currentAutomatedRoleInterface.isError || !currentRoleInterfaceVerified) {
       setPublishConfirmation(false);
       setError("Cannot publish: the configured manager does not expose the expected audited contract interface. No transaction was submitted.");
       return;
