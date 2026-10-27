@@ -115,7 +115,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       setCodeCheckDone(true);
     });
     return () => { cancelled = true; };
-  }, [client, managerCode, chainId]);
+  }, [client, managerCode, chainId, marketId]);
 
   const market = useReadContract({
     address: manager,
