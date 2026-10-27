@@ -56,6 +56,20 @@ const marketPublisherAbi = [
   },
   {
     type: "function",
+    name: "DISPUTE_RESOLUTION_TIMEOUT",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "disputeConsensusReached",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "validatorRosterConfigured",
     stateMutability: "view",
     inputs: [],
@@ -148,6 +162,21 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     address: manager,
     abi: marketPublisherAbi,
     functionName: "validatorRosterConfigured",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+
+  // Fail closed unless the configured manager exposes the expected audited-manager interface.
+  const disputeTimeout = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "DISPUTE_RESOLUTION_TIMEOUT",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+  const disputeConsensusProbe = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "disputeConsensusReached",
+    args: [0n],
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
 
@@ -300,9 +329,14 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("The configured market-manager contract has not been verified on this network. Wait for the contract check to finish, then retry.");
       return;
     }
-    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading) {
+    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading || disputeTimeout.isLoading || disputeConsensusProbe.isLoading) {
       setPublishConfirmation(false);
       setError("The contract configuration is still loading. Wait a moment and click Publish again.");
+      return;
+    }
+    if (disputeTimeout.isError || disputeTimeout.data !== 604800n || disputeConsensusProbe.isError || typeof disputeConsensusProbe.data !== "boolean") {
+      setPublishConfirmation(false);
+      setError("Cannot publish: the configured manager does not expose the expected audited contract interface. No transaction was submitted.");
       return;
     }
     if (tokenConfig.isError || !stablecoinReady) {
