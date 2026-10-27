@@ -19,7 +19,6 @@ import {
 import {
   ASSET_CHAIN_TESTNET_EXPLORER,
   ASSET_CHAIN_TESTNET_ID,
-  assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
   TESTNET_USDC_ADDRESS,
   TESTNET_USDC_DECIMALS,
