@@ -38,6 +38,13 @@ export const assetOracleMarketManagerAbi = [
   },
   {
     type: "function",
+    name: "AUTOMATED_MARKET_CREATOR_ROLE",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bytes32" }],
+  },
+  {
+    type: "function",
     name: "DISPUTE_RESOLUTION_TIMEOUT",
     stateMutability: "view",
     inputs: [],
