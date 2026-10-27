@@ -195,7 +195,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const hasPosition = positionYes > 0n || positionNo > 0n;
   const safe = Boolean(
     isCurrentManager && manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
-    stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
+    managerCompatible && stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
     !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError &&
     balance.data !== undefined && allowance.data !== undefined
   );
