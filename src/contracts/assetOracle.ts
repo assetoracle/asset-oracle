@@ -38,6 +38,20 @@ export const assetOracleMarketManagerAbi = [
   },
   {
     type: "function",
+    name: "DISPUTE_RESOLUTION_TIMEOUT",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "disputeConsensusReached",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "validatorRosterConfigured",
     stateMutability: "view",
     inputs: [],
