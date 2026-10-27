@@ -60,7 +60,7 @@ const marketPublisherAbi = [
     name: "DISPUTE_RESOLUTION_TIMEOUT",
     stateMutability: "view",
     inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
+    outputs: [{ name: "", type: "uint64" }],
   },
   {
     type: "function",
