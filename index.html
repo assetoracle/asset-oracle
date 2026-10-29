@@ -48,6 +48,34 @@
     />
     <meta name="twitter:image:alt" content="Asset Oracle — Real-World Data. Smarter Decisions." />
     <title>Asset Oracle | Real-World Data. Smarter Decisions.</title>
+
+    <style id="asset-oracle-domain-mobile-layout">
+      /* Critical mobile layout fallback is inline so it does not depend on the
+         separately cached application stylesheet. Desktop layout is unchanged. */
+      @media screen and (max-width: 768px) {
+        html, body, #root { width: 100%; max-width: 100%; overflow-x: clip; }
+        .app { width: 100% !important; max-width: 100% !important; min-width: 0 !important; padding-left: 12px !important; padding-right: 12px !important; }
+        .markets-section, .page-section, .market-grid, .market-card { box-sizing: border-box !important; min-width: 0 !important; max-width: 100% !important; }
+        .markets-section .market-grid, .market-grid { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; width: 100% !important; }
+        .market-grid > .market-card { width: 100% !important; }
+        .market-card.market-card-compact .market-card-bottom {
+          display: flex !important; flex-direction: column !important; align-items: flex-start !important;
+          justify-content: flex-start !important; gap: 12px !important; width: 100% !important;
+        }
+        .market-card.market-card-compact .market-card-bottom > .market-status-note {
+          display: block !important; width: 100% !important; max-width: 100% !important;
+          min-width: 0 !important; white-space: normal !important; overflow-wrap: anywhere !important;
+          line-height: 1.5 !important;
+        }
+        .market-card.market-card-compact .market-card-bottom > .open-market-button,
+        .market-card.market-card-compact .market-card-bottom > .verify-market-button {
+          display: inline-flex !important; align-self: flex-start !important; flex: 0 1 auto !important;
+          width: auto !important; min-width: 0 !important; max-width: 100% !important;
+          margin: 0 !important; white-space: normal !important;
+        }
+      }
+    </style>
+
   </head>
   <body>
     <div id="root"></div>
