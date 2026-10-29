@@ -398,7 +398,7 @@ export default function Portfolio({
                 </div>
                 <div>
                   <strong>RWA</strong>
-                  <p>Asset Chain testnet token</p>
+                  <p>Available Gas Fee</p>
                 </div>
               </div>
               <div className="portfolio-token-balance">
