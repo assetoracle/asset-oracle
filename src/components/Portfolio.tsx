@@ -394,7 +394,7 @@ export default function Portfolio({
             <article className="portfolio-token-card portfolio-token-card-rwa" aria-busy={rwaData.loading}>
               <div className="portfolio-token-identity">
                 <div className="portfolio-token-icon portfolio-token-rwa">
-                  <img src="/rwa-logo.svg" alt="RWA token logo" width="42" height="42" />
+                  <img src="/rwa-logo.png" alt="RWA token logo" width="42" height="42" />
                 </div>
                 <div>
                   <strong>RWA</strong>
