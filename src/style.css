@@ -11506,117 +11506,118 @@ select.brand-select option,
 }
 
 
-/* Mobile viewport overflow fixes for market cards and portfolio assets */
-html,
-body,
-#root {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: clip;
-}
-
-.app,
-.page-content,
-.page-section,
-.markets-section,
-.market-grid,
-.market-card,
-.portfolio-token-card {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.market-card,
-.market-card * {
-  overflow-wrap: anywhere;
-}
-
-.market-card-top,
-.market-card-badges,
-.market-card-statistics,
-.market-card-bottom {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.market-card-badges {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.market-card-statistics > span,
-.market-status-note {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.open-market-button {
-  flex-shrink: 0;
-  max-width: 100%;
-  white-space: normal;
-}
-
-.portfolio-token-identity {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.portfolio-token-identity img {
-  display: block;
-  width: 42px;
-  height: 42px;
-  max-width: 100%;
-  object-fit: contain;
-}
-
+/* Corrected mobile layout: keep market content in view without changing desktop styles. */
 @media (max-width: 600px) {
-  .app {
+  .app,
+  .page-content,
+  .page-section,
+  .markets-section,
+  .market-grid,
+  .market-card {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .markets-section {
     width: 100%;
-    padding-left: 12px;
-    padding-right: 12px;
+    overflow: visible;
   }
 
   .market-grid {
+    width: 100%;
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .market-card {
+  .market-card-compact {
+    width: 100%;
     padding: 16px;
+    overflow: visible;
   }
 
-  .market-card-bottom {
-    align-items: stretch;
+  .market-card-compact .market-card-top {
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .market-card-compact .market-card-badges {
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .market-card-compact h3 {
+    min-width: 0;
+    max-width: 100%;
+    font-size: clamp(16px, 4.3vw, 19px);
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .market-card-compact .market-sentiment,
+  .market-card-compact .market-sentiment-track,
+  .market-card-compact .market-sentiment-labels,
+  .market-card-compact .market-card-statistics {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .market-card-compact .market-sentiment-labels {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .market-card-compact .market-card-statistics {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .market-card-compact .market-card-statistics span,
+  .market-card-compact .market-status-note {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+  }
+
+  /* Put the close time first and the action below it, aligned left.
+     Keep the button at its natural size instead of stretching across the card. */
+  .market-card-compact .market-card-bottom {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
     flex-direction: column;
     gap: 12px;
-  }
-
-  .market-status-note {
-    display: block;
-    width: 100%;
-    line-height: 1.6;
-  }
-
-  .open-market-button {
     width: 100%;
     min-width: 0;
-    min-height: 46px;
+  }
+
+  .market-card-compact .open-market-button {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
     justify-content: center;
-  }
-
-  .market-card-statistics {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .market-card-statistics > span {
+    width: auto;
     min-width: 0;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 0 16px;
+    flex: 0 1 auto;
     white-space: normal;
+    overflow-wrap: normal;
   }
 
   .portfolio-token-card {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 }
