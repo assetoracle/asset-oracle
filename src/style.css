@@ -11504,3 +11504,119 @@ select.brand-select option,
     gap: 7px;
   }
 }
+
+
+/* Mobile viewport overflow fixes for market cards and portfolio assets */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.app,
+.page-content,
+.page-section,
+.markets-section,
+.market-grid,
+.market-card,
+.portfolio-token-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.market-card,
+.market-card * {
+  overflow-wrap: anywhere;
+}
+
+.market-card-top,
+.market-card-badges,
+.market-card-statistics,
+.market-card-bottom {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.market-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.market-card-statistics > span,
+.market-status-note {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.open-market-button {
+  flex-shrink: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.portfolio-token-identity {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.portfolio-token-identity img {
+  display: block;
+  width: 42px;
+  height: 42px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+@media (max-width: 600px) {
+  .app {
+    width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .market-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .market-card {
+    padding: 16px;
+  }
+
+  .market-card-bottom {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .market-status-note {
+    display: block;
+    width: 100%;
+    line-height: 1.6;
+  }
+
+  .open-market-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    justify-content: center;
+  }
+
+  .market-card-statistics {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .market-card-statistics > span {
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .portfolio-token-card {
+    width: 100%;
+  }
+}
