@@ -11621,3 +11621,38 @@ select.brand-select option,
     max-width: 100%;
   }
 }
+
+
+/* Final mobile-only override for the Markets page: close time first, action below it. */
+@media screen and (max-width: 768px) {
+  .market-card.market-card-compact .market-card-bottom {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .market-card.market-card-compact .market-card-bottom > .market-status-note {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .market-card.market-card-compact .market-card-bottom > .open-market-button,
+  .market-card.market-card-compact .market-card-bottom > .verify-market-button {
+    display: inline-flex !important;
+    align-self: flex-start !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+}
