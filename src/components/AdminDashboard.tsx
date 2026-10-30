@@ -46,7 +46,7 @@ export default function AdminDashboard({
   const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "referrals" | "refunds">("proposals");
 
   useEffect(() => {
-    if (role !== "OWNER") setActiveSection("automated");
+    if (role === "MARKET_CREATOR") setActiveSection("proposals");
   }, [role]);
 
   const authenticate = useCallback(async () => {
@@ -167,20 +167,20 @@ export default function AdminDashboard({
       <div className="section-heading">
         <div>
           <span className="eyebrow">RESTRICTED ACCESS</span>
-          <h1>{role === "OWNER" ? "Market Operations" : "Automated Market Review"}</h1>
-          <p>{role === "OWNER" ? "Review manual proposals and manage API-generated markets." : "Review private API-generated markets. One authorized market maker can approve publication."}</p>
+          <h1>{role === "OWNER" ? "Market Operations" : "Market Creator Review"}</h1>
+          <p>{role === "OWNER" ? "Review manual proposals and manage API-generated markets." : "Review and decide normal proposals and automated market proposals."}</p>
         </div>
         <ShieldCheck size={30} />
       </div>
 
       <nav className="admin-section-nav" aria-label="Market operations sections">
-        {role === "OWNER" && <button type="button" className={activeSection === "proposals" ? "primary-button" : "text-action"} aria-current={activeSection === "proposals" ? "page" : undefined} onClick={() => setActiveSection("proposals")}>Manual proposals</button>}
+        {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "proposals" ? "primary-button" : "text-action"} aria-current={activeSection === "proposals" ? "page" : undefined} onClick={() => setActiveSection("proposals")}>Normal proposals</button>}
         <button type="button" className={activeSection === "automated" ? "primary-button" : "text-action"} aria-current={activeSection === "automated" ? "page" : undefined} onClick={() => setActiveSection("automated")}>Automated markets</button>
         {role === "OWNER" && <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "refunds" ? "primary-button" : "text-action"} aria-current={activeSection === "refunds" ? "page" : undefined} onClick={() => setActiveSection("refunds")}>Paid proposal refunds</button>}
       </nav>
 
-      {role === "OWNER" && activeSection === "proposals" && <>
+      {(role === "OWNER" || role === "MARKET_CREATOR") && activeSection === "proposals" && <>
       <div className="account-summary-grid admin-summary-grid">
         <article className="account-summary-card">
           <span>Total proposals loaded</span>
