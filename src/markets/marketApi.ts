@@ -187,37 +187,13 @@ export async function validateMarketProposal(
   });
 }
 
-type AutomatedCandidateResponse = {
-  id: string;
-  status: "PENDING_REVIEW" | "DISMISSED" | "APPROVED_FOR_PUBLICATION" | "PUBLISHED";
-  firstSeenAt: string;
-  lastSeenAt: string;
-  proposal: MarketProposalInput;
-  evidence: { provider: string; metric: string; assetId: string; observedAt: string; value: number; currency: string; sourceUrl: string };
-  quality: { score: number; reasons: string[] };
-};
-
-function mapAutomatedCandidate(candidate: AutomatedCandidateResponse): StoredMarketProposal {
-  const status: StoredMarketProposal["status"] =
-    candidate.status === "PENDING_REVIEW" ? "PENDING_APPROVAL" :
-    candidate.status === "APPROVED_FOR_PUBLICATION" || candidate.status === "PUBLISHED" ? "APPROVED" : "REJECTED";
-  return {
-    ...candidate.proposal,
-    id: candidate.id,
-    status,
-    submittedAt: candidate.firstSeenAt,
-    origin: "AUTOMATED",
-    visibility: "PRIVATE",
-  };
-}
-
 export async function getPrivateAutomatedMarkets(address: string) {
   const session = getWalletSession(address);
   if (!session) throw new Error("Wallet session is not established.");
-  const data = await request<{ candidates: AutomatedCandidateResponse[]; count: number }>(
-    `/api/automation/candidates?address=${encodeURIComponent(address)}&limit=100`,
-  );
-  return { proposals: data.candidates.map(mapAutomatedCandidate), count: data.count };
+  return request<{ proposals: StoredMarketProposal[]; count: number }>("/api/markets/automated/private/session", {
+    method: "POST",
+    body: JSON.stringify({ address }),
+  });
 }
 
 export async function decideAutomatedMarket(
@@ -225,16 +201,10 @@ export async function decideAutomatedMarket(
   address: string,
   status: "APPROVED" | "REJECTED",
 ) {
-  const result = status === "APPROVED"
-    ? await request<{ message: string; candidate: AutomatedCandidateResponse }>(
-        `/api/automation/candidates/${encodeURIComponent(id)}/approve`,
-        { method: "POST", body: JSON.stringify({ address }) },
-      )
-    : await request<{ message: string; candidate: AutomatedCandidateResponse }>(
-        `/api/automation/candidates/${encodeURIComponent(id)}/review`,
-        { method: "POST", body: JSON.stringify({ address, action: "DISMISS", reason: "Rejected during market creator review." }) },
-      );
-  return { message: result.message, proposal: mapAutomatedCandidate(result.candidate) };
+  return request<{ message: string; proposal: StoredMarketProposal }>(
+    `/api/markets/automated/${encodeURIComponent(id)}/decision/session`,
+    { method: "POST", body: JSON.stringify({ address, status }) },
+  );
 }
 
 export async function requestWalletNonce(address: string) {
