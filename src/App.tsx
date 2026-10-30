@@ -1128,7 +1128,7 @@ useEffect(() => {
     }
 
     if (page === "Admin") {
-      if (!canAccessMarketOperations) {
+      if (!isAdmin) {
         return (
           <div className="empty-state">
             <h3>Admin access unavailable</h3>
