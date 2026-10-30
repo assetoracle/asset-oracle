@@ -331,7 +331,8 @@ export default function App() {
     } else if (walletRole?.role === "MARKET_CREATOR") {
       items.push({ label: "Market Creators", icon: ShieldCheck });
     }
-    if (canAccessValidatorDashboard) {
+    // Owners manage validator operations from the Admin dashboard, so do not show a duplicate Validators page.
+    if (canAccessValidatorDashboard && !isAdmin) {
       items.push({ label: "Validators", icon: ShieldCheck });
     }
 
