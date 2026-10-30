@@ -299,13 +299,13 @@ export default function AdminDashboard({
           {automatedProposals.map((proposal) => <article className="market-card" key={proposal.id}>
             <div className="market-card-top"><span className="market-category">{proposal.category}</span><span className="market-status">{proposal.status.replaceAll("_", " ")}</span></div>
             {proposal.status === "PENDING_APPROVAL" && <div className="hero-actions admin-proposal-actions">
-              <button className="primary-button" type="button" disabled={!!busyId || loading} onClick={() => decide(proposal.id, "APPROVED")}><Check size={16} /> {busyId === proposal.id ? "Processing..." : "Approve & publish"}</button>
+              <button className="primary-button" type="button" disabled={!!busyId || loading} onClick={() => decide(proposal.id, "APPROVED")}><Check size={16} /> {busyId === proposal.id ? "Processing..." : "Approve"}</button>
               <button className="text-action" type="button" disabled={!!busyId || loading} onClick={() => decide(proposal.id, "REJECTED")}><X size={16} /> Reject</button>
             </div>}
             <h3>{proposal.question}</h3><p className="market-description">{proposal.description}</p>
             <div className="market-meta"><span>Source ID</span><span>{proposal.resolutionRule?.sourceId || "Not provided"}</span></div>
             <div className="market-meta"><span>Visibility</span><span>{proposal.visibility}</span></div>
-            {proposal.status === "APPROVED" && <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />}
+            {proposal.status === "APPROVED" && proposal.origin !== "AUTOMATED" && <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />}\n            {proposal.status === "APPROVED" && proposal.origin === "AUTOMATED" && <p className="market-description">Approved for the owner-managed publication step. Approval does not publish a transaction.</p>}
             <div className="market-meta"><span>Submitted</span><span>{new Date(proposal.submittedAt).toLocaleDateString()}</span></div>
             <div className="market-meta"><span>Closes</span><span>{formatProposalTime(proposal.closesAt)}</span></div>
             <div className="market-meta"><span>Resolves</span><span>{formatProposalTime(proposal.resolvesAt)}</span></div>
