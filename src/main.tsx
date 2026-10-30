@@ -8,7 +8,6 @@ import App from "./App";
 import { rainbowKitTheme, wagmiConfig } from "./walletConnect";
 import "@rainbow-me/rainbowkit/styles.css";
 import "./style.css";
-import "./mobile-market-layout-fix.css";
 
 const queryClient = new QueryClient();
 
