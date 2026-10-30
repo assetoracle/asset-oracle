@@ -38,6 +38,27 @@ export const assetOracleMarketManagerAbi = [
   },
   {
     type: "function",
+    name: "AUTOMATED_MARKET_CREATOR_ROLE",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bytes32" }],
+  },
+  {
+    type: "function",
+    name: "DISPUTE_RESOLUTION_TIMEOUT",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint64" }],
+  },
+  {
+    type: "function",
+    name: "disputeConsensusReached",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "validatorRosterConfigured",
     stateMutability: "view",
     inputs: [],
@@ -104,6 +125,7 @@ export const assetOracleMarketManagerAbi = [
         components: [
           { name: "id", type: "uint256" },
           { name: "creator", type: "address" },
+          { name: "marketType", type: "uint8" },
           { name: "stablecoin", type: "uint8" },
           { name: "question", type: "string" },
           { name: "resolutionRules", type: "string" },
@@ -145,6 +167,20 @@ export const assetOracleMarketManagerAbi = [
       { name: "decimals", type: "uint8" },
       { name: "enabled", type: "bool" },
     ],
+  },
+  {
+    type: "function",
+    name: "createAutomatedMarket",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "stablecoin", type: "uint8" },
+      { name: "question", type: "string" },
+      { name: "resolutionRules", type: "string" },
+      { name: "evidenceSource", type: "string" },
+      { name: "closeTime", type: "uint64" },
+      { name: "challengePeriod", type: "uint64" },
+    ],
+    outputs: [{ name: "marketId", type: "uint256" }],
   },
   {
     type: "function",

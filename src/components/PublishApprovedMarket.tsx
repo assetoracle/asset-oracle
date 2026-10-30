@@ -42,6 +42,41 @@ const marketPublisherAbi = [
   },
   {
     type: "function",
+    name: "createAutomatedMarket",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "stablecoin", type: "uint8" },
+      { name: "question", type: "string" },
+      { name: "resolutionRules", type: "string" },
+      { name: "evidenceSource", type: "string" },
+      { name: "closeTime", type: "uint64" },
+      { name: "challengePeriod", type: "uint64" },
+    ],
+    outputs: [{ name: "marketId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "AUTOMATED_MARKET_CREATOR_ROLE",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bytes32" }],
+  },
+  {
+    type: "function",
+    name: "DISPUTE_RESOLUTION_TIMEOUT",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint64" }],
+  },
+  {
+    type: "function",
+    name: "disputeConsensusReached",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "validatorRosterConfigured",
     stateMutability: "view",
     inputs: [],
@@ -137,6 +172,29 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
 
+  // Fail closed unless the configured manager exposes the expected audited-manager interface.
+  const disputeTimeout = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "DISPUTE_RESOLUTION_TIMEOUT",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+  const disputeConsensusProbe = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "disputeConsensusReached",
+    args: [0n],
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+
+  // This role getter exists on the current manager and is absent from the retired interface.
+  const currentAutomatedRoleInterface = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "AUTOMATED_MARKET_CREATOR_ROLE",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+
   const marketCreatorRole = useReadContract({
     address: manager,
     abi: marketPublisherAbi,
@@ -147,6 +205,19 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
     ],
     query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID },
   });
+
+  const automatedMarketCreatorRole = useReadContract({
+    address: manager,
+    abi: marketPublisherAbi,
+    functionName: "hasRole",
+    args: [
+      keccak256(toBytes("AUTOMATED_MARKET_CREATOR_ROLE")),
+      (address ?? "0x0000000000000000000000000000000000000000") as Address,
+    ],
+    query: { enabled: Boolean(manager && address && proposal.origin === "AUTOMATED") && chainId === ASSET_CHAIN_TESTNET_ID },
+  });
+  const requiredRole = proposal.origin === "AUTOMATED" ? automatedMarketCreatorRole : marketCreatorRole;
+
 
   useEffect(() => {
     let cancelled = false;
@@ -273,9 +344,19 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("The configured market-manager contract has not been verified on this network. Wait for the contract check to finish, then retry.");
       return;
     }
-    if (tokenConfig.isLoading || validatorRoster.isLoading || marketCreatorRole.isLoading) {
+    if (tokenConfig.isLoading || validatorRoster.isLoading || requiredRole.isLoading || disputeTimeout.isLoading || disputeConsensusProbe.isLoading || currentAutomatedRoleInterface.isLoading) {
       setPublishConfirmation(false);
       setError("The contract configuration is still loading. Wait a moment and click Publish again.");
+      return;
+    }
+    const currentRoleInterfaceVerified = Boolean(
+      typeof currentAutomatedRoleInterface.data === "string" &&
+      /^0x[0-9a-fA-F]{64}$/.test(currentAutomatedRoleInterface.data) &&
+      currentAutomatedRoleInterface.data !== `0x${"0".repeat(64)}`
+    );
+    if (disputeTimeout.isError || disputeTimeout.data !== 604800n || disputeConsensusProbe.isError || typeof disputeConsensusProbe.data !== "boolean" || currentAutomatedRoleInterface.isError || !currentRoleInterfaceVerified) {
+      setPublishConfirmation(false);
+      setError("Cannot publish: the configured manager does not expose the expected audited contract interface. No transaction was submitted.");
       return;
     }
     if (tokenConfig.isError || !stablecoinReady) {
@@ -288,9 +369,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       setError("Cannot publish: validator roster verification failed on the configured manager.");
       return;
     }
-    if (marketCreatorRole.isError || marketCreatorRole.data !== true) {
+    if (requiredRole.isError || requiredRole.data !== true) {
       setPublishConfirmation(false);
-      setError("Cannot publish: the connected wallet does not have MARKET_CREATOR_ROLE on the canonical manager. This is an on-chain permission, not an admin dashboard permission.");
+      setError(proposal.origin === "AUTOMATED"
+        ? "Cannot publish: the connected wallet does not have AUTOMATED_MARKET_CREATOR_ROLE on the canonical manager."
+        : "Cannot publish: the connected wallet does not have MARKET_CREATOR_ROLE on the canonical manager. This is an on-chain permission, not an admin dashboard permission.");
       return;
     }
     publishInFlight.current = true;
@@ -305,7 +388,7 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
       const hash = await writeContractAsync({
         address: manager as Address,
         abi: marketPublisherAbi,
-        functionName: "createMarket",
+        functionName: proposal.origin === "AUTOMATED" ? "createAutomatedMarket" : "createMarket",
         args: [
           0,
           proposal.question,
@@ -352,9 +435,11 @@ export default function PublishApprovedMarket({ proposal, signMessage }: Props) 
               validatorRoster.isLoading ? "Checking validator configuration…" :
               validatorRoster.isError ? "Unable to read validator configuration from the manager." :
               validatorRoster.data !== true ? "Blocked: the configured manager does not report a configured validator roster." :
-              marketCreatorRole.isLoading ? "Checking this wallet's market-creator permission…" :
-              marketCreatorRole.isError ? "Unable to verify this wallet's market-creator permission." :
-              marketCreatorRole.data !== true ? "Blocked: connected wallet lacks the on-chain market-creator role." :
+              requiredRole.isLoading ? "Checking this wallet's required market-creator permission…" :
+              requiredRole.isError ? "Unable to verify this wallet's required on-chain permission." :
+              requiredRole.data !== true ? (proposal.origin === "AUTOMATED"
+                ? "Blocked: connected wallet lacks the automated market-creator role on this contract."
+                : "Blocked: connected wallet lacks the on-chain market-creator role.") :
               proposal.status !== "APPROVED" ? "Only owner-approved proposals can be published." :
               !Number.isFinite(closeTimestamp) || closeTimestamp <= Math.floor(Date.now() / 1000) ? "The proposal closing time has passed; it cannot be published as-is." :
               "Ready to publish to the configured Asset Chain testnet market manager. Approval alone does not publish a market."}

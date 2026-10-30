@@ -39,6 +39,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const [pendingStakeSide, setPendingStakeSide] = useState<"YES" | "NO">("YES");
   const [yesSide, setYesSide] = useState(true);
   const [codeVerified, setCodeVerified] = useState(false);
+  const [managerCompatible, setManagerCompatible] = useState(false);
   const [codeCheckDone, setCodeCheckDone] = useState(false);
   const [message, setMessage] = useState("");
   const [lastAction, setLastAction] = useState<"approve" | "stake" | "close" | "claim" | "refund" | "timeout" | null>(null);
@@ -56,6 +57,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     let cancelled = false;
     setCodeCheckDone(false);
     setCodeVerified(false);
+    setManagerCompatible(false);
     if (!client || !managerCode || chainId !== ASSET_CHAIN_TESTNET_ID || !isAddress(TESTNET_USDC_ADDRESS)) {
       setCodeCheckDone(true);
       return;
@@ -63,17 +65,57 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     Promise.all([
       client.getBytecode({ address: managerCode }),
       client.getBytecode({ address: TESTNET_USDC_ADDRESS as Address }),
-    ]).then(([managerBytecode, tokenBytecode]) => {
+    ]).then(async ([managerBytecode, tokenBytecode]) => {
       if (cancelled) return;
-      setCodeVerified(Boolean(managerBytecode && managerBytecode !== "0x" && tokenBytecode && tokenBytecode !== "0x"));
+      const codeExists = Boolean(managerBytecode && managerBytecode !== "0x" && tokenBytecode && tokenBytecode !== "0x");
+      setCodeVerified(codeExists);
       setCodeCheckDone(true);
+      if (!codeExists) return;
+      try {
+        const [disputeTimeout, disputeConsensusProbe, currentMarketShape] = await Promise.all([
+          client.readContract({
+            address: managerCode,
+            abi: assetOracleMarketManagerAbi,
+            functionName: "DISPUTE_RESOLUTION_TIMEOUT",
+          }),
+          client.readContract({
+            address: managerCode,
+            abi: assetOracleMarketManagerAbi,
+            functionName: "disputeConsensusReached",
+            args: [0n],
+          }),
+          client.readContract({
+            address: managerCode,
+            abi: assetOracleMarketManagerAbi,
+            functionName: "getMarket",
+            args: [marketId],
+          }),
+        ]);
+        const currentMarketTupleVerified = Boolean(
+          currentMarketShape &&
+          typeof currentMarketShape === "object" &&
+          "marketType" in currentMarketShape &&
+          "stablecoin" in currentMarketShape &&
+          "evidenceHash" in currentMarketShape
+        );
+        if (!cancelled) {
+          setManagerCompatible(
+            disputeTimeout === 604800n &&
+            typeof disputeConsensusProbe === "boolean" &&
+            currentMarketTupleVerified
+          );
+        }
+      } catch {
+        if (!cancelled) setManagerCompatible(false);
+      }
     }).catch(() => {
       if (cancelled) return;
       setCodeVerified(false);
+      setManagerCompatible(false);
       setCodeCheckDone(true);
     });
     return () => { cancelled = true; };
-  }, [client, managerCode, chainId]);
+  }, [client, managerCode, chainId, marketId]);
 
   const market = useReadContract({
     address: manager,
@@ -153,11 +195,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const hasPosition = positionYes > 0n || positionNo > 0n;
   const safe = Boolean(
     isCurrentManager && manager && chainId === ASSET_CHAIN_TESTNET_ID && codeCheckDone && codeVerified &&
-    stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
+    managerCompatible && stablecoinVerified && marketVerified && !market.isError && !tokenConfig.isError &&
     !tokenDecimals.isError && !position.isError && !balance.isError && !allowance.isError &&
     balance.data !== undefined && allowance.data !== undefined
   );
-  const canStake = safe && isConnected && Boolean(address) &&
+  const canStake = safe && managerCompatible && isConnected && Boolean(address) &&
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount >= MINIMUM_STAKE &&
     balance.data !== undefined && parsedAmount <= balance.data;
@@ -190,7 +232,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
                             : balance.data !== undefined && parsedAmount > balance.data
                             ? "Your USDC balance is too low for this stake."
                             : "Staking is temporarily unavailable. Check your wallet and market status.";
-  const canClose = safe && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
+  const canClose = safe && managerCompatible && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 >= closeTime;
   const canClaim = safe && isConnected && hasPosition && !claimed &&
     Number(marketData?.status) === MARKET_STATUS.SETTLED;
@@ -352,6 +394,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       : market.isError || tokenConfig.isError || tokenDecimals.isError || position.isError ? <p>Transactions blocked because one or more verification reads failed.</p>
       : !isConnected ? <p>Sign in on Asset Chain Testnet to check your position and participate.</p>
       : <>
+          {!managerCompatible && <p role="alert">Market actions are blocked because the configured manager does not match the current Asset Oracle contract interface. Legacy contracts are not supported; verify the canonical testnet manager before retrying.</p>}
           <div className="market-detail-grid">
             <article className="detail-info-card"><span>Participants</span><strong>{participantCount.data === undefined ? "Unavailable" : participantCount.data.toString()}</strong></article>
             <article className="detail-info-card"><span>Total amount staked</span><strong>{marketData?.totalStaked === undefined ? "Unavailable" : `${formatUnits(marketData.totalStaked, TESTNET_USDC_DECIMALS)} USDC`}</strong></article>

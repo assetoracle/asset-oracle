@@ -26,6 +26,8 @@ export type StoredMarketProposal = MarketProposalInput & {
   onchainTxHash?: string | null;
   onchainManagerAddress?: string | null;
   onchainChainId?: number | null;
+  origin?: "MANUAL" | "AUTOMATED";
+  visibility?: "PRIVATE" | "PUBLIC";
 };
 
 function compactErrorMessage(value: unknown, fallback = "Request failed. Try again."): string {
@@ -183,6 +185,26 @@ export async function validateMarketProposal(
     method: "POST",
     body: JSON.stringify(proposal),
   });
+}
+
+export async function getPrivateAutomatedMarkets(address: string) {
+  const session = getWalletSession(address);
+  if (!session) throw new Error("Wallet session is not established.");
+  return request<{ proposals: StoredMarketProposal[]; count: number }>("/api/markets/automated/private/session", {
+    method: "POST",
+    body: JSON.stringify({ address }),
+  });
+}
+
+export async function decideAutomatedMarket(
+  id: string,
+  address: string,
+  status: "APPROVED" | "REJECTED",
+) {
+  return request<{ message: string; proposal: StoredMarketProposal }>(
+    `/api/markets/automated/${encodeURIComponent(id)}/decision/session`,
+    { method: "POST", body: JSON.stringify({ address, status }) },
+  );
 }
 
 export async function requestWalletNonce(address: string) {
