@@ -2,7 +2,7 @@ name: Asset Oracle Build Check
 
 on:
   push:
-    branches: [main, feat/enugu-testnet-contract-integration, fix/testnet-contract-abi-alignment]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -57,7 +57,7 @@ jobs:
           done
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Verify wallet exports
         run: |
