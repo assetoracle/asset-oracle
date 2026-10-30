@@ -11506,41 +11506,47 @@ select.brand-select option,
 }
 
 
-/* Single mobile Markets layout rule. Desktop styling is unchanged. */
+/* One authoritative mobile Markets layout. Keep actions visible in phone and wallet browsers. */
 @media screen and (max-width: 768px) {
-  .app { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; padding-left: 12px; padding-right: 12px; }
+  .app { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; padding-inline: 12px; }
   .markets-section, .markets-section .market-grid, .markets-section .market-card-compact {
     box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%;
   }
   .markets-section .market-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .markets-section .market-card-compact { margin: 0; overflow: hidden; }
-  .markets-section .market-card-compact *,
-  .markets-section .market-card-compact h3,
-  .markets-section .market-card-compact .market-card-badges,
-  .markets-section .market-card-compact .market-card-statistics,
-  .markets-section .market-card-compact .market-status-note {
+  .markets-section .market-card-compact {
+    display: flex !important; flex-direction: column !important; align-items: stretch !important;
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    overflow: visible !important; margin: 0 !important;
+  }
+  .markets-section .market-card-compact * {
     box-sizing: border-box; min-width: 0; max-width: 100%; overflow-wrap: anywhere;
   }
   .markets-section .market-card-compact .market-card-top { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
   .markets-section .market-card-compact .market-card-badges { display: flex; flex-wrap: wrap; gap: 6px; }
   .markets-section .market-card-compact .market-card-statistics { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; width: 100%; }
   .markets-section .market-card-compact .market-card-bottom {
-    position: static; inset: auto; float: none; display: flex; flex-direction: column;
-    align-items: flex-start; justify-content: flex-start; gap: 10px;
-    width: 100%; min-width: 0; max-width: 100%; margin: 0;
+    position: static !important; inset: auto !important; float: none !important;
+    display: flex !important; flex: 0 0 auto !important; flex-direction: column !important;
+    align-items: flex-start !important; justify-content: flex-start !important;
+    gap: 10px !important; width: 100% !important; height: auto !important;
+    min-width: 0 !important; max-width: 100% !important; max-height: none !important;
+    overflow: visible !important; margin: 0 !important; padding-top: 0;
   }
   .markets-section .market-card-compact .market-card-bottom > .market-status-note {
-    display: block; width: 100%; margin: 0; white-space: normal; line-height: 1.5;
+    display: block !important; position: static !important; width: 100% !important;
+    margin: 0 !important; white-space: normal !important; line-height: 1.5;
   }
   .markets-section .market-card-compact .market-card-bottom > .open-market-button,
   .markets-section .market-card-compact .market-card-bottom > .verify-market-button {
-    position: static; inset: auto; float: none; transform: none; display: inline-flex;
-    align-self: flex-start; justify-self: start; flex: 0 1 auto; width: auto;
-    min-width: 0; max-width: 100%; min-height: 44px; margin: 0;
-    white-space: normal; text-align: left;
+    display: inline-flex !important; visibility: visible !important; opacity: 1 !important;
+    position: static !important; inset: auto !important; float: none !important; transform: none !important;
+    align-self: flex-start !important; justify-self: start !important; flex: 0 0 auto !important;
+    width: auto !important; height: auto !important; min-width: 0 !important;
+    max-width: 100% !important; min-height: 44px !important; margin: 0 !important;
+    white-space: normal !important; text-align: left !important; justify-content: flex-start !important;
   }
 }
 @media screen and (max-width: 380px) {
-  .app { padding-left: 10px; padding-right: 10px; }
+  .app { padding-inline: 10px; }
   .markets-section .market-card-compact { padding: 14px; }
 }
