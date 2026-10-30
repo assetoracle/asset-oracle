@@ -2,7 +2,7 @@ name: Asset Oracle Build Check
 
 on:
   push:
-    branches: [main, feat/enugu-testnet-contract-integration, fix/testnet-contract-abi-alignment]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
