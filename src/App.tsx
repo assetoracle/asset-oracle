@@ -117,6 +117,7 @@ function pathForPage(page: Page, marketId?: string): string {
     History: "/history",
     Referrals: "/referrals",
     Admin: "/admin",
+    "Market Creators": "/market-creators",
     Validators: "/validators",
     "Terms of Service": "/terms",
   };
@@ -171,6 +172,7 @@ function parseRoutePath(pathname: string): {
     history: "History",
     referrals: "Referrals",
     admin: "Admin",
+    "market-creators": "Market Creators",
     validators: "Validators",
     terms: "Terms of Service",
   };
@@ -271,7 +273,6 @@ export default function App() {
   const { signMessageAsync } = useSignMessage();
   const { openConnectModal } = useConnectModal();
   const isAdmin = useIsAdmin(address);
-  const canAccessMarketOperations = isAdmin || walletRole?.permissions.createMarketProposal === true;
 
   const validatorStatusReads = useReadContracts({
     contracts: address && assetOracleMarketManagerAddress ? [
@@ -325,15 +326,17 @@ export default function App() {
       { label: "Referrals", icon: Trophy },
     ];
 
-    if (canAccessMarketOperations) {
+    if (isAdmin) {
       items.push({ label: "Admin", icon: ShieldCheck });
+    } else if (walletRole?.role === "MARKET_CREATOR") {
+      items.push({ label: "Market Creators", icon: ShieldCheck });
     }
     if (canAccessValidatorDashboard) {
       items.push({ label: "Validators", icon: ShieldCheck });
     }
 
     return items;
-  }, [canAccessMarketOperations, canAccessValidatorDashboard]);
+  }, [isAdmin, walletRole?.role, canAccessValidatorDashboard]);
 
   const isMountedRef = useRef(false);
 
@@ -1116,8 +1119,15 @@ useEffect(() => {
       return <ValidatorDashboard />;
     }
 
+    if (page === "Market Creators") {
+      if (walletRole?.role !== "MARKET_CREATOR" || walletRole.permissions.approveOrRejectProposals !== true) {
+        return <div className="empty-state"><h3>Market creator access unavailable</h3><p>This dashboard is restricted to configured market creator wallets.</p></div>;
+      }
+      return <AdminDashboard address={address} role="MARKET_CREATOR" signMessage={(message) => signMessageAsync({ message })} />;
+    }
+
     if (page === "Admin") {
-      if (!canAccessMarketOperations) {
+      if (!isAdmin) {
         return (
           <div className="empty-state">
             <h3>Admin access unavailable</h3>

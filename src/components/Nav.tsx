@@ -11,6 +11,7 @@ export type Page =
   | "History"
   | "Referrals"
   | "Admin"
+  | "Market Creators"
   | "Validators"
   | "Terms of Service";
 
