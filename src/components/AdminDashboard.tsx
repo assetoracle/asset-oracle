@@ -305,7 +305,8 @@ export default function AdminDashboard({
             <h3>{proposal.question}</h3><p className="market-description">{proposal.description}</p>
             <div className="market-meta"><span>Source ID</span><span>{proposal.resolutionRule?.sourceId || "Not provided"}</span></div>
             <div className="market-meta"><span>Visibility</span><span>{proposal.visibility}</span></div>
-            {proposal.status === "APPROVED" && proposal.origin !== "AUTOMATED" && <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />}\n            {proposal.status === "APPROVED" && proposal.origin === "AUTOMATED" && <p className="market-description">Approved for the owner-managed publication step. Approval does not publish a transaction.</p>}
+            {proposal.status === "APPROVED" && proposal.origin !== "AUTOMATED" && <PublishApprovedMarket proposal={proposal} signMessage={signMessage} />}
+            {proposal.status === "APPROVED" && proposal.origin === "AUTOMATED" && <p className="market-description">Approved for the owner-managed publication step. Approval does not publish a transaction.</p>}
             <div className="market-meta"><span>Submitted</span><span>{new Date(proposal.submittedAt).toLocaleDateString()}</span></div>
             <div className="market-meta"><span>Closes</span><span>{formatProposalTime(proposal.closesAt)}</span></div>
             <div className="market-meta"><span>Resolves</span><span>{formatProposalTime(proposal.resolvesAt)}</span></div>
