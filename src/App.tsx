@@ -273,7 +273,6 @@ export default function App() {
   const { signMessageAsync } = useSignMessage();
   const { openConnectModal } = useConnectModal();
   const isAdmin = useIsAdmin(address);
-  const canAccessMarketOperations = isAdmin || walletRole?.permissions.createMarketProposal === true;
 
   const validatorStatusReads = useReadContracts({
     contracts: address && assetOracleMarketManagerAddress ? [
