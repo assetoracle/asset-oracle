@@ -183,6 +183,8 @@ export default function MarketsPage({
         </div>
         <div className="market-card-bottom">
           <span className="market-status-note">{settledMarketIds.has(market.id) ? "Resolution confirmed on-chain" : `Closes ${formatMarketTime(market.closesAt)}`}</span>
+        </div>
+        <div className="market-card-action-row">
           {settledMarketIds.has(market.id) ? (
             <button className="primary-button open-market-button verify-market-button" type="button" onClick={() => onVerify(market)}><ShieldCheck size={15} /> Verify</button>
           ) : (
