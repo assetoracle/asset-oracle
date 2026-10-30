@@ -1,34 +1,131 @@
-/* Single source of truth for the mobile Markets layout.
-   Keep cards and actions in normal document flow at 100% zoom, including wallet webviews. */
+/* Mobile-only layout rules for published market cards and the proposal dialog.
+   Desktop styling remains controlled by style.css. */
 @media screen and (max-width: 768px) {
   html, body, #root { width: 100%; max-width: 100%; min-width: 0; }
   body { overflow-x: hidden; }
-  .app { width: 100%; max-width: 100%; min-width: 0; padding-left: 16px; padding-right: 16px; }
-  .page-section, .markets-section, .markets-section > *, .markets-section .market-grid,
-  .markets-section .market-grid > .market-card, .markets-section .market-card-compact {
-    box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%;
+  .app {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-left: 12px;
+    padding-right: 12px;
   }
-  .markets-section .market-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .markets-section .market-card-compact { position: relative; inset: auto; margin: 0; overflow: hidden; }
-  .markets-section .market-card-compact *, .markets-section .market-card-compact h3,
-  .markets-section .market-card-compact .market-card-badges, .markets-section .market-card-compact .market-status-note {
-    min-width: 0; max-width: 100%; overflow-wrap: anywhere;
+
+  .markets-section,
+  .markets-section.page-section,
+  .markets-section .market-grid,
+  .markets-section .market-grid > .market-card,
+  .markets-section .market-card-compact {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
-  .markets-section .market-card-compact .market-card-top { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
-  .markets-section .market-card-compact .market-card-badges { display: flex; flex: 1 1 140px; flex-wrap: wrap; justify-content: flex-start; gap: 6px; }
+  .markets-section .market-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .markets-section .market-card-compact {
+    position: static;
+    margin: 0;
+    overflow: hidden;
+  }
+  .markets-section .market-card-compact * {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .markets-section .market-card-compact .market-card-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .markets-section .market-card-compact .market-card-badges {
+    display: flex;
+    flex: 1 1 140px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .markets-section .market-card-compact .market-card-statistics {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    width: 100%;
+  }
   .markets-section .market-card-compact .market-card-bottom {
-    position: static; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-    gap: 12px; width: 100%; min-width: 0; max-width: 100%; margin: 0;
+    position: static !important;
+    inset: auto !important;
+    float: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
   }
-  .markets-section .market-card-compact .market-status-note { display: block; width: 100%; white-space: normal; line-height: 1.5; }
-  .markets-section .market-card-compact .market-card-bottom .open-market-button,
-  .markets-section .market-card-compact .market-card-bottom .verify-market-button {
-    position: static; inset: auto; float: none; transform: none; display: inline-flex; align-self: flex-start;
-    justify-self: start; box-sizing: border-box; width: auto; min-width: 0; max-width: 100%; margin: 0;
-    flex: 0 1 auto; white-space: normal; overflow-wrap: anywhere;
+  .markets-section .market-card-compact .market-card-bottom > .market-status-note {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.5;
   }
+  .markets-section .market-card-compact .market-card-bottom > .open-market-button,
+  .markets-section .market-card-compact .market-card-bottom > .verify-market-button {
+    position: static !important;
+    inset: auto !important;
+    float: none !important;
+    transform: none !important;
+    display: inline-flex !important;
+    align-self: flex-start !important;
+    justify-self: start !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 44px;
+    margin: 0 !important;
+    white-space: normal !important;
+    text-align: left;
+  }
+
+  /* Keep the proposal form inside narrow wallet-app webviews. */
+  [role="dialog"] {
+    box-sizing: border-box;
+    align-items: flex-start !important;
+    padding: 10px !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  [role="dialog"] > section {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    padding: 16px !important;
+    border-radius: 16px !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  [role="dialog"] h2 { font-size: clamp(20px, 5.5vw, 26px) !important; overflow-wrap: anywhere; }
+  [role="dialog"] textarea,
+  [role="dialog"] input,
+  [role="dialog"] select { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; }
 }
 @media screen and (max-width: 380px) {
-  .app { padding-left: 12px; padding-right: 12px; }
+  .app { padding-left: 10px; padding-right: 10px; }
   .markets-section .market-card-compact { padding: 14px; }
+  [role="dialog"] > section { padding: 12px !important; }
 }
