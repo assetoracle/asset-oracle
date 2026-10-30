@@ -9,3 +9,68 @@
   .markets-section .market-card .market-status-note { display: block; width: 100%; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
   .markets-section .market-card .open-market-button { display: inline-flex; align-self: flex-start; box-sizing: border-box; flex: 0 1 auto; width: fit-content; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; justify-content: center; }
 }
+
+/* Hard alignment safeguard for narrow mobile and wallet in-app browsers.
+   Keep the card and CTA inside the viewport; anchor CTA to the left. */
+@media screen and (max-width: 768px) {
+  html, body, #root {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .app,
+  .page-content,
+  .page-section,
+  .markets-section,
+  .markets-section .market-grid,
+  .markets-section .market-card.market-card-compact {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .markets-section .market-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .markets-section .market-card.market-card-compact {
+    position: relative;
+    left: 0 !important;
+    right: auto !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: hidden;
+  }
+
+  .markets-section .market-card.market-card-compact .market-card-bottom {
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .markets-section .market-card.market-card-compact .market-card-bottom > .open-market-button,
+  .markets-section .market-card.market-card-compact .market-card-bottom > .verify-market-button {
+    box-sizing: border-box !important;
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
+    align-self: flex-start !important;
+    justify-self: start !important;
+    float: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 0 1 auto !important;
+    white-space: normal !important;
+  }
+}
