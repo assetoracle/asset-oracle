@@ -11552,30 +11552,34 @@ select.brand-select option,
 }
 
 
-/* Dedicated action row: separate from the closing-date footer so inherited
-   footer positioning cannot hide the action on mobile. */
-.market-card-action-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-  min-width: 0;
-  margin-top: 10px;
-}
-.market-card-action-row > .open-market-button,
-.market-card-action-row > .verify-market-button {
-  display: inline-flex;
-  position: static;
-  float: none;
-  transform: none;
-  align-self: flex-start;
-  justify-content: flex-start;
-  width: auto;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  margin: 0;
-  white-space: normal;
+/* Desktop: preserve the original side-by-side footer appearance.
+   Mobile uses a separate left-aligned row below the closing statement. */
+@media screen and (min-width: 769px) {
+  .markets-section .market-card-compact { position: relative; }
+  .markets-section .market-card-compact .market-card-action-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin-top: -44px;
+    pointer-events: none;
+  }
+  .markets-section .market-card-compact .market-card-action-row > .open-market-button,
+  .markets-section .market-card-compact .market-card-action-row > .verify-market-button {
+    pointer-events: auto;
+    display: inline-flex;
+    position: relative;
+    float: none;
+    transform: none;
+    align-self: center;
+    width: auto;
+    max-width: 100%;
+    min-height: 40px;
+    margin: 0;
+    white-space: nowrap;
+  }
 }
 @media screen and (max-width: 768px) {
   .markets-section .market-card-compact {
