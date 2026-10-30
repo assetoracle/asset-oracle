@@ -11552,27 +11552,26 @@ select.brand-select option,
 }
 
 
-/* Desktop: preserve the original side-by-side footer appearance.
-   Mobile uses a separate left-aligned row below the closing statement. */
+/* Desktop action placement: anchor the action at the card footer without negative margins. */
 @media screen and (min-width: 769px) {
-  .markets-section .market-card-compact { position: relative; }
+  .markets-section .market-card-compact { position: relative; padding-bottom: 76px; }
   .markets-section .market-card-compact .market-card-action-row {
+    position: absolute;
+    right: 22px;
+    bottom: 20px;
     display: flex;
-    justify-content: flex-end;
     align-items: center;
-    width: 100%;
-    min-width: 0;
-    min-height: 0;
-    margin-top: -44px;
+    justify-content: flex-end;
+    width: auto;
+    max-width: calc(100% - 44px);
+    margin: 0;
     pointer-events: none;
   }
   .markets-section .market-card-compact .market-card-action-row > .open-market-button,
   .markets-section .market-card-compact .market-card-action-row > .verify-market-button {
     pointer-events: auto;
+    position: static;
     display: inline-flex;
-    position: relative;
-    float: none;
-    transform: none;
     align-self: center;
     width: auto;
     max-width: 100%;
@@ -11624,4 +11623,31 @@ select.brand-select option,
     margin: 0 !important;
     transform: none !important;
   }
+}
+
+/* Compact spacing pass across cards and dashboard panels; preserve typography and hierarchy. */
+.market-card-compact,
+.admin-proposal-grid > .market-card,
+.my-proposal-grid > .market-card {
+  gap: 12px;
+}
+.market-card-compact { padding: 20px; }
+.market-card-compact .market-card-statistics { padding: 8px 0; gap: 6px 12px; }
+.market-card-compact .market-card-bottom { gap: 10px; padding-top: 12px; }
+.market-card-compact .market-card-top { gap: 10px; }
+.admin-summary-grid,
+.admin-proposal-grid,
+.my-proposal-grid,
+.market-grid { gap: 14px; }
+.account-summary-card,
+.dashboard-panel,
+.admin-dashboard .account-summary-card {
+  padding: 16px;
+}
+@media screen and (max-width: 768px) {
+  .market-card-compact { padding: 15px; gap: 10px; }
+  .market-card-compact .market-card-statistics { padding: 7px 0; }
+  .market-card-compact .market-card-bottom { gap: 9px; }
+  .market-grid, .admin-proposal-grid, .my-proposal-grid, .admin-summary-grid { gap: 10px; }
+  .account-summary-card, .dashboard-panel, .admin-dashboard .account-summary-card { padding: 13px; }
 }
