@@ -1,0 +1,11 @@
+/* Mobile wallet-browser fix: keep market cards and action buttons inside the viewport at 100% zoom. */
+@media screen and (max-width: 768px) {
+  .markets-section, .markets-section .market-grid, .markets-section .market-card, .markets-section .market-card > * { box-sizing: border-box; min-width: 0; max-width: 100%; }
+  .markets-section .market-card { width: 100%; overflow: hidden; }
+  .markets-section .market-card .market-card-top { display: flex; flex-wrap: wrap; align-items: flex-start; min-width: 0; max-width: 100%; }
+  .markets-section .market-card .market-card-badges { display: flex; flex: 1 1 160px; flex-wrap: wrap; min-width: 0; max-width: 100%; gap: 6px; }
+  .markets-section .market-card h3 { width: 100%; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+  .markets-section .market-card .market-card-bottom { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; width: 100%; min-width: 0; max-width: 100%; gap: 12px; }
+  .markets-section .market-card .market-status-note { display: block; width: 100%; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .markets-section .market-card .open-market-button { display: inline-flex; align-self: flex-start; box-sizing: border-box; flex: 0 1 auto; width: fit-content; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; justify-content: center; }
+}
