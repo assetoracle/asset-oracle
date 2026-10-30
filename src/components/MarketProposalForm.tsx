@@ -252,10 +252,10 @@ export function MarketProposalForm({
                 </strong>
                 <span style={{ display: "block", marginTop: 4, fontSize: 14 }}>
                   Regular users: <strong>10 USDC</strong> on Asset Chain Enugu Testnet.
-                  Configured market makers: <strong>Free</strong>.
+                  Market Creators (MC2 and MC3) and the owner: <strong>Free</strong>.
                 </span>
                 <span style={{ display: "block", marginTop: 5, color: "#8DA9B3", fontSize: 12 }}>
-                  The fee is checked with the backend when you submit. Your wallet will request the USDC transfer only after the server returns a valid payment instruction. Your proposal remains pending review after payment.
+                  The backend enforces this exemption. Market Creators and the owner submit manually proposed markets without paying. Regular users must complete the verified fee payment, and their proposals remain pending review.
                 </span>
               </div>
             )}
