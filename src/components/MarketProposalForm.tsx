@@ -24,7 +24,7 @@ type Props = {
 };
 
 const categories = [
-  "Crypto",
+  "Digital Assets",
   "Sports",
   "Economics",
   "RWA",
@@ -332,7 +332,7 @@ export function MarketProposalForm({
                 setCategory(nextCategory);
                 if (nextCategory !== "Sports") setSport("");
               }}
-              options={categories.map((item) => ({ value: item, label: item }))}
+              options={categories.map((item) => ({ value: item === "Digital Assets" ? "Crypto" : item, label: item }))}
               ariaLabel="Market category"
             />
           </label>
