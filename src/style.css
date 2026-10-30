@@ -11550,3 +11550,74 @@ select.brand-select option,
   .app { padding-inline: 10px; }
   .markets-section .market-card-compact { padding: 14px; }
 }
+
+
+/* Dedicated action row: separate from the closing-date footer so inherited
+   footer positioning cannot hide the action on mobile. */
+.market-card-action-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  margin-top: 10px;
+}
+.market-card-action-row > .open-market-button,
+.market-card-action-row > .verify-market-button {
+  display: inline-flex;
+  position: static;
+  float: none;
+  transform: none;
+  align-self: flex-start;
+  justify-content: flex-start;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  white-space: normal;
+}
+@media screen and (max-width: 768px) {
+  .markets-section .market-card-compact {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .markets-section .market-card-compact .market-card-bottom {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .markets-section .market-card-compact .market-card-action-row {
+    display: flex !important;
+    position: static !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 10px 0 0 !important;
+  }
+  .markets-section .market-card-compact .market-card-action-row > .open-market-button,
+  .markets-section .market-card-compact .market-card-action-row > .verify-market-button {
+    display: inline-flex !important;
+    position: static !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-self: flex-start !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+}
