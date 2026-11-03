@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "./contracts/assetOracle";
+import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress, isAssetOracleContractConfigured } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
   ASSET_CHAIN_TESTNET_ID,
@@ -203,7 +203,9 @@ export default function App() {
     (market) =>
       market.onchainMarketId &&
       market.onchainManagerAddress &&
-      market.onchainChainId === ASSET_CHAIN_TESTNET_ID,
+      market.onchainChainId === ASSET_CHAIN_TESTNET_ID &&
+      isAssetOracleContractConfigured &&
+      market.onchainManagerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase(),
   );
   const marketStatusReads = useReadContracts({
     contracts: onchainPublishedMarkets.map((market) => ({
@@ -256,13 +258,13 @@ export default function App() {
   const isAdmin = walletRole?.isOwner === true;
 
   const validatorStatusReads = useReadContracts({
-    contracts: address && assetOracleMarketManagerAddress ? [{
+    contracts: address && isAssetOracleContractConfigured ? [{
       address: assetOracleMarketManagerAddress,
       abi: assetOracleMarketManagerAbi,
       functionName: "validatorRosterConfigured" as const,
     }] : [],
     query: {
-      enabled: Boolean(address && assetOracleMarketManagerAddress && networkState === "correct"),
+      enabled: Boolean(address && isAssetOracleContractConfigured && networkState === "correct"),
       refetchInterval: 30_000,
     },
   });
