@@ -1,8 +1,8 @@
-name: RainbowKit Wagmi 2 remediation experiment
+name: Wagmi 2 targeted dependency remediation experiment
 
 on:
   push:
-    branches: [rainbowkit-wagmi2-remediation-test]
+    branches: [wagmi2-targeted-overrides-test]
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,15 +23,34 @@ jobs:
         run: |
           npm audit --json > audit-before.json || true
           node -e "const a=require('./audit-before.json'); console.log('BASELINE', JSON.stringify(a.metadata?.vulnerabilities))"
-      - name: Apply npm-supported non-breaking fixes only
+      - name: Apply targeted semver-compatible transitive overrides
         run: |
-          npm audit fix --no-fund || true
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          p.overrides = {
+            ...(p.overrides || {}),
+            'decode-uri-component': '0.5.1',
+            'ws': '8.21.0',
+            'abitype': '^1.2.3',
+            'viem': '$viem',
+            '@walletconnect/core': '2.26.0',
+            '@walletconnect/sign-client': '2.26.0',
+            '@walletconnect/universal-provider': '2.26.0',
+            '@walletconnect/utils': '2.26.0',
+            '@walletconnect/ethereum-provider': '2.26.0'
+          };
+          fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
+          NODE
+          npm install --no-audit --no-fund
           npm ls --depth=0
-          echo "=== Reown dependency path after safe fixes ==="
-          npm explain @reown/appkit || true
-          echo "=== Zod dependency paths after safe fixes ==="
-          npm explain zod || true
-      - name: Record post-fix audit
+          echo "=== WalletConnect dependency paths ==="
+          npm explain @walletconnect/ethereum-provider || true
+          npm explain @walletconnect/utils || true
+          echo "=== Viem and ABI type paths ==="
+          npm explain viem || true
+          npm explain abitype || true
+      - name: Record targeted override audit
         run: |
           npm audit --json > audit-after.json || true
           node -e "const a=require('./audit-after.json'); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, advisories:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,via:v.via.map(x=>typeof x==='string'?x:x.title),fixAvailable:v.fixAvailable,nodes:v.nodes}))},null,2))" > audit-after-summary.json
@@ -42,9 +61,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rainbowkit-wagmi2-remediation-diagnostics
+          name: wagmi2-targeted-overrides-diagnostics
           path: |
             package-lock.json
+            package.json
             audit-before.json
             audit-after.json
             audit-after-summary.json
