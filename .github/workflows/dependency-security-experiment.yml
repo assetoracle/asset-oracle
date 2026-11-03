@@ -1,0 +1,64 @@
+name: Dependency security experiment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dependency-security-upstream-experiment
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/dependency-security-experiment.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  safe-audit-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout experimental branch
+        uses: actions/checkout@v4
+        with:
+          ref: dependency-security-upstream-experiment
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install baseline dependencies
+        run: npm ci
+
+      - name: Apply non-breaking npm audit fixes only
+        run: npm audit fix
+        continue-on-error: true
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Capture full audit report
+        if: always()
+        run: npm audit --json > dependency-audit-experiment.json || true
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-experiment
+          path: dependency-audit-experiment.json
+          if-no-files-found: warn
+
+      - name: Commit lockfile changes from safe fixes
+        run: |
+          if ! git diff --quiet -- package.json package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json
+            git commit -m "test: apply non-breaking dependency security fixes"
+            git push origin HEAD:dependency-security-upstream-experiment
+          else
+            echo "No non-breaking dependency changes were available."
+          fi
