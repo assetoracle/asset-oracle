@@ -256,33 +256,24 @@ export default function App() {
   const isAdmin = walletRole?.isOwner === true;
 
   const validatorStatusReads = useReadContracts({
-    contracts: address && assetOracleMarketManagerAddress ? [
-      {
-        address: assetOracleMarketManagerAddress,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "isValidator" as const,
-        args: [address] as const,
-      },
-      {
-        address: assetOracleMarketManagerAddress,
-        abi: assetOracleMarketManagerAbi,
-        functionName: "validatorRosterConfigured" as const,
-      },
-    ] : [],
+    contracts: address && assetOracleMarketManagerAddress ? [{
+      address: assetOracleMarketManagerAddress,
+      abi: assetOracleMarketManagerAbi,
+      functionName: "validatorRosterConfigured" as const,
+    }] : [],
     query: {
       enabled: Boolean(address && assetOracleMarketManagerAddress && networkState === "correct"),
       refetchInterval: 30_000,
     },
   });
-  const onchainValidatorStatus =
+  // Validator access is market-specific. The dashboard checks each market's
+  // immutable validator snapshot, so the current global roster is not a gate.
+  const onchainValidatorStatus: boolean | null = null;
+  const onchainValidatorRosterConfigured =
     validatorStatusReads.data?.[0]?.status === "success"
       ? validatorStatusReads.data[0].result === true
       : null;
-  const onchainValidatorRosterConfigured =
-    validatorStatusReads.data?.[1]?.status === "success"
-      ? validatorStatusReads.data[1].result === true
-      : null;
-  const canAccessValidatorDashboard = onchainValidatorStatus === true;
+  const canAccessValidatorDashboard = Boolean(address);
 
   useEffect(() => {
     if (!helpOpen) return;
