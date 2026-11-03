@@ -1,0 +1,50 @@
+name: Wagmi 2 low-risk dependency patch experiment
+
+on:
+  push:
+    branches: [wagmi2-deepmerge-patch-test]
+
+permissions:
+  contents: read
+
+jobs:
+  audit-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install current frontend dependencies
+        run: npm install --no-audit --no-fund
+      - name: Capture baseline audit
+        run: |
+          npm audit --json > audit-before.json || true
+          node -e "const a=require('./audit-before.json'); console.log('BEFORE', JSON.stringify(a.metadata?.vulnerabilities))"
+      - name: Apply only the deepmerge security patch
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          p.overrides = { ...(p.overrides || {}), deepmerge: '4.3.2' };
+          fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\\n');
+          NODE
+          npm install --no-audit --no-fund
+          npm ls deepmerge
+      - name: Capture patched audit
+        run: |
+          npm audit --json > audit-after.json || true
+          node -e "const a=require('./audit-after.json'); console.log('AFTER', JSON.stringify(a.metadata?.vulnerabilities)); console.log(JSON.stringify(Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,fixAvailable:v.fixAvailable})),null,2))"
+      - name: Build frontend
+        run: npm run build
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wagmi2-deepmerge-patch-diagnostics
+          path: |
+            package.json
+            package-lock.json
+            audit-before.json
+            audit-after.json
