@@ -33,17 +33,19 @@ export default function AdminWalletManagement() {
       functionName: "validators" as const,
       args: [BigInt(index)] as const,
     })),
-    query: { refetchInterval: 15000 },
+    query: { enabled: isAssetOracleContractConfigured, refetchInterval: 15000 },
   });
   const automationRole = useReadContract({
     address: assetOracleMarketManagerAddress,
     abi: assetOracleMarketManagerAbi,
     functionName: "AUTOMATED_MARKET_CREATOR_ROLE",
+    query: { enabled: isAssetOracleContractConfigured },
   });
   const creatorRole = useReadContract({
     address: assetOracleMarketManagerAddress,
     abi: assetOracleMarketManagerAbi,
     functionName: "MARKET_CREATOR_ROLE",
+    query: { enabled: isAssetOracleContractConfigured },
   });
   const creatorLookupRead = useReadContract({
     address: assetOracleMarketManagerAddress,
