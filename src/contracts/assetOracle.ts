@@ -31,6 +31,13 @@ export const assetOracleMarketManagerAbi = [
   },
   {
     type: "function",
+    name: "isMarketValidator",
+    stateMutability: "view",
+    inputs: [{ name: "marketId", type: "uint256" }, { name: "account", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
     name: "marketValidators",
     stateMutability: "view",
     inputs: [{ name: "marketId", type: "uint256" }, { name: "index", type: "uint8" }],
