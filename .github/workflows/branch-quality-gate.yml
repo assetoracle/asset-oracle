@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - align-market-manager-interface
+      - dependency-security-review
     paths:
       - "src/**"
       - "package.json"
@@ -14,13 +15,14 @@ on:
       - "src/**"
       - "package.json"
       - "package-lock.json"
+      - ".github/workflows/branch-quality-gate.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  build-and-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -29,9 +31,36 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
-      - run: npm install
-      - name: Report dependency advisories
+          cache: npm
+      - name: Install exact lockfile dependencies
+        run: npm ci
+      - name: Run frontend production build
+        run: npm run build
+      - name: Audit frontend dependencies
         run: |
-          npm audit --json > /tmp/npm-audit.json || true
-          node -e 'const a=require("/tmp/npm-audit.json"); for (const [name,v] of Object.entries(a.vulnerabilities || {})) console.log(JSON.stringify({name,severity:v.severity,isDirect:v.isDirect,range:v.range,fixAvailable:v.fixAvailable}));'
-      - run: npm run build
+          npm audit --json > frontend-audit.json || audit_status=$?
+          node --input-type=commonjs -e '
+            const fs = require("node:fs");
+            const report = JSON.parse(fs.readFileSync("frontend-audit.json", "utf8"));
+            const counts = report.metadata?.vulnerabilities || {};
+            console.log("Dependency audit totals:", JSON.stringify(counts));
+            for (const [name, issue] of Object.entries(report.vulnerabilities || {})) {
+              console.log(JSON.stringify({
+                name,
+                severity: issue.severity,
+                direct: issue.isDirect,
+                range: issue.range,
+                fixAvailable: issue.fixAvailable
+              }));
+            }
+            if ((counts.high || 0) > 0 || (counts.critical || 0) > 0) {
+              console.error("High or critical dependency advisories remain.");
+              process.exit(1);
+            }
+          '
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: frontend-dependency-audit
+          path: frontend-audit.json
+          if-no-files-found: ignore
