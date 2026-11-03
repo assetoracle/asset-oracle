@@ -115,7 +115,7 @@ export default function ValidatorDashboard() {
       const isClosed = market.status === MARKET_STATUS.CLOSED;
       const isExpiredOpen = market.status === MARKET_STATUS.OPEN &&
         market.closeTime <= BigInt(Math.floor(Date.now() / 1000));
-      return isClosed || isExpiredOpen || market.status === MARKET_STATUS.DISPUTED;
+      return isClosed || isExpiredOpen || market.status === MARKET_STATUS.DISPUTED || market.status === MARKET_STATUS.ARBITRATION;
     })
     .sort((a, b) => Number(a.closeTime - b.closeTime)), [marketReads.data, marketContracts]);
 
@@ -140,7 +140,7 @@ export default function ValidatorDashboard() {
     contracts: address ? markets.map((market) => ({
       address: market.managerAddress,
       abi: assetOracleMarketManagerAbi,
-      functionName: "hasVoted" as const,
+      functionName: (market.status === MARKET_STATUS.ARBITRATION ? "hasVotedOnDispute" : "hasVoted") as "hasVoted" | "hasVotedOnDispute",
       args: [market.id, address] as const,
     })) : [],
     query: { enabled: Boolean(address && authorizedValidator && markets.length > 0), refetchInterval: 10_000 },
@@ -153,7 +153,7 @@ export default function ValidatorDashboard() {
       return [1, 2, 3].map((outcome) => ({
         address: market.managerAddress,
         abi: assetOracleMarketManagerAbi,
-        functionName: "voteCountByKey" as const,
+        functionName: (market.status === MARKET_STATUS.ARBITRATION ? "disputeVoteCountByKey" : "voteCountByKey") as "voteCountByKey" | "disputeVoteCountByKey",
         args: [market.id, voteKey(outcome, evidenceHash)] as const,
       }));
     }),
@@ -262,13 +262,13 @@ export default function ValidatorDashboard() {
       });
       return;
     }
-    if (market.status !== MARKET_STATUS.CLOSED) return;
+    if (market.status !== MARKET_STATUS.CLOSED && market.status !== MARKET_STATUS.ARBITRATION) return;
     setPendingVote(null);
     setActionType("vote");
     writeContract({
       address: market.managerAddress,
       abi: assetOracleMarketManagerAbi,
-      functionName: "resolveMarket",
+      functionName: market.status === MARKET_STATUS.ARBITRATION ? "resolveDispute" : "resolveMarket",
       args: [market.id, outcome, evidenceHash],
     });
   }
@@ -316,7 +316,7 @@ export default function ValidatorDashboard() {
             const matchingVotes = Number(voteCountReads.data?.[voteIndex]?.status === "success" ? voteCountReads.data[voteIndex].result ?? 0n : 0n);
             const evidence = market.evidenceSource.trim();
             return <article className="validator-market-card" key={`${market.managerAddress.toLowerCase()}-${id}`}>
-              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">Main manager</span><span className="validator-status-pill">{market.status === MARKET_STATUS.DISPUTED ? (canFinalize ? "Challenge period ended · ready to finalize" : "In challenge period") : market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
+              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">Main manager</span><span className="validator-status-pill">{market.status === MARKET_STATUS.ARBITRATION ? "Disputed · awaiting validator arbitration" : market.status === MARKET_STATUS.DISPUTED ? (canFinalize ? "Challenge period ended · ready to finalize" : "In challenge period") : market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
               <h2>{market.question}</h2>
               <p>{displayResolutionRules(market.resolutionRules)}</p>
               <div className="validator-market-meta"><span>Closed {new Date(Number(market.closeTime) * 1000).toLocaleString()}</span><span>Pool: {(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span></div>
@@ -348,8 +348,8 @@ export default function ValidatorDashboard() {
                   required
                 />
               </>}
-              <p className="validator-vote-count">{market.status === MARKET_STATUS.DISPUTED ? `Challenge period ends ${new Date(Number(challengeEndsAt) * 1000).toLocaleString()}` : `Matching votes: ${matchingVotes}/2`}</p>
-              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || !(sourceUrls[market.managerAddress.toLowerCase() + "-" + id] ?? "").trim() || isPending || receipt.isLoading || savingSource} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : savingSource ? "Saving source link…" : `Vote ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
+              <p className="validator-vote-count">{market.status === MARKET_STATUS.DISPUTED ? market.status === MARKET_STATUS.ARBITRATION ? `Arbitration votes: ${matchingVotes}/2` : `Matching votes: ${matchingVotes}/2`}</p>
+              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || !(sourceUrls[market.managerAddress.toLowerCase() + "-" + id] ?? "").trim() || isPending || receipt.isLoading || savingSource} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : savingSource ? "Saving source link…" : `${market.status === MARKET_STATUS.ARBITRATION ? "Submit arbitration vote" : "Vote"} ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
             </article>;
           })}
         </div>}
