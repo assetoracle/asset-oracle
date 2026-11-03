@@ -1,0 +1,40 @@
+name: RainbowKit dependency security audit
+
+on:
+  push:
+    branches: [dependency-audit-rainbowkit]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the existing RainbowKit dependency setup
+        run: npm install --no-audit --no-fund
+      - name: Record dependency versions
+        run: npm ls --depth=0
+      - name: Run security audit
+        run: |
+          npm audit --json > rainbowkit-audit.json || true
+          node -e "const a=require('./rainbowkit-audit.json'); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, advisories:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,via:v.via.map(x=>typeof x==='string'?x:x.title),fixAvailable:v.fixAvailable}))},null,2))" > rainbowkit-audit-summary.json
+          cat rainbowkit-audit-summary.json
+      - name: Build application
+        run: npm run build
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rainbowkit-dependency-audit
+          path: |
+            rainbowkit-audit.json
+            rainbowkit-audit-summary.json
+          if-no-files-found: warn
