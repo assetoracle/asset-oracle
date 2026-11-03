@@ -350,7 +350,7 @@ export default function ValidatorDashboard() {
                   required
                 />
               </>}
-              <p className="validator-vote-count">{market.status === MARKET_STATUS.DISPUTED ? market.status === MARKET_STATUS.ARBITRATION ? `Arbitration votes: ${matchingVotes}/2` : `Matching votes: ${matchingVotes}/2`}</p>
+              <p className="validator-vote-count">{market.status === MARKET_STATUS.ARBITRATION ? `Arbitration votes: ${matchingVotes}/2` : `Matching votes: ${matchingVotes}/2`}</p>
               {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || !(sourceUrls[market.managerAddress.toLowerCase() + "-" + id] ?? "").trim() || isPending || receipt.isLoading || savingSource} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : savingSource ? "Saving source link…" : `${market.status === MARKET_STATUS.ARBITRATION ? "Submit arbitration vote" : "Vote"} ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
             </article>;
           })}
