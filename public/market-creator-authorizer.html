@@ -32,8 +32,8 @@ small{color:#8ea6c7;line-height:1.5;display:block;margin-top:12px}
 <div class="label">Permission</div><div class="value">MARKET_CREATOR_ROLE</div>
 </section>
 <section class="panel">
-<div class="status" id="status">Connect Rabby to begin. No transaction is sent until you press Authorize and approve it in Rabby.</div>
-<button id="connect">Connect Rabby wallet</button>
+<div class="status" id="status">Connect Rabby. The page will request Asset Chain Enugu Testnet automatically if needed. No transaction is sent until you press Authorize and approve it in Rabby.</div>
+<button id="connect">Connect Rabby & switch network</button>
 <button id="authorize" disabled>Authorize automation wallet</button>
 <button id="verify" disabled>Check permission</button>
 <small id="account"></small>
@@ -46,21 +46,42 @@ small{color:#8ea6c7;line-height:1.5;display:block;margin-top:12px}
 <script>
 (() => {
   const CHAIN_ID = 42421n;
+  const CHAIN_HEX = "0xa575";
   const OWNER = "0x3d3724d20d9d5db5a40819869057b37465a0c67d";
   const MANAGER = "0x5fc327f55cf533ed5d05337f835be37ff1e0db1f";
   const AUTOMATION = "0xc476bcbbf4ebf0d11afa513b19b70e1f1a1af39e";
   const ABI = ["function owner() view returns (address)","function hasRole(bytes32 role,address account) view returns (bool)","function setMarketCreator(address account,bool enabled)"];
   const $ = id => document.getElementById(id);
-  let provider, contract, role, ready = false, authorized = false;
+  let injected, provider, contract, role, ready = false, authorized = false;
   const say = message => { $("status").textContent = message; };
   const setReady = value => { ready = value; $("authorize").disabled = !value || authorized; $("verify").disabled = !value; };
+  async function switchToAssetChain(walletProvider) {
+    try {
+      await walletProvider.request({method:"wallet_switchEthereumChain",params:[{chainId:CHAIN_HEX}]});
+    } catch (error) {
+      if (error.code !== 4902 && error.code !== -32603) throw error;
+      await walletProvider.request({method:"wallet_addEthereumChain",params:[{
+        chainId:CHAIN_HEX,
+        chainName:"Asset Chain Enugu Testnet",
+        nativeCurrency:{name:"Real World Asset",symbol:"RWA",decimals:18},
+        rpcUrls:["https://enugu-rpc.assetchain.org"],
+        blockExplorerUrls:["https://scan-testnet.assetchain.org"]
+      }]});
+      await walletProvider.request({method:"wallet_switchEthereumChain",params:[{chainId:CHAIN_HEX}]});
+    }
+    for (let attempt=0; attempt<8; attempt++) {
+      const current = await walletProvider.request({method:"eth_chainId"});
+      if (BigInt(current) === CHAIN_ID) return;
+      await new Promise(resolve => setTimeout(resolve,500));
+    }
+    throw new Error("Rabby did not switch to Asset Chain Enugu Testnet. Please approve the network switch and try again.");
+  }
   async function inspect() {
     setReady(false);
-    if (!window.ethereum) throw new Error("No wallet detected. Open this page in Rabby Mobile's browser.");
+    if (!injected) throw new Error("No wallet detected. Open this page in Rabby Mobile's browser.");
     if (!window.ethers) throw new Error("Wallet library unavailable. Check your connection and refresh.");
-    const injected = window.ethereum.providers?.find(p => p.isRabby) || window.ethereum;
     provider = new ethers.BrowserProvider(injected);
-    if ((await provider.getNetwork()).chainId !== CHAIN_ID) throw new Error("Wrong network. Switch Rabby to Asset Chain Enugu Testnet (Chain ID 42421).");
+    if ((await provider.getNetwork()).chainId !== CHAIN_ID) throw new Error("Network switch did not complete. Tap Connect Rabby & switch network again.");
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
     $("account").textContent = "Connected wallet: " + address;
@@ -69,19 +90,23 @@ small{color:#8ea6c7;line-height:1.5;display:block;margin-top:12px}
     contract = new ethers.Contract(MANAGER, ABI, signer);
     if ((await contract.owner()).toLowerCase() !== OWNER.toLowerCase()) throw new Error("On-chain contract owner mismatch. No transaction allowed.");
     role = ethers.keccak256(ethers.toUtf8Bytes("MARKET_CREATOR_ROLE"));
-    const has = await contract.hasRole(role, AUTOMATION);
-    authorized = has;
+    authorized = await contract.hasRole(role, AUTOMATION);
     setReady(true);
-    say(has ? "Permission is already active for the automation wallet. Worker remains disabled." : "Owner, network and contract checks passed. Ready to request authorization.");
+    say(authorized ? "Permission is already active for the automation wallet. Worker remains disabled." : "Owner, network and contract checks passed. Ready to request authorization.");
   }
   $("connect").addEventListener("click", async () => {
     try {
       say("Connecting to Rabby…");
-      const injected = window.ethereum?.providers?.find(p => p.isRabby) || window.ethereum;
+      injected = window.ethereum?.providers?.find(p => p.isRabby) || window.ethereum;
       if (!injected) throw new Error("Open this page inside Rabby Mobile's browser. No wallet provider was detected.");
       await injected.request({method:"eth_requestAccounts"});
+      say("Requesting Asset Chain Enugu Testnet. Approve the network prompt in Rabby…");
+      await switchToAssetChain(injected);
       await inspect();
-    } catch (e) { setReady(false); say(e.shortMessage || e.message || String(e)); }
+    } catch (e) {
+      setReady(false);
+      say(e.code === 4001 ? "Network switch was declined. Tap Connect Rabby & switch network and approve the request." : (e.shortMessage || e.message || String(e)));
+    }
   });
   $("authorize").addEventListener("click", async () => {
     if (!ready || !contract || authorized) return;
@@ -91,9 +116,8 @@ small{color:#8ea6c7;line-height:1.5;display:block;margin-top:12px}
       const tx = await contract.setMarketCreator(AUTOMATION, true);
       say("Transaction submitted: " + tx.hash + ". Waiting for confirmation…");
       await tx.wait();
-      const has = await contract.hasRole(role, AUTOMATION);
-      authorized = has;
-      say(has ? "Confirmed: MARKET_CREATOR_ROLE is active for the automation wallet. The scheduled worker is still disabled." : "Transaction confirmed, but role verification failed. Do not enable automation.");
+      authorized = await contract.hasRole(role, AUTOMATION);
+      say(authorized ? "Confirmed: MARKET_CREATOR_ROLE is active for the automation wallet. The scheduled worker is still disabled." : "Transaction confirmed, but role verification failed. Do not enable automation.");
       $("authorize").disabled = true;
       $("verify").disabled = false;
     } catch (e) {
@@ -103,10 +127,9 @@ small{color:#8ea6c7;line-height:1.5;display:block;margin-top:12px}
   });
   $("verify").addEventListener("click", async () => {
     try {
-      const has = await contract.hasRole(role, AUTOMATION);
-      authorized = has;
-      say(has ? "Verified: MARKET_CREATOR_ROLE is active for the automation wallet." : "Not yet authorized. Do not enable automation.");
-      $("authorize").disabled = has || !ready;
+      authorized = await contract.hasRole(role, AUTOMATION);
+      say(authorized ? "Verified: MARKET_CREATOR_ROLE is active for the automation wallet." : "Not yet authorized. Do not enable automation.");
+      $("authorize").disabled = authorized || !ready;
     } catch (e) { say(e.shortMessage || e.message || String(e)); }
   });
   if (!window.ethers) say("Wallet library unavailable. Refresh when connected to the internet.");
