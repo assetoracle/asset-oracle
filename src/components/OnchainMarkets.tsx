@@ -7,6 +7,7 @@ import {
   ASSET_CHAIN_TESTNET_ID,
   assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
+  isAssetOracleContractConfigured,
 } from "../contracts/assetOracle";
 
 const MAX_MARKETS_TO_DISPLAY = 50;
@@ -21,7 +22,7 @@ type Props = {
 
 export default function OnchainMarkets({ activeCategory, publishedMarkets, onOpenMarket }: Props) {
   const chainId = useChainId();
-  const enabled = Boolean(assetOracleMarketManagerAddress) && chainId === ASSET_CHAIN_TESTNET_ID;
+  const enabled = isAssetOracleContractConfigured && chainId === ASSET_CHAIN_TESTNET_ID;
   const count = useReadContract({
     address: assetOracleMarketManagerAddress,
     abi: assetOracleMarketManagerAbi,
@@ -48,7 +49,7 @@ export default function OnchainMarkets({ activeCategory, publishedMarkets, onOpe
     query: { enabled: enabled && ids.length > 0, refetchInterval: 30_000 },
   });
 
-  if (!assetOracleMarketManagerAddress) return null;
+  if (!isAssetOracleContractConfigured) return <section className="resolution-preview onchain-status"><h2>On-chain markets not configured</h2><p>The verified active manager address has not been set for this frontend.</p></section>;
   if (chainId !== ASSET_CHAIN_TESTNET_ID) {
     return <section className="resolution-preview onchain-status"><span className="eyebrow">ON-CHAIN MARKETS</span><h2>Enugu testnet</h2><p>Switch to Asset Chain Testnet (Chain ID 42421) to load markets directly from the contract.</p></section>;
   }
