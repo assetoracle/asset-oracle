@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - dependency-security-review
+      - dependency-security-fixes-test
     paths:
       - ".github/workflows/bootstrap-dependency-lockfiles.yml"
       - "package.json"
