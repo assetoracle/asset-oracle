@@ -3,14 +3,6 @@ import { useAccount, useReadContract, useReadContracts, useWaitForTransactionRec
 import { isAddress, type Address } from "viem";
 import { assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "../contracts/assetOracle";
 
-const OWNER_WALLET = "0x3d3724d20d9d5db5a40819869057b37465a0c67d" as Address;
-const CREATOR_WALLETS = [
-  OWNER_WALLET,
-  "0x8b8a6fb521d372c19a5ff913049475f4c8fb9459",
-  "0x96adb1c2ea8a816d68d27363a55e88b4c507691a",
-] as Address[];
-const AUTOMATION_WALLET = "0xc476bcbbf4ebf0d11afa513b19b70e1f1a1af39e" as Address;
-
 function shortAddress(value: string) {
   return value ? `${value.slice(0, 8)}…${value.slice(-6)}` : "Not configured";
 }
@@ -19,7 +11,9 @@ export default function AdminWalletManagement() {
   const { address, chainId } = useAccount();
   const [newCreator, setNewCreator] = useState("");
   const [removeCreator, setRemoveCreator] = useState("");
+  const [previousAutomation, setPreviousAutomation] = useState("");
   const [newAutomation, setNewAutomation] = useState("");
+  const [creatorLookup, setCreatorLookup] = useState("");
   const [validators, setValidators] = useState<string[]>(["", "", ""]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -50,6 +44,20 @@ export default function AdminWalletManagement() {
     address: assetOracleMarketManagerAddress,
     abi: assetOracleMarketManagerAbi,
     functionName: "MARKET_CREATOR_ROLE",
+  });
+  const creatorLookupRead = useReadContract({
+    address: assetOracleMarketManagerAddress,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "hasRole",
+    args: creatorRole.data && isAddress(creatorLookup.trim()) ? [creatorRole.data, creatorLookup.trim() as Address] : undefined,
+    query: { enabled: Boolean(creatorRole.data && isAddress(creatorLookup.trim())), refetchInterval: 10000 },
+  });
+  const automationLookupRead = useReadContract({
+    address: assetOracleMarketManagerAddress,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "hasRole",
+    args: automationRole.data && isAddress(previousAutomation.trim()) ? [automationRole.data, previousAutomation.trim() as Address] : undefined,
+    query: { enabled: Boolean(automationRole.data && isAddress(previousAutomation.trim())), refetchInterval: 10000 },
   });
   const { writeContractAsync, isPending } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash, query: { enabled: Boolean(txHash) } });
@@ -120,26 +128,28 @@ export default function AdminWalletManagement() {
       <article className="market-card">
         <h3>Manual market creators</h3>
         <p>The owner is permanently shown as Creator 1. Other creator permissions are checked against the contract role.</p>
-        <div className="market-meta"><span>Creator 1 · Owner</span><strong>{shortAddress(OWNER_WALLET)}</strong></div>
-        {CREATOR_WALLETS.slice(1).map((wallet, index) => (
-          <div className="market-meta" key={wallet}><span>Configured creator {index + 2}</span><strong>{shortAddress(wallet)}</strong></div>
-        ))}
+        <div className="market-meta"><span>Creator 1 · Contract owner</span><strong>{shortAddress(String(ownerRead.data))}</strong></div>
+        <label htmlFor="creator-role-lookup">Check a creator wallet</label>
+        <input id="creator-role-lookup" value={creatorLookup} onChange={(event) => setCreatorLookup(event.target.value)} placeholder="0x…" autoComplete="off" />
+        {validAddress(creatorLookup) && <p role="status">{creatorLookupRead.isLoading ? "Checking on-chain role…" : creatorLookupRead.data ? "This wallet has the manual creator role." : "This wallet does not have the manual creator role."}</p>}
         <label htmlFor="add-market-creator">Add manual creator wallet</label>
         <input id="add-market-creator" value={newCreator} onChange={(event) => setNewCreator(event.target.value)} placeholder="0x…" autoComplete="off" />
         <button className="primary-button" type="button" disabled={!validAddress(newCreator) || isPending || Boolean(txHash)} onClick={() => { void send("setMarketCreator", [newCreator.trim() as Address, true], "Adding market creator"); setNewCreator(""); }}>Add creator</button>
         <label htmlFor="remove-market-creator">Remove manual creator wallet</label>
         <input id="remove-market-creator" value={removeCreator} onChange={(event) => setRemoveCreator(event.target.value)} placeholder="0x…" autoComplete="off" />
-        <button className="text-action" type="button" disabled={!validAddress(removeCreator) || removeCreator.toLowerCase() === OWNER_WALLET.toLowerCase() || isPending || Boolean(txHash)} onClick={() => { void send("setMarketCreator", [removeCreator.trim() as Address, false], "Removing market creator"); setRemoveCreator(""); }}>Remove creator</button>
+        <button className="text-action" type="button" disabled={!validAddress(removeCreator) || removeCreator.toLowerCase() === String(ownerRead.data).toLowerCase() || isPending || Boolean(txHash)} onClick={() => { void send("setMarketCreator", [removeCreator.trim() as Address, false], "Removing market creator"); setRemoveCreator(""); }}>Remove creator</button>
         <small>The owner cannot be removed from the creator role.</small>
       </article>
 
       <article className="market-card">
         <h3>Automated market creator</h3>
         <p>Replace the automation wallet in one owner-authorized transaction. The old wallet loses the role as the new wallet receives it.</p>
-        <div className="market-meta"><span>Configured automation wallet</span><strong>{shortAddress(AUTOMATION_WALLET)}</strong></div>
+        <label htmlFor="previous-automation">Current automation wallet to replace</label>
+        <input id="previous-automation" value={previousAutomation} onChange={(event) => setPreviousAutomation(event.target.value)} placeholder="0x…" autoComplete="off" />
+        {validAddress(previousAutomation) && <p role="status">{automationLookupRead.isLoading ? "Checking role…" : automationLookupRead.data ? "This wallet currently has the automation role." : "This wallet does not have the automation role."}</p>}
         <label htmlFor="replace-automation">New automation wallet</label>
         <input id="replace-automation" value={newAutomation} onChange={(event) => setNewAutomation(event.target.value)} placeholder="0x…" autoComplete="off" />
-        <button className="primary-button" type="button" disabled={!validAddress(newAutomation) || newAutomation.toLowerCase() === AUTOMATION_WALLET.toLowerCase() || isPending || Boolean(txHash)} onClick={() => { void send("replaceAutomatedMarketCreator", [AUTOMATION_WALLET, newAutomation.trim() as Address], "Replacing automation wallet"); setNewAutomation(""); }}>Replace automation wallet</button>
+        <button className="primary-button" type="button" disabled={!validAddress(previousAutomation) || !automationLookupRead.data || !validAddress(newAutomation) || newAutomation.toLowerCase() === previousAutomation.toLowerCase() || isPending || Boolean(txHash)} onClick={() => { void send("replaceAutomatedMarketCreator", [previousAutomation.trim() as Address, newAutomation.trim() as Address], "Replacing automation wallet"); setPreviousAutomation(""); setNewAutomation(""); }}>Replace automation wallet</button>
       </article>
 
       <article className="market-card">
@@ -157,7 +167,7 @@ export default function AdminWalletManagement() {
       {pendingAction && <p role="status">{pendingAction}{txHash ? ` · ${txHash}` : ""}</p>}
       {message && <p role="status">{message}</p>}
       {error && <p role="alert">{error}</p>}
-      <p><small>Role reads and validator slots are on-chain. Creator and automation wallet labels above are the deployment's configured addresses; refresh deployment settings after a wallet replacement.</small></p>
+      <p><small>Creator and automation permissions are checked directly against the manager contract. The owner is protected from removal as Manual Market Creator 1.</small></p>
     </section>
   );
 }
