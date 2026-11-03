@@ -84,30 +84,6 @@ const categories: MarketFilter[] = [
   "Settled Markets",
 ];
 
-/**
- * Public frontend allowlist used only to show or hide admin navigation.
- * Backend authorization remains mandatory for every admin operation.
- *
- * Configure VITE_ADMIN_WALLET_ADDRESSES as a comma-separated list of
- * designated public wallet addresses in the frontend deployment settings.
- */
-const OWNER_WALLET_ADDRESS = "0x3d3724d20d9d5db5a40819869057b37465a0c67d";
-const ADMIN_WALLET_ADDRESSES = (
-  import.meta.env.VITE_ADMIN_WALLET_ADDRESSES ?? ""
-)
-  .split(",")
-  .map((value: string) => value.trim().toLowerCase())
-  .filter(Boolean);
-
-if (!ADMIN_WALLET_ADDRESSES.includes(OWNER_WALLET_ADDRESS.toLowerCase())) {
-  ADMIN_WALLET_ADDRESSES.push(OWNER_WALLET_ADDRESS.toLowerCase());
-}
-
-function useIsAdmin(address: string | undefined): boolean {
-  if (!address) return false;
-  return ADMIN_WALLET_ADDRESSES.includes(address.toLowerCase());
-}
-
 function pathForPage(page: Page, marketId?: string): string {
   if (marketId) {
     return `/markets/${encodeURIComponent(marketId)}`;
@@ -277,7 +253,7 @@ export default function App() {
 
   const { signMessageAsync } = useSignMessage();
   const { openConnectModal } = useConnectModal();
-  const isAdmin = useIsAdmin(address);
+  const isAdmin = walletRole?.isOwner === true;
 
   const validatorStatusReads = useReadContracts({
     contracts: address && assetOracleMarketManagerAddress ? [
