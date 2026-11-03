@@ -11,13 +11,13 @@ on:
       - "src/**"
       - "package.json"
       - "package-lock.json"
-      - ".github/workflows/branch-quality-gate.yml"
+      - ".github/workflows/**"
   pull_request:
     paths:
       - "src/**"
       - "package.json"
       - "package-lock.json"
-      - ".github/workflows/branch-quality-gate.yml"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 permissions:
