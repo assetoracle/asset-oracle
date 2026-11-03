@@ -1,0 +1,55 @@
+name: Asset Oracle deepmerge security reproduction
+
+on:
+  push:
+    branches: [deepmerge-prototype-reproduction-test]
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install locked frontend dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Identify deepmerge in the actual dependency tree
+        run: |
+          npm ls deepmerge --all
+          node -e "console.log('deepmerge resolves to:', require.resolve('deepmerge'))"
+      - name: Reproduce reported prototype behaviour
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const merge = require('deepmerge');
+          const version = require('deepmerge/package.json').version;
+
+          const input = JSON.parse(
+            '{"session":{"__proto__":{"admin":true}}}'
+          );
+
+          const safeTarget = { foo: true };
+          const safe = merge(safeTarget, input);
+          assert.equal(Object.hasOwn(Object.prototype, 'admin'), false);
+          assert.equal(({}).admin, undefined);
+          assert.equal(Object.getPrototypeOf(safe.session), Object.prototype);
+          console.log('PASS: ordinary object merge does not pollute Object.prototype');
+
+          const nullTarget = { session: null };
+          const result = merge(nullTarget, input);
+          assert.equal(Object.hasOwn(Object.prototype, 'admin'), false);
+          assert.equal(({}).admin, undefined);
+          assert.equal(Object.getPrototypeOf(result).admin, undefined);
+          assert.equal(Object.getPrototypeOf(result.session).admin, true);
+          assert.equal(Object.hasOwn(result.session, 'admin'), false);
+          console.log('OBSERVED: null-target clone result inherits admin=true');
+          console.log('CONFIRMED: Object.prototype remains unchanged');
+          console.log('deepmerge version:', version);
+          NODE
+      - name: Build production frontend
+        run: npm run build
