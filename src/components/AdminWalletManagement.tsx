@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAccount, useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { isAddress, type Address } from "viem";
-import { assetOracleMarketManagerAbi, assetOracleMarketManagerAddress } from "../contracts/assetOracle";
+import { assetOracleMarketManagerAbi, assetOracleMarketManagerAddress, isAssetOracleContractConfigured } from "../contracts/assetOracle";
 
 function shortAddress(value: string) {
   return value ? `${value.slice(0, 8)}…${value.slice(-6)}` : "Not configured";
@@ -24,7 +24,7 @@ export default function AdminWalletManagement() {
     address: assetOracleMarketManagerAddress,
     abi: assetOracleMarketManagerAbi,
     functionName: "owner",
-    query: { refetchInterval: 15000 },
+    query: { enabled: isAssetOracleContractConfigured, refetchInterval: 15000 },
   });
   const validatorReads = useReadContracts({
     contracts: [0, 1, 2].map((index) => ({
@@ -50,14 +50,14 @@ export default function AdminWalletManagement() {
     abi: assetOracleMarketManagerAbi,
     functionName: "hasRole",
     args: creatorRole.data && isAddress(creatorLookup.trim()) ? [creatorRole.data, creatorLookup.trim() as Address] : undefined,
-    query: { enabled: Boolean(creatorRole.data && isAddress(creatorLookup.trim())), refetchInterval: 10000 },
+    query: { enabled: Boolean(isAssetOracleContractConfigured && creatorRole.data && isAddress(creatorLookup.trim())), refetchInterval: 10000 },
   });
   const automationLookupRead = useReadContract({
     address: assetOracleMarketManagerAddress,
     abi: assetOracleMarketManagerAbi,
     functionName: "hasRole",
     args: automationRole.data && isAddress(previousAutomation.trim()) ? [automationRole.data, previousAutomation.trim() as Address] : undefined,
-    query: { enabled: Boolean(automationRole.data && isAddress(previousAutomation.trim())), refetchInterval: 10000 },
+    query: { enabled: Boolean(isAssetOracleContractConfigured && automationRole.data && isAddress(previousAutomation.trim())), refetchInterval: 10000 },
   });
   const { writeContractAsync, isPending } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash, query: { enabled: Boolean(txHash) } });
@@ -89,6 +89,7 @@ export default function AdminWalletManagement() {
   }, [receipt.isSuccess, receipt.isError]);
 
   async function send(functionName: string, args: readonly unknown[], label: string) {
+    if (!isAssetOracleContractConfigured) { setError("The active market manager address is not configured."); return; }
     setError("");
     setMessage("");
     setPendingAction(label);
@@ -112,6 +113,7 @@ export default function AdminWalletManagement() {
     return isAddress(value.trim());
   }
 
+  if (!isAssetOracleContractConfigured) return <div className="empty-state"><h3>Market manager not configured</h3><p>Set the verified active manager address in the frontend environment before using wallet management.</p></div>;
   if (!address) return <div className="empty-state"><h3>Connect the owner wallet</h3><p>Wallet management requires the connected on-chain contract owner.</p></div>;
   if (ownerRead.isLoading) return <p role="status">Checking contract ownership…</p>;
   if (!isOwner) return <div className="empty-state"><h3>Owner access required</h3><p>This section verifies the manager’s on-chain owner before showing management actions.</p></div>;
