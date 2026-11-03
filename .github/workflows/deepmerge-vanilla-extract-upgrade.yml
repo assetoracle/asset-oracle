@@ -1,0 +1,103 @@
+name: Deepmerge upstream dependency mitigation test
+
+on:
+  push:
+    branches: [deepmerge-vanilla-extract-upgrade-test]
+
+permissions:
+  contents: read
+
+jobs:
+  mitigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies with upstream vanilla-extract fix
+        run: |
+          npm install --no-audit --no-fund
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          p.overrides = { ...(p.overrides || {}), '@vanilla-extract/css': '1.21.3' };
+          fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
+          NODE
+          npm install --no-audit --no-fund
+      - name: Verify dependency replacement
+        run: |
+          npm ls @vanilla-extract/css deepmerge --all || true
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const css = require('@vanilla-extract/css/package.json');
+          assert.equal(css.version, '1.21.3');
+          assert.equal(css.dependencies['deepmerge'], undefined);
+          assert.ok(css.dependencies['deepmerge-ts']);
+          console.log('PASS: @vanilla-extract/css 1.21.3 uses deepmerge-ts, not deepmerge.');
+          console.log('deepmerge-ts range:', css.dependencies['deepmerge-ts']);
+          NODE
+      - name: Build production frontend
+        run: npm run build
+      - name: Install browser test runner
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Test RainbowKit wallet connection
+        run: |
+          npm run preview -- --host 127.0.0.1 > /tmp/asset-oracle-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 2
+          done
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+          const errors = [];
+          page.on('pageerror', error => errors.push(error.message));
+          await page.addInitScript(() => {
+            const account = '0x1111111111111111111111111111111111111111';
+            const provider = {
+              isMetaMask: true, selectedAddress: null, chainId: '0xa5b5', networkVersion: '42421',
+              on() {}, removeListener() {},
+              async request({ method }) {
+                if (method === 'eth_chainId') return '0xa5b5';
+                if (method === 'net_version') return '42421';
+                if (method === 'eth_accounts' || method === 'eth_requestAccounts') {
+                  this.selectedAddress = account; return [account];
+                }
+                if (method === 'wallet_switchEthereumChain' || method === 'wallet_addEthereumChain') return null;
+                if (method === 'personal_sign' || method === 'eth_sign' || method.startsWith('eth_signTypedData')) return '0x' + '1'.repeat(130);
+                if (method === 'eth_sendTransaction') return '0x' + 'a'.repeat(64);
+                if (method === 'eth_getBalance') return '0x0';
+                if (method === 'eth_call') return '0x';
+                if (method === 'eth_estimateGas') return '0x5208';
+                if (method === 'eth_gasPrice') return '0x3b9aca00';
+                if (method === 'eth_blockNumber') return '0x1';
+                throw new Error('Mock wallet does not implement ' + method);
+              }
+            };
+            Object.defineProperty(window, 'ethereum', { configurable: true, value: provider });
+          });
+          await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+          await page.getByRole('button', { name: /connect wallet/i }).first().waitFor({ state: 'visible', timeout: 30000 });
+          await page.getByRole('button', { name: /connect wallet/i }).first().click();
+          await page.getByRole('button', { name: /MetaMask/i }).first().waitFor({ state: 'visible', timeout: 15000 });
+          await page.getByRole('button', { name: /MetaMask/i }).first().click();
+          await page.getByText(/0x1111|0x1111\.\.\.1111/i).waitFor({ state: 'visible', timeout: 20000 });
+          if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
+          console.log('PASS: simulated injected MetaMask wallet connects and account renders.');
+          await page.setViewportSize({ width: 390, height: 844 });
+          const box = await page.locator('#root').boundingBox();
+          if (!box || box.width <= 0 || box.height <= 0) throw new Error('Mobile viewport did not render.');
+          console.log('PASS: app remains rendered at 390px mobile viewport.');
+          await browser.close();
+          NODE
+      - name: Upload browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepmerge-mitigation-browser-diagnostics
+          path: /tmp/asset-oracle-preview.log
