@@ -1,6 +1,7 @@
 name: Asset Oracle Frontend Branch Quality Gate
 
-# Supports both push-based checks and manual workflow_dispatch runs.
+# Supports push-based checks and manual workflow_dispatch runs.
+# Dependency remediation validation is isolated to this frontend test branch.
 
 on:
   push:
