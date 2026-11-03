@@ -5,6 +5,7 @@ import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
 import PaidSubmissionRefundPanel from "./PaidSubmissionRefundPanel";
+import AdminWalletManagement from "./AdminWalletManagement";
 import ValidatorDashboard from "./ValidatorDashboard";
 import { friendlyError } from "../utils/friendlyError";
 import { API_BASE_URL } from "../config/env";
@@ -44,7 +45,7 @@ export default function AdminDashboard({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [confirmation, setConfirmation] = useState<{ id: string; status: "APPROVED" | "REJECTED" } | null>(null);
-  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "validators" | "referrals" | "refunds">("proposals");
+  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "validators" | "wallets" | "referrals" | "refunds">("proposals");
 
   useEffect(() => {
     if (role === "MARKET_CREATOR") setActiveSection("proposals");
@@ -178,6 +179,7 @@ export default function AdminDashboard({
         {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "proposals" ? "primary-button" : "text-action"} aria-current={activeSection === "proposals" ? "page" : undefined} onClick={() => setActiveSection("proposals")}>Normal proposals</button>}
         <button type="button" className={activeSection === "automated" ? "primary-button" : "text-action"} aria-current={activeSection === "automated" ? "page" : undefined} onClick={() => setActiveSection("automated")}>Automated markets</button>
         {role === "OWNER" && <button type="button" className={activeSection === "validators" ? "primary-button" : "text-action"} aria-current={activeSection === "validators" ? "page" : undefined} onClick={() => setActiveSection("validators")}>Validator operations</button>}
+        {role === "OWNER" && <button type="button" className={activeSection === "wallets" ? "primary-button" : "text-action"} aria-current={activeSection === "wallets" ? "page" : undefined} onClick={() => setActiveSection("wallets")}>Admin management</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "refunds" ? "primary-button" : "text-action"} aria-current={activeSection === "refunds" ? "page" : undefined} onClick={() => setActiveSection("refunds")}>Paid proposal refunds</button>}
       </nav>
@@ -315,6 +317,7 @@ export default function AdminDashboard({
         </div>
       </>}
       {role === "OWNER" && activeSection === "validators" && <ValidatorDashboard />}
+      {role === "OWNER" && activeSection === "wallets" && <AdminWalletManagement />}
       {role === "OWNER" && activeSection === "referrals" && <ReferralReviewPanel address={address} signMessage={signMessage} />}
       {role === "OWNER" && activeSection === "refunds" && <PaidSubmissionRefundPanel address={address} signMessage={signMessage} />}
 
