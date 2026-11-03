@@ -9,6 +9,7 @@ import {
   assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
   MARKET_STATUS,
+  isAssetOracleContractConfigured,
 } from "../contracts/assetOracle";
 
 type ChainMarket = {
@@ -74,7 +75,7 @@ export default function ValidatorDashboard() {
   // able to finish markets they were originally assigned to.
   const managerCountReads = useReadContracts({
     contracts: managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "marketCount" as const })),
-    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
+    query: { enabled: Boolean(isAssetOracleContractConfigured && address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
   });
   const marketContracts = useMemo(() => managers.flatMap((managerAddress, managerIndex) => {
     const count = Number(managerCountReads.data?.[managerIndex]?.status === "success" ? managerCountReads.data[managerIndex].result ?? 0n : 0n);
@@ -273,6 +274,7 @@ export default function ValidatorDashboard() {
     });
   }
 
+  if (!isAssetOracleContractConfigured) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>The active market manager address has not been configured for this frontend.</p></section>;
   if (!isConnected) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Connect a wallet to check its assignments across current and previous validator rosters.</p></section>;
   if (chainId !== ASSET_CHAIN_TESTNET_ID) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Switch to Asset Chain Testnet (Chain ID 42421).</p></section>;
   if (!authorizedValidator && !marketValidatorReads.isPending) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This wallet is not assigned to any active market validator roster.</p></section>;
