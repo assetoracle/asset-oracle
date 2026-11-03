@@ -1,5 +1,7 @@
 name: Asset Oracle Frontend Branch Quality Gate
 
+# Supports both push-based checks and manual workflow_dispatch runs.
+
 on:
   push:
     branches:
