@@ -1,5 +1,5 @@
 import { friendlyError } from "../utils/friendlyError";
-import { useAccountModal, useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { assetChainTestnet } from "../config/assetChain";
@@ -72,8 +72,7 @@ async function requestAssetChainSwitch(
 }
 
 export function useWalletStatus() {
-  const { openConnectModal } = useConnectModal();
-  const { openAccountModal } = useAccountModal();
+  const { open } = useAppKit();
   const { address, chainId, isConnected, connector } = useAccount();
   const { disconnectAsync } = useDisconnect();
 
@@ -232,19 +231,11 @@ export function useWalletStatus() {
   async function handleConnect() {
     userInitiatedDisconnectRef.current = false;
     setWalletMessage("");
-    if (!openConnectModal) {
-      setWalletMessage("Wallet connection is unavailable. Please reload the page and try again.");
-      return;
-    }
-    openConnectModal();
+    open({ view: "Connect" });
   }
 
   async function handleOpenAccount() {
-    if (!openAccountModal) {
-      setWalletMessage("Wallet account controls are unavailable. Please reload the page and try again.");
-      return;
-    }
-    openAccountModal();
+    open({ view: "Account" });
   }
 
   async function handleSwitchNetwork() {
