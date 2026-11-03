@@ -69,14 +69,12 @@ export default function ValidatorDashboard() {
   const { signMessageAsync } = useSignMessage();
   // Validator reads and transactions must target only the canonical 2-of-3 manager.
   const managers = useMemo(() => [assetOracleMarketManagerAddress], []);
-  const validatorReads = useReadContracts({
-    contracts: address ? managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "isValidator" as const, args: [address] as const })) : [],
-    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
-  });
-  const authorizedValidator = Boolean(address && validatorReads.data?.some((read) => read.status === "success" && read.result === true));
+  // Load the market list for any connected wallet, then authorize it against
+  // each market's immutable validator snapshot. This keeps replaced validators
+  // able to finish markets they were originally assigned to.
   const managerCountReads = useReadContracts({
     contracts: managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "marketCount" as const })),
-    query: { enabled: Boolean(authorizedValidator && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
+    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
   });
   const marketContracts = useMemo(() => managers.flatMap((managerAddress, managerIndex) => {
     const count = Number(managerCountReads.data?.[managerIndex]?.status === "success" ? managerCountReads.data[managerIndex].result ?? 0n : 0n);
@@ -121,7 +119,22 @@ export default function ValidatorDashboard() {
     })
     .sort((a, b) => Number(a.closeTime - b.closeTime)), [marketReads.data, marketContracts]);
 
-  const sectionMarkets = markets.filter((market) => activeValidatorSection === "finalization" ? market.status === MARKET_STATUS.DISPUTED : market.status !== MARKET_STATUS.DISPUTED);
+  const marketValidatorReads = useReadContracts({
+    contracts: address ? markets.map((market) => ({
+      address: market.managerAddress,
+      abi: assetOracleMarketManagerAbi,
+      functionName: "isMarketValidator" as const,
+      args: [market.id, address] as const,
+    })) : [],
+    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID && markets.length > 0), refetchInterval: 15_000 },
+  });
+  const authorizedMarketIds = new Set(markets.filter((_, index) =>
+    marketValidatorReads.data?.[index]?.status === "success" &&
+    marketValidatorReads.data[index].result === true
+  ).map((market) => market.id.toString()));
+  const authorizedValidator = authorizedMarketIds.size > 0;
+  const authorizedMarkets = markets.filter((market) => authorizedMarketIds.has(market.id.toString()));
+  const sectionMarkets = authorizedMarkets.filter((market) => activeValidatorSection === "finalization" ? market.status === MARKET_STATUS.DISPUTED : market.status !== MARKET_STATUS.DISPUTED);
 
   const votedReads = useReadContracts({
     contracts: address ? markets.map((market) => ({
@@ -260,9 +273,9 @@ export default function ValidatorDashboard() {
     });
   }
 
-  if (!isConnected) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Connect an authorized validator wallet to continue.</p></section>;
+  if (!isConnected) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Connect a wallet to check its assignments across current and previous validator rosters.</p></section>;
   if (chainId !== ASSET_CHAIN_TESTNET_ID) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Switch to Asset Chain Testnet (Chain ID 42421).</p></section>;
-  if (!authorizedValidator) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This dashboard is available only to the designated validator wallets. Connect one of the authorized validator wallets.</p></section>;
+  if (!authorizedValidator && !marketValidatorReads.isPending) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This wallet is not assigned to any active market validator roster.</p></section>;
 
   return (
     <section className="validator-dashboard page-section">
