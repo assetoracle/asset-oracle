@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadContracts, useSignMessage } from "wagmi";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAppKit } from "@reown/appkit/react";
 import { MARKET_STATUS, assetOracleMarketManagerAbi, assetOracleMarketManagerAddress, isAssetOracleContractConfigured } from "./contracts/assetOracle";
 import { isAddress } from "viem";
 import {
@@ -254,7 +254,7 @@ export default function App() {
   } = useWalletStatus();
 
   const { signMessageAsync } = useSignMessage();
-  const { openConnectModal } = useConnectModal();
+  const { open } = useAppKit();
   const isAdmin = walletRole?.isOwner === true;
 
   const validatorStatusReads = useReadContracts({
@@ -845,7 +845,7 @@ useEffect(() => {
   }, []);
 
   function openWalletHelp() {
-    openConnectModal?.();
+    open({ view: "Connect" });
   }
 
   useEffect(() => {
