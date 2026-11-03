@@ -1,4 +1,3 @@
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu, X } from "lucide-react";
 import type { Page, NavItem } from "./Nav";
 import { DesktopNav, MobileNav } from "./Nav";
@@ -53,11 +52,7 @@ export default function Header({
         />
 
         <div className="header-actions">
-          <ConnectButton
-            chainStatus="none"
-            accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
-            showBalance={false}
-          />
+          <appkit-button />
 
           <button
             className="mobile-menu-button"
