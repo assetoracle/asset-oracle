@@ -1,61 +1,44 @@
-import { connectorsForWallets, darkTheme } from "@rainbow-me/rainbowkit";
-import {
-  binanceWallet,
-  coinbaseWallet,
-  injectedWallet,
-  metaMaskWallet,
-  okxWallet,
-  rabbyWallet,
-  rainbowWallet,
-  safepalWallet,
-  trustWallet,
-  walletConnectWallet,
-  zerionWallet,
-} from "@rainbow-me/rainbowkit/wallets";
-import { createConfig, http } from "wagmi";
+import { createAppKit } from "@reown/appkit/react";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import type { AppKitNetwork } from "@reown/appkit/networks";
+import { http } from "viem";
 import { assetChainTestnet } from "./config/assetChain";
 import { ASSET_CHAIN_RPC_URL } from "./config/env";
 
 const projectId =
   import.meta.env.VITE_REOWN_PROJECT_ID || "31b59192af5764277976dd36db7754ba";
 
-const chains = [assetChainTestnet] as const;
+const networks: [AppKitNetwork, ...AppKitNetwork[]] = [assetChainTestnet];
 
-const connectors = connectorsForWallets(
-  [
-    {
-      groupName: "Recommended",
-      wallets: [metaMaskWallet, walletConnectWallet, rainbowWallet, injectedWallet],
-    },
-    {
-      groupName: "More",
-      wallets: [
-        rabbyWallet,
-        okxWallet,
-        trustWallet,
-        zerionWallet,
-        safepalWallet,
-        binanceWallet,
-        coinbaseWallet,
-      ],
-    },
-  ],
-  { appName: "Asset Oracle", projectId },
-);
-
-export const wagmiConfig = createConfig({
-  chains,
-  connectors,
+export const wagmiAdapter = new WagmiAdapter({
+  projectId,
+  networks,
   transports: {
     [assetChainTestnet.id]: http(ASSET_CHAIN_RPC_URL),
   },
   ssr: false,
 });
 
-export const rainbowKitTheme = darkTheme({
-  accentColor: "#12D9F5",
-  accentColorForeground: "#071A24",
-  borderRadius: "large",
-  fontStack: "system",
-  overlayBlur: "small",
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks,
+  projectId,
+  metadata: {
+    name: "Asset Oracle",
+    description: "Real-world truth, on-chain.",
+    url: "https://assetoracleapp.xyz",
+    icons: ["https://assetoracleapp.xyz/asset-oracle-logo-transparent.svg"],
+  },
+  themeMode: "dark",
+  themeVariables: {
+    "--w3m-accent": "#12D9F5",
+    "--w3m-border-radius-master": "16px",
+  },
+  features: {
+    analytics: false,
+    email: false,
+    socials: [],
+  },
 });
+
+export const wagmiConfig = wagmiAdapter.wagmiConfig;
