@@ -20,6 +20,7 @@ import {
   MARKET_STATUS,
   TESTNET_USDC_ADDRESS,
   TESTNET_USDC_DECIMALS,
+  isAssetOracleContractConfigured,
 } from "../contracts/assetOracle";
 import { ensureWalletSession } from "../markets/marketApi";
 
@@ -46,8 +47,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const [referralQualificationAttempted, setReferralQualificationAttempted] = useState<string | null>(null);
   const [referralAttributionReady, setReferralAttributionReady] = useState(false);
   const [referralPreparing, setReferralPreparing] = useState(false);
-  const manager = managerAddress == null ||
-    (isAddress(managerAddress) && managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase())
+  const manager = isAssetOracleContractConfigured && (managerAddress == null ||
+    (isAddress(managerAddress) && managerAddress.toLowerCase() === assetOracleMarketManagerAddress.toLowerCase()))
     ? assetOracleMarketManagerAddress
     : undefined;
   const isCurrentManager = Boolean(manager);
