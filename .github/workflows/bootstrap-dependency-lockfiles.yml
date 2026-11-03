@@ -9,6 +9,10 @@ on:
       - "package.json"
       - "package-lock.json"
       - "src/**"
+concurrency:
+  group: frontend-dependency-remediation-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 jobs:
