@@ -25,5 +25,11 @@
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "~5.9.3",
     "vite": "^6.0.7"
+  },
+  "overrides": {
+    "@reown/appkit-utils": {
+      "@x402/core": "2.29.0",
+      "@x402/evm": "2.29.0"
+    }
   }
 }
