@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/bootstrap-dependency-lockfiles.yml"
       - "package.json"
+      - "package.json"
       - "package-lock.json"
 permissions:
   contents: write
