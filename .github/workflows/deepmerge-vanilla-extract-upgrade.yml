@@ -85,7 +85,7 @@ jobs:
           await page.getByRole('button', { name: /connect wallet/i }).first().waitFor({ state: 'visible', timeout: 30000 });
           await page.getByRole('button', { name: /connect wallet/i }).first().click();
           await page.getByRole('button', { name: /MetaMask/i }).first().waitFor({ state: 'visible', timeout: 15000 });
-          await page.getByRole('button', { name: /MetaMask/i }).first().click();
+          await page.waitForTimeout(750);\n          await page.getByRole('button', { name: /MetaMask/i }).first().click({ force: true });
           await page.getByText(/0x1111|0x1111\.\.\.1111/i).waitFor({ state: 'visible', timeout: 20000 });
           if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
           console.log('PASS: simulated injected MetaMask wallet connects and account renders.');
