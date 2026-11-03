@@ -82,7 +82,7 @@ export default function ValidatorDashboard() {
   }), [managers, managerCountReads.data]);
   const marketReads = useReadContracts({
     contracts: marketContracts,
-    query: { enabled: Boolean(authorizedValidator && chainId === ASSET_CHAIN_TESTNET_ID && marketContracts.length > 0), refetchInterval: 15_000 },
+    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID && marketContracts.length > 0), refetchInterval: 15_000 },
   });
   const { writeContract, data: txHash, isPending, error, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
@@ -205,9 +205,9 @@ export default function ValidatorDashboard() {
     if (refreshingMarkets) return;
     setRefreshingMarkets(true);
     try {
-      await validatorReads.refetch();
       await managerCountReads.refetch();
       await marketReads.refetch();
+      await marketValidatorReads.refetch();
     } finally {
       setRefreshingMarkets(false);
     }
