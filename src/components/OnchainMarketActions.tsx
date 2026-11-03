@@ -94,7 +94,6 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
         const currentMarketTupleVerified = Boolean(
           currentMarketShape &&
           typeof currentMarketShape === "object" &&
-          "marketType" in currentMarketShape &&
           "stablecoin" in currentMarketShape &&
           "evidenceHash" in currentMarketShape
         );
