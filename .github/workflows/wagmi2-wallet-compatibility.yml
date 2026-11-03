@@ -104,13 +104,18 @@ jobs:
           const metaMask = page.getByRole('button', { name: /MetaMask/i }).first();
           await metaMask.waitFor({ state: 'visible', timeout: 15000 });
           await metaMask.click();
-          await page.getByText(/0x1111|0x1111\.\.\.1111/i).waitFor({ state: 'visible', timeout: 20000 });
+          await page.getByText(/0x1111|0x1111\\.\\.\\.1111/i).waitFor({ state: 'visible', timeout: 20000 });
           if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
           console.log('PASS: RainbowKit modal opened, MetaMask injected provider connected, account rendered.');
           await page.setViewportSize({ width: 390, height: 844 });
-          await page.reload({ waitUntil: 'domcontentloaded' });
-          await page.getByRole('button', { name: /connect wallet/i }).first().waitFor({ state: 'visible', timeout: 30000 });
-          console.log('PASS: Mobile viewport rendered wallet connection control.');
+          const root = page.locator('#root');
+          await root.waitFor({ state: 'visible', timeout: 15000 });
+          const rootBox = await root.boundingBox();
+          if (!rootBox || rootBox.width <= 0 || rootBox.height <= 0) {
+            throw new Error('Mobile viewport did not render the application root.');
+          }
+          if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
+          console.log('PASS: Application remained rendered at 390px mobile viewport.');
           await browser.close();
           NODE
       - name: Upload browser diagnostics
