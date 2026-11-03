@@ -1,8 +1,8 @@
-name: RainbowKit dependency security audit
+name: RainbowKit Wagmi 2 remediation experiment
 
 on:
   push:
-    branches: [dependency-audit-rainbowkit]
+    branches: [rainbowkit-wagmi2-remediation-test]
   workflow_dispatch:
 
 permissions:
@@ -11,36 +11,40 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install the existing RainbowKit dependency setup
+      - name: Install existing RainbowKit and Wagmi 2 setup
         run: npm install --no-audit --no-fund
-      - name: Record dependency versions and explain unexpected packages
+      - name: Record baseline audit
         run: |
+          npm audit --json > audit-before.json || true
+          node -e "const a=require('./audit-before.json'); console.log('BASELINE', JSON.stringify(a.metadata?.vulnerabilities))"
+      - name: Apply npm-supported non-breaking fixes only
+        run: |
+          npm audit fix --no-fund || true
           npm ls --depth=0
-          echo "=== Reown dependency path ==="
+          echo "=== Reown dependency path after safe fixes ==="
           npm explain @reown/appkit || true
-          npm ls @reown/appkit --all || true
-          echo "=== Zod dependency paths ==="
+          echo "=== Zod dependency paths after safe fixes ==="
           npm explain zod || true
-          npm ls zod --all || true
-      - name: Run security audit
+      - name: Record post-fix audit
         run: |
-          npm audit --json > rainbowkit-audit.json || true
-          node -e "const a=require('./rainbowkit-audit.json'); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, advisories:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,via:v.via.map(x=>typeof x==='string'?x:x.title),fixAvailable:v.fixAvailable,nodes:v.nodes}))},null,2))" > rainbowkit-audit-summary.json
-          cat rainbowkit-audit-summary.json
+          npm audit --json > audit-after.json || true
+          node -e "const a=require('./audit-after.json'); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, advisories:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,range:v.range,via:v.via.map(x=>typeof x==='string'?x:x.title),fixAvailable:v.fixAvailable,nodes:v.nodes}))},null,2))" > audit-after-summary.json
+          cat audit-after-summary.json
       - name: Build application
         run: npm run build
-      - name: Upload dependency tree and audit reports
+      - name: Upload experimental lockfile and audit reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rainbowkit-dependency-diagnostics
+          name: rainbowkit-wagmi2-remediation-diagnostics
           path: |
             package-lock.json
-            rainbowkit-audit.json
-            rainbowkit-audit-summary.json
+            audit-before.json
+            audit-after.json
+            audit-after-summary.json
