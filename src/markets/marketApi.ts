@@ -291,19 +291,13 @@ export async function createPaidMarketProposal(
   const chainId = typeof chainIdValue === "string" ? Number.parseInt(chainIdValue, 16) : Number.NaN;
   if (chainId !== 42421) throw new Error("Switch your wallet to Asset Chain Testnet (chain ID 42421) before paying.");
   const accountsValue = await provider.request({ method: "eth_accounts" });
-  if (!Array.isArray(accountsValue) ||
-      !accountsValue.some((account) => typeof account === "string" && account.toLowerCase() === address.toLowerCase())) {
+  if (!Array.isArray(accountsValue) || !accountsValue.some((account) => typeof account === "string" && account.toLowerCase() === address.toLowerCase())) {
     throw new Error("The connected wallet account does not match the proposal creator.");
   }
 
   const quote = await request<{
-    quoteId: string;
-    network: "TESTNET";
-    token: "USDC";
-    tokenAddress: string;
-    tokenDecimals: number;
-    amountAtomic: string;
-    expiresAtMs: number;
+    quoteId: string; network: "TESTNET"; token: "USDC"; tokenAddress: string;
+    tokenDecimals: number; amountAtomic: string; expiresAtMs: number;
   }>("/api/markets/paid-submissions/quote", {
     method: "POST",
     body: JSON.stringify({ token: "USDC", walletAuth: await signedWalletAuth(address, signMessage) }),
@@ -318,36 +312,26 @@ export async function createPaidMarketProposal(
     submissionId: string;
     proposal: { id: string; question: string; status: "PENDING_APPROVAL"; submittedAt: string };
     payment: {
-      network: "TESTNET";
-      token: "USDC";
-      tokenAddress: string;
-      tokenDecimals: number;
-      amountAtomic: string;
-      treasuryAddress: string;
-      expiresAtMs: number;
+      network: "TESTNET"; token: "USDC"; tokenAddress: string; tokenDecimals: number;
+      amountAtomic: string; escrowAddress: string; proposalIdHash: string; expiresAtMs: number;
     };
   }>("/api/markets/paid-submissions/intent", {
     method: "POST",
-    body: JSON.stringify({
-      proposal,
-      quoteId: quote.quoteId,
-      walletAuth: await signedWalletAuth(address, signMessage),
-    }),
+    body: JSON.stringify({ proposal, quoteId: quote.quoteId, walletAuth: await signedWalletAuth(address, signMessage) }),
   });
 
   if (intent.payment.network !== "TESTNET" || intent.payment.token !== "USDC" ||
       intent.payment.tokenAddress.toLowerCase() !== ASSET_CHAIN_TESTNET_USDC_ADDRESS.toLowerCase() ||
       intent.payment.tokenAddress.toLowerCase() !== quote.tokenAddress.toLowerCase() ||
-      intent.payment.amountAtomic !== "10000000" || intent.payment.tokenDecimals !== 6) {
-    throw new Error("The payment intent does not match the 10 USDC testnet quote.");
+      intent.payment.amountAtomic !== "10000000" || intent.payment.tokenDecimals !== 6 ||
+      !/^0x[0-9a-fA-F]{40}$/.test(intent.payment.escrowAddress) ||
+      !/^0x[0-9a-fA-F]{64}$/.test(intent.payment.proposalIdHash)) {
+    throw new Error("The payment intent does not match the 10 USDC testnet escrow policy.");
   }
+  const tokenAddress = getAddress(intent.payment.tokenAddress);
+  const escrowAddress = getAddress(intent.payment.escrowAddress);
+  const amount = BigInt(intent.payment.amountAtomic);
 
-  const recipient = intent.payment.treasuryAddress.toLowerCase().replace(/^0x/, "");
-  if (!/^0x[0-9a-fA-F]{40}$/.test(intent.payment.treasuryAddress) ||
-      !/^0x[0-9a-fA-F]{40}$/.test(intent.payment.tokenAddress)) {
-    throw new Error("The configured testnet USDC contract or treasury address is invalid.");
-  }
-  // Recheck immediately before prompting the wallet in case the user changed accounts or networks.
   const currentChainValue = await provider.request({ method: "eth_chainId" });
   const currentChainId = typeof currentChainValue === "string" ? Number.parseInt(currentChainValue, 16) : Number.NaN;
   const currentAccounts = await provider.request({ method: "eth_accounts" });
@@ -355,36 +339,44 @@ export async function createPaidMarketProposal(
       !currentAccounts.some((account) => typeof account === "string" && account.toLowerCase() === address.toLowerCase())) {
     throw new Error("Wallet account or network changed. Reconnect to the proposal wallet on Asset Chain Testnet and try again.");
   }
-  const amountHex = BigInt(intent.payment.amountAtomic).toString(16).padStart(64, "0");
-  const transferData = `0xa9059cbb${recipient.padStart(64, "0")}${amountHex}`;
-  const transactionHash = await provider.request({
-    method: "eth_sendTransaction",
-    params: [{
-      from: address,
-      to: intent.payment.tokenAddress,
-      data: transferData,
-      value: "0x0",
-    }],
+
+  const approvalData = encodeFunctionData({
+    abi: usdcApprovalAbi, functionName: "approve", args: [escrowAddress, amount],
   });
-  if (typeof transactionHash !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(transactionHash)) {
-    throw new Error("Wallet did not return a valid USDC payment transaction hash.");
+  const approvalHash = await provider.request({
+    method: "eth_sendTransaction",
+    params: [{ from: address, to: tokenAddress, data: approvalData, value: "0x0" }],
+  });
+  if (typeof approvalHash !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(approvalHash)) {
+    throw new Error("Wallet did not return a valid USDC approval transaction hash.");
   }
+  await waitForConfirmedWalletTransaction(provider, approvalHash);
+
+  const escrowData = encodeFunctionData({
+    abi: proposalEscrowAbi, functionName: "submitProposalFee",
+    args: [intent.payment.proposalIdHash as `0x${string}`],
+  });
+  const escrowHash = await provider.request({
+    method: "eth_sendTransaction",
+    params: [{ from: address, to: escrowAddress, data: escrowData, value: "0x0" }],
+  });
+  if (typeof escrowHash !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(escrowHash)) {
+    throw new Error("Wallet did not return a valid escrow payment transaction hash.");
+  }
+  await waitForConfirmedWalletTransaction(provider, escrowHash);
 
   await request<{ status: string; message: string }>("/api/markets/paid-submissions/verify-payment", {
     method: "POST",
     body: JSON.stringify({
-      submissionId: intent.submissionId,
-      transactionHash,
+      submissionId: intent.submissionId, transactionHash: escrowHash,
       walletAuth: await signedWalletAuth(address, signMessage),
     }),
   });
 
   return {
-    message: "10 USDC payment verified. Your proposal is pending admin review.",
+    message: "10 USDC secured in escrow. Your proposal is pending admin review; the fee will reach Treasury only if approved.",
     proposal: {
-      ...proposal,
-      id: intent.proposal.id,
-      status: "PENDING_APPROVAL" as const,
+      ...proposal, id: intent.proposal.id, status: "PENDING_APPROVAL" as const,
       submittedAt: intent.proposal.submittedAt,
     } satisfies StoredMarketProposal,
   };
