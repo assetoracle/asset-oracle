@@ -118,7 +118,7 @@ export default function AdminDashboard({
     setNotice("");
     try {
       await authenticate();
-      const result = await decideGeneratedMarketCandidate(candidateId, address, decision);
+      await decideGeneratedMarketCandidate(candidateId, address, decision);
       setGeneratedCandidates((current) => current.filter((candidate) => candidate.id !== candidateId));
       if (decision === "PROMOTED") {
         setNotice("Candidate promoted into the normal proposal queue. It still requires the usual approval.");
@@ -220,7 +220,8 @@ export default function AdminDashboard({
 
       <nav className="admin-section-nav" aria-label="Market operations sections">
         {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "proposals" ? "primary-button" : "text-action"} aria-current={activeSection === "proposals" ? "page" : undefined} onClick={() => setActiveSection("proposals")}>Normal proposals</button>}
-        <button type="button" className={activeSection === "automated" ? "primary-button" : "text-action"} aria-current={activeSection === "automated" ? "page" : undefined} onClick={() => setActiveSection("automated")}>Automated markets</button>\n        {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "candidates" ? "primary-button" : "text-action"} aria-current={activeSection === "candidates" ? "page" : undefined} onClick={() => setActiveSection("candidates")}>Generated candidates</button>}
+        <button type="button" className={activeSection === "automated" ? "primary-button" : "text-action"} aria-current={activeSection === "automated" ? "page" : undefined} onClick={() => setActiveSection("automated")}>Automated markets</button>
+        {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "candidates" ? "primary-button" : "text-action"} aria-current={activeSection === "candidates" ? "page" : undefined} onClick={() => setActiveSection("candidates")}>Generated candidates</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "validators" ? "primary-button" : "text-action"} aria-current={activeSection === "validators" ? "page" : undefined} onClick={() => setActiveSection("validators")}>Validator operations</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "refunds" ? "primary-button" : "text-action"} aria-current={activeSection === "refunds" ? "page" : undefined} onClick={() => setActiveSection("refunds")}>Paid proposal refunds</button>}
