@@ -16,8 +16,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Regenerate lockfile for scoped Zod 4 overrides
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Install exact combined dependency tree
         run: npm ci --no-audit --no-fund
+      - name: Audit dependencies and report resolved Zod versions
+        shell: bash
+        run: |
+          npm audit --json > npm-audit.json || true
+          node <<'NODE'
+          const fs = require('node:fs');
+          const audit = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          console.log('NPM AUDIT COUNTS');
+          console.log(JSON.stringify(audit.metadata?.vulnerabilities || {}, null, 2));
+          for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
+            console.log(name + ': ' + item.severity + '; via=' + JSON.stringify(item.via) + '; nodes=' + JSON.stringify(item.nodes));
+          }
+          NODE
+          npm ls zod --all || true
       - name: Verify wallet stack versions
         run: |
           npm ls wagmi @rainbow-me/rainbowkit viem @walletconnect/ethereum-provider @walletconnect/core --all
@@ -81,16 +97,17 @@ jobs:
                 throw new Error('Mock wallet does not implement ' + method);
               }
             };
+            window.__mockEthereum = provider;
             Object.defineProperty(window, 'ethereum', { configurable: true, value: provider });
           });
           await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
           const connect = page.getByRole('button', { name: /connect wallet/i }).first();
           await connect.waitFor({ state: 'visible', timeout: 30000 });
           await connect.click();
-          const metaMask = page.getByRole('button', { name: /MetaMask/i }).first();
+          const metaMask = page.locator('[data-testid="rk-wallet-option-metaMask"]');
           await metaMask.waitFor({ state: 'visible', timeout: 15000 });
-          await metaMask.click();
-          await page.getByText(/0x1111|0x1111\.\.\.1111/i).waitFor({ state: 'visible', timeout: 20000 });
+          await metaMask.click({ timeout: 10000 });
+          await page.waitForFunction(() => window.__mockEthereum?.selectedAddress === '0x1111111111111111111111111111111111111111', { timeout: 15000 });
           if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
           console.log('PASS: RainbowKit modal opened and simulated injected MetaMask account connected.');
           await page.setViewportSize({ width: 390, height: 844 });
@@ -100,6 +117,7 @@ jobs:
           if (!rootBox || rootBox.width <= 0 || rootBox.height <= 0) throw new Error('Mobile viewport did not render the application root.');
           if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
           console.log('PASS: Application remained rendered at 390px mobile viewport.');
+          await page.screenshot({ path: '/tmp/asset-oracle-wallet-smoke.png', fullPage: true });
           await browser.close();
           NODE
       - name: Upload browser diagnostics
@@ -107,5 +125,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: combined-security-wallet-diagnostics
-          path: /tmp/asset-oracle-preview.log
+          path: |
+            /tmp/asset-oracle-preview.log
+            /tmp/asset-oracle-wallet-smoke.png
+            npm-audit.json
+            package-lock.json
           if-no-files-found: warn
