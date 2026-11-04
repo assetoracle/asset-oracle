@@ -20,6 +20,7 @@ import {
   ensureWalletSession,
   getPrivateAutomatedMarkets,
   decideAutomatedMarket,
+  decideManualMarketProposal,
   type StoredMarketProposal,
   listGeneratedMarketCandidates,
   decideGeneratedMarketCandidate,
@@ -179,19 +180,12 @@ export default function AdminDashboard({
         setAutomatedProposals((current) => current.map((proposal) => proposal.id === id ? result.proposal : proposal));
         setNotice(`Automated market ${status.toLowerCase()} successfully.`);
       } else {
-        const response = await fetch(
-          `${API}/api/markets/admin/proposals/${encodeURIComponent(id)}/decision/session`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-            body: JSON.stringify({ address, status }),
-          },
-        );
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `Unable to ${action} proposal.`);
-        setProposals((current) => current.map((proposal) => proposal.id === id ? data.proposal : proposal)
+        const result = await decideManualMarketProposal(id, address!, status, signMessage);
+        setProposals((current) => current.map((proposal) => proposal.id === id ? result.proposal : proposal)
           .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
-        setNotice(`Proposal ${status.toLowerCase()} successfully.`);
+        setNotice(status === "APPROVED"
+          ? "Proposal approved. Any escrowed $10 USDC fee has been released to Treasury."
+          : "Proposal rejected. Any escrowed $10 USDC fee has been refunded to its original wallet.");
       }
     } catch (err) {
       setError(friendlyError(err, "Decision failed."));
