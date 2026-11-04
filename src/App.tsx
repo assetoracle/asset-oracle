@@ -688,7 +688,7 @@ useEffect(() => {
         activeCategory === "All Markets" ||
         activeCategory === "Live" ||
         activeCategory === "Settled Markets" ||
-        (activeCategory === "Digital Assets" ? market.category === "Crypto" : market.category === activeCategory);
+        market.category === activeCategory;
 
       const matchesSearch =
         market.question.toLowerCase().includes(query) ||

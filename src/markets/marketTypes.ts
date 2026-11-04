@@ -8,7 +8,7 @@ export type MarketStatus =
   | "CANCELLED";
 
 export type MarketCategory =
-  | "Crypto"
+  | "Digital Assets"
   | "Sports"
   | "Economics"
   | "RWA"
