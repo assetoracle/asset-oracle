@@ -1,0 +1,83 @@
+name: Deepmerge upstream dependency mitigation test
+
+on:
+  push:
+    branches: [deepmerge-vanilla-extract-upgrade-test]
+
+permissions:
+  contents: write
+
+jobs:
+  mitigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Regenerate lockfile from committed override
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Install exactly from lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Verify dependency replacement
+        run: |
+          npm ls @vanilla-extract/css deepmerge deepmerge-ts --all || true
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+          const css = require('@vanilla-extract/css/package.json');
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          assert.equal(css.version, '1.21.3');
+          assert.equal(css.dependencies.deepmerge, undefined);
+          assert.ok(css.dependencies['deepmerge-ts']);
+          assert.equal(lock.packages['node_modules/@vanilla-extract/css'].version, '1.21.3');
+          const deepmergePaths = Object.keys(lock.packages || {}).filter(
+            p => p === 'node_modules/deepmerge' || p.endsWith('/node_modules/deepmerge')
+          );
+          assert.deepEqual(deepmergePaths, [], 'deepmerge remains in the resolved lockfile');
+          console.log('PASS: locked @vanilla-extract/css 1.21.3 uses deepmerge-ts; deepmerge is absent from the dependency lockfile.');
+          console.log('deepmerge-ts range:', css.dependencies['deepmerge-ts']);
+          NODE
+      - name: Build production frontend
+        run: npm run build
+      - name: Run fresh dependency security audit
+        shell: bash
+        run: |
+          npm audit --json > npm-audit.json || true
+          node <<'NODE'
+          const fs = require('node:fs');
+          const audit = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          const v = audit.metadata?.vulnerabilities || {};
+          console.log('NPM AUDIT SUMMARY');
+          console.log(JSON.stringify({
+            total: v.total ?? null,
+            critical: v.critical ?? null,
+            high: v.high ?? null,
+            moderate: v.moderate ?? null,
+            low: v.low ?? null,
+            info: v.info ?? null
+          }, null, 2));
+          for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
+            console.log(`- ${name}: severity=${item.severity}, direct=${item.isDirect}, fixAvailable=${JSON.stringify(item.fixAvailable)}`);
+          }
+          NODE
+      - name: Commit regenerated lockfile to isolated test branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile already matches the committed override."
+          else
+            git commit -m "Update lockfile for vanilla-extract security fix"
+            git push
+          fi
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asset-oracle-npm-audit
+          path: npm-audit.json
+          if-no-files-found: warn
+          retention-days: 14

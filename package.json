@@ -23,5 +23,18 @@
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "~5.9.3",
     "vite": "^6.0.7"
+  },
+  "overrides": {
+    "@vanilla-extract/css": "1.21.3",
+    "decode-uri-component": "0.5.1",
+    "ws": "8.21.0",
+    "abitype": "^1.2.3",
+    "viem": "$viem",
+    "@walletconnect/core": "2.26.0",
+    "@walletconnect/sign-client": "2.26.0",
+    "@walletconnect/universal-provider": "2.26.0",
+    "@walletconnect/utils": "2.26.0",
+    "@walletconnect/ethereum-provider": "2.26.0",
+    "uuid": "11.1.1"
   }
 }
