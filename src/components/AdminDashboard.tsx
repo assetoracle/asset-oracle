@@ -21,6 +21,9 @@ import {
   getPrivateAutomatedMarkets,
   decideAutomatedMarket,
   type StoredMarketProposal,
+  listGeneratedMarketCandidates,
+  decideGeneratedMarketCandidate,
+  type GeneratedMarketCandidate,
   type WalletRole,
 } from "../markets/marketApi";
 
@@ -38,7 +41,8 @@ export default function AdminDashboard({
   signMessage,
 }: Props) {
   const [proposals, setProposals] = useState<StoredMarketProposal[]>([]);
-  const [automatedProposals, setAutomatedProposals] = useState<StoredMarketProposal[]>([]);\n  const [generatedCandidates, setGeneratedCandidates] = useState<GeneratedMarketCandidate[]>([]);
+  const [automatedProposals, setAutomatedProposals] = useState<StoredMarketProposal[]>([]);
+  const [generatedCandidates, setGeneratedCandidates] = useState<GeneratedMarketCandidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
