@@ -35,6 +35,9 @@
     "@walletconnect/universal-provider": "2.26.0",
     "@walletconnect/utils": "2.26.0",
     "@walletconnect/ethereum-provider": "2.26.0",
-    "uuid": "11.1.1"
+    "uuid": "11.1.1",
+    "@reown/appkit-wallet": {
+      "zod": "3.25.76"
+    }
   }
 }
