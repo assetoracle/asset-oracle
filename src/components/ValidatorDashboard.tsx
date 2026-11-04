@@ -9,6 +9,7 @@ import {
   assetOracleMarketManagerAbi,
   assetOracleMarketManagerAddress,
   MARKET_STATUS,
+  isAssetOracleContractConfigured,
 } from "../contracts/assetOracle";
 
 type ChainMarket = {
@@ -69,14 +70,12 @@ export default function ValidatorDashboard() {
   const { signMessageAsync } = useSignMessage();
   // Validator reads and transactions must target only the canonical 2-of-3 manager.
   const managers = useMemo(() => [assetOracleMarketManagerAddress], []);
-  const validatorReads = useReadContracts({
-    contracts: address ? managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "isValidator" as const, args: [address] as const })) : [],
-    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
-  });
-  const authorizedValidator = Boolean(address && validatorReads.data?.some((read) => read.status === "success" && read.result === true));
+  // Load the market list for any connected wallet, then authorize it against
+  // each market's immutable validator snapshot. This keeps replaced validators
+  // able to finish markets they were originally assigned to.
   const managerCountReads = useReadContracts({
     contracts: managers.map((managerAddress) => ({ address: managerAddress, abi: assetOracleMarketManagerAbi, functionName: "marketCount" as const })),
-    query: { enabled: Boolean(authorizedValidator && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
+    query: { enabled: Boolean(isAssetOracleContractConfigured && address && chainId === ASSET_CHAIN_TESTNET_ID), refetchInterval: 15_000 },
   });
   const marketContracts = useMemo(() => managers.flatMap((managerAddress, managerIndex) => {
     const count = Number(managerCountReads.data?.[managerIndex]?.status === "success" ? managerCountReads.data[managerIndex].result ?? 0n : 0n);
@@ -84,7 +83,7 @@ export default function ValidatorDashboard() {
   }), [managers, managerCountReads.data]);
   const marketReads = useReadContracts({
     contracts: marketContracts,
-    query: { enabled: Boolean(authorizedValidator && chainId === ASSET_CHAIN_TESTNET_ID && marketContracts.length > 0), refetchInterval: 15_000 },
+    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID && marketContracts.length > 0), refetchInterval: 15_000 },
   });
   const { writeContract, data: txHash, isPending, error, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
@@ -117,17 +116,32 @@ export default function ValidatorDashboard() {
       const isClosed = market.status === MARKET_STATUS.CLOSED;
       const isExpiredOpen = market.status === MARKET_STATUS.OPEN &&
         market.closeTime <= BigInt(Math.floor(Date.now() / 1000));
-      return isClosed || isExpiredOpen || market.status === MARKET_STATUS.DISPUTED;
+      return isClosed || isExpiredOpen || market.status === MARKET_STATUS.DISPUTED || market.status === MARKET_STATUS.ARBITRATION;
     })
     .sort((a, b) => Number(a.closeTime - b.closeTime)), [marketReads.data, marketContracts]);
 
-  const sectionMarkets = markets.filter((market) => activeValidatorSection === "finalization" ? market.status === MARKET_STATUS.DISPUTED : market.status !== MARKET_STATUS.DISPUTED);
+  const marketValidatorReads = useReadContracts({
+    contracts: address ? markets.map((market) => ({
+      address: market.managerAddress,
+      abi: assetOracleMarketManagerAbi,
+      functionName: "isMarketValidator" as const,
+      args: [market.id, address] as const,
+    })) : [],
+    query: { enabled: Boolean(address && chainId === ASSET_CHAIN_TESTNET_ID && markets.length > 0), refetchInterval: 15_000 },
+  });
+  const authorizedMarketIds = new Set(markets.filter((_, index) =>
+    marketValidatorReads.data?.[index]?.status === "success" &&
+    marketValidatorReads.data[index].result === true
+  ).map((market) => market.id.toString()));
+  const authorizedValidator = authorizedMarketIds.size > 0;
+  const authorizedMarkets = markets.filter((market) => authorizedMarketIds.has(market.id.toString()));
+  const sectionMarkets = authorizedMarkets.filter((market) => activeValidatorSection === "finalization" ? market.status === MARKET_STATUS.DISPUTED : market.status !== MARKET_STATUS.DISPUTED);
 
   const votedReads = useReadContracts({
     contracts: address ? markets.map((market) => ({
       address: market.managerAddress,
       abi: assetOracleMarketManagerAbi,
-      functionName: "hasVoted" as const,
+      functionName: (market.status === MARKET_STATUS.ARBITRATION ? "hasVotedOnDispute" : "hasVoted") as "hasVoted" | "hasVotedOnDispute",
       args: [market.id, address] as const,
     })) : [],
     query: { enabled: Boolean(address && authorizedValidator && markets.length > 0), refetchInterval: 10_000 },
@@ -140,7 +154,7 @@ export default function ValidatorDashboard() {
       return [1, 2, 3].map((outcome) => ({
         address: market.managerAddress,
         abi: assetOracleMarketManagerAbi,
-        functionName: "voteCountByKey" as const,
+        functionName: (market.status === MARKET_STATUS.ARBITRATION ? "disputeVoteCountByKey" : "voteCountByKey") as "voteCountByKey" | "disputeVoteCountByKey",
         args: [market.id, voteKey(outcome, evidenceHash)] as const,
       }));
     }),
@@ -192,9 +206,9 @@ export default function ValidatorDashboard() {
     if (refreshingMarkets) return;
     setRefreshingMarkets(true);
     try {
-      await validatorReads.refetch();
       await managerCountReads.refetch();
       await marketReads.refetch();
+      await marketValidatorReads.refetch();
     } finally {
       setRefreshingMarkets(false);
     }
@@ -249,20 +263,21 @@ export default function ValidatorDashboard() {
       });
       return;
     }
-    if (market.status !== MARKET_STATUS.CLOSED) return;
+    if (market.status !== MARKET_STATUS.CLOSED && market.status !== MARKET_STATUS.ARBITRATION) return;
     setPendingVote(null);
     setActionType("vote");
     writeContract({
       address: market.managerAddress,
       abi: assetOracleMarketManagerAbi,
-      functionName: "resolveMarket",
+      functionName: market.status === MARKET_STATUS.ARBITRATION ? "resolveDispute" : "resolveMarket",
       args: [market.id, outcome, evidenceHash],
     });
   }
 
-  if (!isConnected) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Connect an authorized validator wallet to continue.</p></section>;
+  if (!isAssetOracleContractConfigured) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>The active market manager address has not been configured for this frontend.</p></section>;
+  if (!isConnected) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Connect a wallet to check its assignments across current and previous validator rosters.</p></section>;
   if (chainId !== ASSET_CHAIN_TESTNET_ID) return <section className="validator-dashboard page-section"><h1>Validator settlement</h1><p>Switch to Asset Chain Testnet (Chain ID 42421).</p></section>;
-  if (!authorizedValidator) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This dashboard is available only to the designated validator wallets. Connect one of the authorized validator wallets.</p></section>;
+  if (!authorizedValidator && !marketValidatorReads.isPending) return <section className="validator-dashboard page-section"><h1>Access restricted</h1><p>This wallet is not assigned to any active market validator roster.</p></section>;
 
   return (
     <section className="validator-dashboard page-section">
@@ -303,7 +318,7 @@ export default function ValidatorDashboard() {
             const matchingVotes = Number(voteCountReads.data?.[voteIndex]?.status === "success" ? voteCountReads.data[voteIndex].result ?? 0n : 0n);
             const evidence = market.evidenceSource.trim();
             return <article className="validator-market-card" key={`${market.managerAddress.toLowerCase()}-${id}`}>
-              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">Main manager</span><span className="validator-status-pill">{market.status === MARKET_STATUS.DISPUTED ? (canFinalize ? "Challenge period ended · ready to finalize" : "In challenge period") : market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
+              <div className="validator-market-card-header"><span className="eyebrow">MARKET ID</span><strong>#{id}</strong><span className="validator-status-pill">Main manager</span><span className="validator-status-pill">{market.status === MARKET_STATUS.ARBITRATION ? "Disputed · awaiting validator arbitration" : market.status === MARKET_STATUS.DISPUTED ? (canFinalize ? "Challenge period ended · ready to finalize" : "In challenge period") : market.status === MARKET_STATUS.CLOSED ? "Ready for validation" : "Expired · ready to vote"}</span></div>
               <h2>{market.question}</h2>
               <p>{displayResolutionRules(market.resolutionRules)}</p>
               <div className="validator-market-meta"><span>Closed {new Date(Number(market.closeTime) * 1000).toLocaleString()}</span><span>Pool: {(Number(market.totalStaked) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC</span></div>
@@ -335,8 +350,8 @@ export default function ValidatorDashboard() {
                   required
                 />
               </>}
-              <p className="validator-vote-count">{market.status === MARKET_STATUS.DISPUTED ? `Challenge period ends ${new Date(Number(challengeEndsAt) * 1000).toLocaleString()}` : `Matching votes: ${matchingVotes}/2`}</p>
-              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || !(sourceUrls[market.managerAddress.toLowerCase() + "-" + id] ?? "").trim() || isPending || receipt.isLoading || savingSource} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : savingSource ? "Saving source link…" : `Vote ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
+              <p className="validator-vote-count">{market.status === MARKET_STATUS.ARBITRATION ? `Arbitration votes: ${matchingVotes}/2` : `Matching votes: ${matchingVotes}/2`}</p>
+              {market.status === MARKET_STATUS.DISPUTED ? <button className="primary-button" type="button" disabled={!canFinalize || isPending || receipt.isLoading} onClick={() => finalizeMarket(market)}>{isPending && actionType === "finalize" ? "Confirm finalization in wallet…" : receipt.isLoading && actionType === "finalize" ? "Finalizing market…" : canFinalize ? "Finalize market" : "Challenge period active"}</button> : hasVoted ? <p role="status">Your vote is recorded on-chain.</p> : <button className="primary-button" type="button" disabled={!evidence || !(sourceUrls[market.managerAddress.toLowerCase() + "-" + id] ?? "").trim() || isPending || receipt.isLoading || savingSource} onClick={() => submitVote(market)}>{isPending && actionType === "close" ? "Confirm closing in wallet…" : receipt.isLoading && actionType === "close" ? "Closing market…" : isPending && actionType === "vote" ? "Confirm vote in wallet…" : receipt.isLoading && actionType === "vote" ? "Recording vote…" : savingSource ? "Saving source link…" : `${market.status === MARKET_STATUS.ARBITRATION ? "Submit arbitration vote" : "Vote"} ${selectedOutcome === 1 ? "YES" : selectedOutcome === 2 ? "NO" : "INVALID"}`}</button>}
             </article>;
           })}
         </div>}

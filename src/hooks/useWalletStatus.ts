@@ -1,5 +1,5 @@
 import { friendlyError } from "../utils/friendlyError";
-import { useAccountModal, useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { assetChainTestnet } from "../config/assetChain";
@@ -11,7 +11,7 @@ import {
 
 // Wallet providers can leave switch requests pending forever on mobile.
 // Bound the wait so the UI always returns control to the user.
-async function withSwitchTimeout<T>(promise: Promise<T>, timeoutMs = 12000): Promise<T> {
+async function withSwitchTimeout<T>(promise: Promise<T>, timeoutMs = 30000): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
@@ -72,8 +72,7 @@ async function requestAssetChainSwitch(
 }
 
 export function useWalletStatus() {
-  const { openConnectModal } = useConnectModal();
-  const { openAccountModal } = useAccountModal();
+  const { open } = useAppKit();
   const { address, chainId, isConnected, connector } = useAccount();
   const { disconnectAsync } = useDisconnect();
 
@@ -83,7 +82,6 @@ export function useWalletStatus() {
     useState(false);
 
   const userInitiatedDisconnectRef = useRef(false);
-  const autoSwitchAttemptRef = useRef<string | null>(null);
   const networkSwitchTimerRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -148,60 +146,9 @@ export function useWalletStatus() {
     };
   }, []);
 
-  // Ask the wallet to switch to Enugu testnet once after connecting on a
-  // different network. Remember the attempt so a rejection cannot cause a
-  // repeated prompt loop; the user can still retry from the manual control.
-  useEffect(() => {
-    if (!wallet || networkState !== "wrong") {
-      if (!wallet) autoSwitchAttemptRef.current = null;
-      return;
-    }
-
-    const attemptKey = `${wallet.address.toLowerCase()}:${wallet.chainId ?? "unknown"}`;
-    if (autoSwitchAttemptRef.current === attemptKey) return;
-    autoSwitchAttemptRef.current = attemptKey;
-
-    let active = true;
-    setWalletBusy(true);
-    setWalletMessage(
-      "Connected on another network. Requesting a switch to Asset Chain Testnet (Chain ID: 42421). Approve it in your wallet.",
-    );
-
-    void withSwitchTimeout(requestAssetChainSwitch(connector))
-      .then(() => {
-        if (!active) return;
-        if (networkSwitchTimerRef.current !== null) {
-          clearTimeout(networkSwitchTimerRef.current);
-        }
-        networkSwitchTimerRef.current = setTimeout(() => {
-          networkSwitchTimerRef.current = null;
-          setWalletMessage(
-            "Network switch is not confirmed yet. Open your wallet app and approve the request, or use Switch network to retry. Asset Chain Testnet ID: 42421.",
-          );
-        }, 45000);
-      })
-      .catch((error: unknown) => {
-        if (!active) return;
-        const errorMessage =
-          error instanceof Error ? error.message : "";
-        if (/user rejected|user denied|user cancelled/i.test(errorMessage)) {
-          setWalletMessage(
-            "Network switch was cancelled. Tap Switch network to try again, or switch to Asset Chain Testnet in your wallet (Chain ID: 42421).",
-          );
-        } else {
-          setWalletMessage(
-            "No wallet approval prompt was received. Reopen your wallet and switch to Asset Chain Testnet (Chain ID: 42421), then return here and reconnect. You can also tap Switch network to retry.",
-          );
-        }
-      })
-      .finally(() => {
-        if (active) setWalletBusy(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [wallet?.address, wallet?.chainId, networkState, connector]);
+  // Do not request a network switch automatically after a mobile wallet
+  // deep-link returns. The user must initiate the switch from the visible
+  // control, preventing an unsolicited prompt from interrupting WalletConnect.
 
   useEffect(() => {
     if (!wallet) {
@@ -218,7 +165,7 @@ export function useWalletStatus() {
       setWalletMessage("Detecting network...");
     } else if (networkState === "correct") {
       setWalletMessage("Wallet connected to Asset Chain Testnet.");
-    } else if (wallet.chainId !== null && autoSwitchAttemptRef.current !== `${wallet.address.toLowerCase()}:${wallet.chainId}`) {
+    } else if (wallet.chainId !== null) {
       setWalletMessage(
         `Wallet connected on chain ID ${displayChainId(
           wallet.chainId,
@@ -232,19 +179,11 @@ export function useWalletStatus() {
   async function handleConnect() {
     userInitiatedDisconnectRef.current = false;
     setWalletMessage("");
-    if (!openConnectModal) {
-      setWalletMessage("Wallet connection is unavailable. Please reload the page and try again.");
-      return;
-    }
-    openConnectModal();
+    open({ view: "Connect" });
   }
 
   async function handleOpenAccount() {
-    if (!openAccountModal) {
-      setWalletMessage("Wallet account controls are unavailable. Please reload the page and try again.");
-      return;
-    }
-    openAccountModal();
+    open({ view: "Account" });
   }
 
   async function handleSwitchNetwork() {
