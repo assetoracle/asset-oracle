@@ -2,7 +2,7 @@ name: Combined security wallet compatibility smoke test
 
 on:
   push:
-    branches: [deepmerge-vanilla-extract-upgrade-test]
+    branches: [zod-patch-compatibility-test]
 
 permissions:
   contents: read
