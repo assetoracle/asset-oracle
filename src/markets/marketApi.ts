@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "../config/env";
+import { encodeFunctionData, getAddress } from "viem";
 
 export type MarketProposalInput = {
   question: string;
@@ -245,9 +246,35 @@ async function signedWalletAuth(
   return { address, message, signature };
 }
 
+async function waitForConfirmedWalletTransaction(provider: InjectedWalletProvider, hash: string): Promise<void> {
+  for (let attempt = 0; attempt < 150; attempt++) {
+    const receipt = await provider.request({ method: "eth_getTransactionReceipt", params: [hash] }) as
+      | { status?: string; blockNumber?: string }
+      | null;
+    if (receipt?.status) {
+      if (receipt.status !== "0x1") throw new Error("Wallet transaction reverted on-chain.");
+      const receiptBlock = Number.parseInt(receipt.blockNumber || "0x0", 16);
+      const latestBlockValue = await provider.request({ method: "eth_blockNumber" });
+      const latestBlock = typeof latestBlockValue === "string" ? Number.parseInt(latestBlockValue, 16) : 0;
+      if (latestBlock - receiptBlock + 1 >= 2) return;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 2000));
+  }
+  throw new Error("Transaction confirmation timed out. Check the transaction on the Asset Chain Testnet explorer before retrying.");
+}
+
+const proposalEscrowAbi = [
+  { type: "function", name: "submitProposalFee", stateMutability: "nonpayable", inputs: [{ name: "proposalId", type: "bytes32" }], outputs: [] },
+  { type: "function", name: "approveAndRelease", stateMutability: "nonpayable", inputs: [{ name: "proposalId", type: "bytes32" }], outputs: [] },
+  { type: "function", name: "rejectAndRefund", stateMutability: "nonpayable", inputs: [{ name: "proposalId", type: "bytes32" }], outputs: [] },
+] as const;
+const usdcApprovalAbi = [
+  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] },
+] as const;
+
 /**
  * Submit a regular user's proposal after paying exactly 10 USDC on Asset Chain Testnet.
- * The backend independently verifies the token, amount, recipient, chain, receipt and confirmations.
+ * The fee is approved to and transferred into the escrow contract, never directly to Treasury.
  */
 /** Project-approved Asset Chain Enugu testnet USDC. Do not replace without explicit approval. */
 export const ASSET_CHAIN_TESTNET_USDC_ADDRESS =
