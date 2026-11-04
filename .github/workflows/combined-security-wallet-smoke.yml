@@ -32,7 +32,15 @@ jobs:
           console.log(JSON.stringify(v, null, 2));
           for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
             console.log('- ' + name + ': severity=' + item.severity + ', direct=' + item.isDirect + ', fixAvailable=' + JSON.stringify(item.fixAvailable));
+            for (const via of item.via || []) {
+              if (typeof via === 'object') console.log('  ADVISORY: ' + via.title + ' | ' + via.url + ' | range=' + via.range);
+            }
           }
+          console.log('RESOLVED ZOD TREE');
+          NODE
+          npm ls zod --all || true
+          node <<'NODE'
+          console.log('END DEPENDENCY DIAGNOSTICS');
           NODE
       - name: Verify wallet stack versions
         run: |
@@ -103,9 +111,23 @@ jobs:
           const connect = page.getByRole('button', { name: /connect wallet/i }).first();
           await connect.waitFor({ state: 'visible', timeout: 30000 });
           await connect.click();
-          const metaMask = page.getByRole('button', { name: /MetaMask/i }).first();
-          await metaMask.waitFor({ state: 'visible', timeout: 15000 });
-          await metaMask.click();
+          const walletOption = '[data-testid="rk-wallet-option-metaMask"]';
+          await page.locator(walletOption).waitFor({ state: 'visible', timeout: 15000 });
+          let connected = false;
+          let lastClickError;
+          for (let attempt = 0; attempt < 5 && !connected; attempt++) {
+            try {
+              await page.waitForTimeout(700);
+              const currentOption = page.locator(walletOption);
+              await currentOption.waitFor({ state: 'visible', timeout: 5000 });
+              await currentOption.click({ timeout: 5000, force: true });
+              await page.getByText(/0x1111|0x1111\\.\\.\\.1111/i).waitFor({ state: 'visible', timeout: 5000 });
+              connected = true;
+            } catch (error) {
+              lastClickError = error;
+            }
+          }
+          if (!connected) throw lastClickError || new Error('MetaMask mock connection did not complete.');
           await page.getByText(/0x1111|0x1111\.\.\.1111/i).waitFor({ state: 'visible', timeout: 20000 });
           if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
           console.log('PASS: RainbowKit modal opened and simulated injected MetaMask account connected.');
@@ -116,6 +138,7 @@ jobs:
           if (!rootBox || rootBox.width <= 0 || rootBox.height <= 0) throw new Error('Mobile viewport did not render the application root.');
           if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
           console.log('PASS: Application remained rendered at 390px mobile viewport.');
+          await page.screenshot({ path: '/tmp/asset-oracle-wallet-smoke.png', fullPage: true });
           await browser.close();
           NODE
       - name: Upload browser diagnostics
@@ -123,5 +146,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: combined-security-wallet-diagnostics
-          path: /tmp/asset-oracle-preview.log
+          path: |
+            /tmp/asset-oracle-preview.log
+            /tmp/asset-oracle-wallet-smoke.png
+            npm-audit.json
+            package-lock.json
           if-no-files-found: warn
