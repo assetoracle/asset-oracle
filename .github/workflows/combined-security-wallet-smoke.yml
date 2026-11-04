@@ -1,0 +1,112 @@
+name: Combined security wallet compatibility smoke test
+
+on:
+  push:
+    branches: [deepmerge-vanilla-extract-upgrade-test]
+
+permissions:
+  contents: read
+
+jobs:
+  wallet-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install exact combined dependency tree
+        run: npm ci --no-audit --no-fund
+      - name: Verify wallet stack versions
+        run: |
+          npm ls wagmi @rainbow-me/rainbowkit viem @walletconnect/ethereum-provider @walletconnect/core --all
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const wagmi = require('wagmi/package.json');
+          const rainbow = require('@rainbow-me/rainbowkit/package.json');
+          const viem = require('viem/package.json');
+          assert.equal(wagmi.version, '2.19.5');
+          assert.ok(rainbow.version.startsWith('2.'));
+          assert.ok(viem.version.startsWith('2.'));
+          console.log('PASS: Wagmi 2, RainbowKit 2 and Viem 2 remain installed.');
+          NODE
+      - name: Build production frontend
+        run: npm run build
+      - name: Install browser test runner
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium
+      - name: Test injected wallet connection and mobile rendering
+        run: |
+          npm run preview -- --host 127.0.0.1 > /tmp/asset-oracle-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 2
+          done
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+          const errors = [];
+          page.on('pageerror', error => errors.push(error.message));
+          await page.addInitScript(() => {
+            const listeners = new Map();
+            const account = '0x1111111111111111111111111111111111111111';
+            const provider = {
+              isMetaMask: true,
+              selectedAddress: null,
+              chainId: '0xa5b5',
+              networkVersion: '42421',
+              on(event, callback) {
+                const group = listeners.get(event) || new Set();
+                group.add(callback);
+                listeners.set(event, group);
+              },
+              removeListener(event, callback) { listeners.get(event)?.delete(callback); },
+              async request({ method }) {
+                if (method === 'eth_chainId') return '0xa5b5';
+                if (method === 'net_version') return '42421';
+                if (method === 'eth_accounts' || method === 'eth_requestAccounts') {
+                  this.selectedAddress = account;
+                  return [account];
+                }
+                if (method === 'wallet_switchEthereumChain' || method === 'wallet_addEthereumChain') return null;
+                if (method === 'personal_sign' || method === 'eth_sign' || method.startsWith('eth_signTypedData')) return '0x' + '1'.repeat(130);
+                if (method === 'eth_sendTransaction') return '0x' + 'a'.repeat(64);
+                if (method === 'eth_getBalance') return '0x0';
+                if (method === 'eth_call') return '0x';
+                if (method === 'eth_estimateGas') return '0x5208';
+                if (method === 'eth_gasPrice') return '0x3b9aca00';
+                if (method === 'eth_blockNumber') return '0x1';
+                throw new Error('Mock wallet does not implement ' + method);
+              }
+            };
+            Object.defineProperty(window, 'ethereum', { configurable: true, value: provider });
+          });
+          await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+          const connect = page.getByRole('button', { name: /connect wallet/i }).first();
+          await connect.waitFor({ state: 'visible', timeout: 30000 });
+          await connect.click();
+          const metaMask = page.getByRole('button', { name: /MetaMask/i }).first();
+          await metaMask.waitFor({ state: 'visible', timeout: 15000 });
+          await metaMask.click();
+          await page.getByText(/0x1111|0x1111\.\.\.1111/i).waitFor({ state: 'visible', timeout: 20000 });
+          if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
+          console.log('PASS: RainbowKit modal opened and simulated injected MetaMask account connected.');
+          await page.setViewportSize({ width: 390, height: 844 });
+          const root = page.locator('#root');
+          await root.waitFor({ state: 'visible', timeout: 15000 });
+          const rootBox = await root.boundingBox();
+          if (!rootBox || rootBox.width <= 0 || rootBox.height <= 0) throw new Error('Mobile viewport did not render the application root.');
+          if (errors.length) throw new Error('Browser runtime errors: ' + errors.join(' | '));
+          console.log('PASS: Application remained rendered at 390px mobile viewport.');
+          await browser.close();
+          NODE
+      - name: Upload browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-security-wallet-diagnostics
+          path: /tmp/asset-oracle-preview.log
+          if-no-files-found: warn
