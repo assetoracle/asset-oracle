@@ -5,7 +5,7 @@ on:
     branches: [zod-v4-compatibility-test]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   wallet-smoke:
@@ -18,6 +18,15 @@ jobs:
           node-version: 22
       - name: Regenerate lockfile for scoped Zod 4 overrides
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit regenerated lockfile to isolated test branch
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add package-lock.json
+            git commit -m 'chore(deps): lock patched Zod 4.6.7'
+            git push
+          fi
       - name: Install exact combined dependency tree
         run: npm ci --no-audit --no-fund
       - name: Audit dependencies and report resolved Zod versions
