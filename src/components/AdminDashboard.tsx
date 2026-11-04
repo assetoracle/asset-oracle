@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
-import PaidSubmissionRefundPanel from "./PaidSubmissionRefundPanel";
 import ValidatorDashboard from "./ValidatorDashboard";
 import { friendlyError } from "../utils/friendlyError";
 import { API_BASE_URL } from "../config/env";
@@ -20,6 +19,7 @@ import {
   ensureWalletSession,
   getPrivateAutomatedMarkets,
   decideAutomatedMarket,
+  decideManualMarketProposal,
   type StoredMarketProposal,
   listGeneratedMarketCandidates,
   decideGeneratedMarketCandidate,
@@ -48,7 +48,7 @@ export default function AdminDashboard({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [confirmation, setConfirmation] = useState<{ id: string; status: "APPROVED" | "REJECTED" } | null>(null);
-  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "candidates" | "validators" | "referrals" | "refunds">("proposals");
+  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "candidates" | "validators" | "referrals">("proposals");
 
   useEffect(() => {
     if (role === "MARKET_CREATOR") setActiveSection("proposals");
@@ -164,7 +164,6 @@ export default function AdminDashboard({
   async function confirmDecision() {
     if (!confirmation) return;
     const { id, status } = confirmation;
-    const action = status === "APPROVED" ? "approve" : "reject";
     setConfirmation(null);
 
     setBusyId(id);
@@ -172,26 +171,19 @@ export default function AdminDashboard({
     setNotice("");
 
     try {
-      const session = await authenticate();
+      await authenticate();
       const selected = proposals.find((proposal) => proposal.id === id) ?? automatedProposals.find((proposal) => proposal.id === id);
       if (selected?.origin === "AUTOMATED") {
         const result = await decideAutomatedMarket(id, address!, status);
         setAutomatedProposals((current) => current.map((proposal) => proposal.id === id ? result.proposal : proposal));
         setNotice(`Automated market ${status.toLowerCase()} successfully.`);
       } else {
-        const response = await fetch(
-          `${API}/api/markets/admin/proposals/${encodeURIComponent(id)}/decision/session`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-            body: JSON.stringify({ address, status }),
-          },
-        );
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `Unable to ${action} proposal.`);
-        setProposals((current) => current.map((proposal) => proposal.id === id ? data.proposal : proposal)
+        const result = await decideManualMarketProposal(id, address!, status, signMessage);
+        setProposals((current) => current.map((proposal) => proposal.id === id ? result.proposal : proposal)
           .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
-        setNotice(`Proposal ${status.toLowerCase()} successfully.`);
+        setNotice(status === "APPROVED"
+          ? "Proposal approved. Any escrowed $10 USDC fee has been released to Treasury."
+          : "Proposal rejected. Any escrowed $10 USDC fee has been refunded to its original wallet.");
       }
     } catch (err) {
       setError(friendlyError(err, "Decision failed."));
@@ -224,7 +216,6 @@ export default function AdminDashboard({
         {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "candidates" ? "primary-button" : "text-action"} aria-current={activeSection === "candidates" ? "page" : undefined} onClick={() => setActiveSection("candidates")}>Generated candidates</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "validators" ? "primary-button" : "text-action"} aria-current={activeSection === "validators" ? "page" : undefined} onClick={() => setActiveSection("validators")}>Validator operations</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>}
-        {role === "OWNER" && <button type="button" className={activeSection === "refunds" ? "primary-button" : "text-action"} aria-current={activeSection === "refunds" ? "page" : undefined} onClick={() => setActiveSection("refunds")}>Paid proposal refunds</button>}
       </nav>
 
       {(role === "OWNER" || role === "MARKET_CREATOR") && activeSection === "proposals" && <>
@@ -398,7 +389,6 @@ export default function AdminDashboard({
       </>}
       {role === "OWNER" && activeSection === "validators" && <ValidatorDashboard />}
       {role === "OWNER" && activeSection === "referrals" && <ReferralReviewPanel address={address} signMessage={signMessage} />}
-      {role === "OWNER" && activeSection === "refunds" && <PaidSubmissionRefundPanel address={address} signMessage={signMessage} />}
 
       {confirmation && createPortal((() => {
         const selectedProposal = proposals.find((proposal) => proposal.id === confirmation.id) ?? automatedProposals.find((proposal) => proposal.id === confirmation.id);
