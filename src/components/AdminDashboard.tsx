@@ -165,7 +165,6 @@ export default function AdminDashboard({
   async function confirmDecision() {
     if (!confirmation) return;
     const { id, status } = confirmation;
-    const action = status === "APPROVED" ? "approve" : "reject";
     setConfirmation(null);
 
     setBusyId(id);
@@ -173,7 +172,7 @@ export default function AdminDashboard({
     setNotice("");
 
     try {
-      const session = await authenticate();
+      await authenticate();
       const selected = proposals.find((proposal) => proposal.id === id) ?? automatedProposals.find((proposal) => proposal.id === id);
       if (selected?.origin === "AUTOMATED") {
         const result = await decideAutomatedMarket(id, address!, status);
