@@ -404,6 +404,38 @@ export async function getMyProposals(address: string) {
   });
 }
 
+
+export type GeneratedMarketCandidate = {
+  id: string;
+  templateId: string;
+  category: MarketProposalInput["category"];
+  proposal: MarketProposalInput;
+  status: "PENDING_REVIEW" | "DISMISSED" | "PROMOTED";
+  createdAt: string;
+};
+
+export async function listGeneratedMarketCandidates(address: string) {
+  return request<{ candidates: GeneratedMarketCandidate[]; count: number }>(
+    "/api/market-candidates/admin/list/session",
+    { method: "POST", body: JSON.stringify({ address, limit: 100 }) },
+  );
+}
+
+export async function decideGeneratedMarketCandidate(
+  candidateId: string,
+  address: string,
+  decision: "DISMISSED" | "PROMOTED",
+) {
+  return request<{
+    message: string;
+    decision: "DISMISSED" | "PROMOTED";
+    proposal?: StoredMarketProposal;
+  }>(`/api/market-candidates/admin/${encodeURIComponent(candidateId)}/decision/session`, {
+    method: "POST",
+    body: JSON.stringify({ address, decision }),
+  });
+}
+
 export type WalletRole = "OWNER" | "VALIDATOR_2" | "VALIDATOR_3" | "MARKET_CREATOR" | "USER";
 
 export type WalletRoleResponse = {

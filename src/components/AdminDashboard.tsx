@@ -21,6 +21,9 @@ import {
   getPrivateAutomatedMarkets,
   decideAutomatedMarket,
   type StoredMarketProposal,
+  listGeneratedMarketCandidates,
+  decideGeneratedMarketCandidate,
+  type GeneratedMarketCandidate,
   type WalletRole,
 } from "../markets/marketApi";
 
@@ -39,12 +42,13 @@ export default function AdminDashboard({
 }: Props) {
   const [proposals, setProposals] = useState<StoredMarketProposal[]>([]);
   const [automatedProposals, setAutomatedProposals] = useState<StoredMarketProposal[]>([]);
+  const [generatedCandidates, setGeneratedCandidates] = useState<GeneratedMarketCandidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [confirmation, setConfirmation] = useState<{ id: string; status: "APPROVED" | "REJECTED" } | null>(null);
-  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "validators" | "referrals" | "refunds">("proposals");
+  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "candidates" | "validators" | "referrals" | "refunds">("proposals");
 
   useEffect(() => {
     if (role === "MARKET_CREATOR") setActiveSection("proposals");
@@ -87,6 +91,46 @@ export default function AdminDashboard({
       setLoading(false);
     }
   }, [address, authenticate]);
+
+  const loadGeneratedCandidates = useCallback(async () => {
+    if (!address) {
+      setError("Connect an authorized reviewer wallet to continue.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setNotice("");
+    try {
+      await authenticate();
+      const data = await listGeneratedMarketCandidates(address);
+      setGeneratedCandidates(data.candidates ?? []);
+    } catch (err) {
+      setError(friendlyError(err, "Unable to load generated candidates."));
+    } finally {
+      setLoading(false);
+    }
+  }, [address, authenticate]);
+
+  async function reviewGeneratedCandidate(candidateId: string, decision: "DISMISSED" | "PROMOTED") {
+    if (!address) return;
+    setBusyId(candidateId);
+    setError("");
+    setNotice("");
+    try {
+      await authenticate();
+      await decideGeneratedMarketCandidate(candidateId, address, decision);
+      setGeneratedCandidates((current) => current.filter((candidate) => candidate.id !== candidateId));
+      if (decision === "PROMOTED") {
+        setNotice("Candidate promoted into the normal proposal queue. It still requires the usual approval.");
+      } else {
+        setNotice("Generated candidate dismissed.");
+      }
+    } catch (err) {
+      setError(friendlyError(err, "Unable to review generated candidate."));
+    } finally {
+      setBusyId("");
+    }
+  }
 
   const loadAutomatedProposals = useCallback(async () => {
     if (!address) {
@@ -177,6 +221,7 @@ export default function AdminDashboard({
       <nav className="admin-section-nav" aria-label="Market operations sections">
         {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "proposals" ? "primary-button" : "text-action"} aria-current={activeSection === "proposals" ? "page" : undefined} onClick={() => setActiveSection("proposals")}>Normal proposals</button>}
         <button type="button" className={activeSection === "automated" ? "primary-button" : "text-action"} aria-current={activeSection === "automated" ? "page" : undefined} onClick={() => setActiveSection("automated")}>Automated markets</button>
+        {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "candidates" ? "primary-button" : "text-action"} aria-current={activeSection === "candidates" ? "page" : undefined} onClick={() => setActiveSection("candidates")}>Generated candidates</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "validators" ? "primary-button" : "text-action"} aria-current={activeSection === "validators" ? "page" : undefined} onClick={() => setActiveSection("validators")}>Validator operations</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "refunds" ? "primary-button" : "text-action"} aria-current={activeSection === "refunds" ? "page" : undefined} onClick={() => setActiveSection("refunds")}>Paid proposal refunds</button>}
@@ -311,6 +356,43 @@ export default function AdminDashboard({
             <div className="market-meta"><span>Submitted</span><span>{new Date(proposal.submittedAt).toLocaleDateString()}</span></div>
             <div className="market-meta"><span>Closes</span><span>{formatProposalTime(proposal.closesAt)}</span></div>
             <div className="market-meta"><span>Resolves</span><span>{formatProposalTime(proposal.resolvesAt)}</span></div>
+          </article>)}
+        </div>
+      </>}
+      {(role === "OWNER" || role === "MARKET_CREATOR") && activeSection === "candidates" && <>
+        <div className="account-summary-grid admin-summary-grid">
+          <article className="account-summary-card"><span>Pending generated candidates</span><strong>{generatedCandidates.length}</strong></article>
+          <article className="account-summary-card"><span>Review status</span><strong>Human review</strong></article>
+          <article className="account-summary-card"><span>Publication</span><strong>Manual approval</strong></article>
+        </div>
+        <p className="market-description">These are draft candidates created from configured templates. Review the source, metric and threshold before promoting. Promotion only creates a normal pending proposal; it does not approve or publish a market.</p>
+        <button className="primary-button" type="button" onClick={loadGeneratedCandidates} disabled={loading || !!busyId || !address}>
+          <RefreshCw size={16} /> {loading ? "Loading candidates..." : "Load generated candidates"}
+        </button>
+        {error && <p role="alert">{error}</p>}
+        {notice && <p role="status">{notice}</p>}
+        {address && !loading && generatedCandidates.length === 0 && !error && <div className="empty-state"><h3>No pending candidates loaded</h3><p>Load the candidate queue to check for generated market drafts.</p></div>}
+        <div className="market-grid admin-proposal-grid">
+          {generatedCandidates.map((candidate) => <article className="market-card" key={candidate.id}>
+            <div className="market-card-top"><span className="market-category">{candidate.category}</span><span className="market-status">PENDING REVIEW</span></div>
+            <h3>{candidate.proposal.question}</h3>
+            <p className="market-description">{candidate.proposal.description}</p>
+            <div className="market-meta"><span>Template</span><span>{candidate.templateId}</span></div>
+            <div className="market-meta"><span>Data source</span><span>{candidate.proposal.resolutionRule.sourceId}</span></div>
+            <div className="market-meta"><span>Metric</span><span>{candidate.proposal.resolutionRule.metric}</span></div>
+            <div className="market-meta"><span>Comparison</span><span>{candidate.proposal.resolutionRule.comparison} {candidate.proposal.resolutionRule.targetValue}{candidate.proposal.resolutionRule.currency ? ` ${candidate.proposal.resolutionRule.currency}` : ""}</span></div>
+            <div className="market-meta"><span>Observation time</span><span>{formatProposalTime(candidate.proposal.resolutionRule.observationTime)}</span></div>
+            <div className="market-meta"><span>Closes</span><span>{formatProposalTime(candidate.proposal.closesAt)}</span></div>
+            <div className="market-meta"><span>Resolves</span><span>{formatProposalTime(candidate.proposal.resolvesAt)}</span></div>
+            <div className="market-meta"><span>Generated</span><span>{formatProposalTime(candidate.createdAt)}</span></div>
+            <div className="hero-actions admin-proposal-actions">
+              <button className="primary-button" type="button" disabled={!!busyId || loading} onClick={() => void reviewGeneratedCandidate(candidate.id, "PROMOTED")}>
+                <Check size={16} /> {busyId === candidate.id ? "Processing..." : "Promote to proposals"}
+              </button>
+              <button className="text-action" type="button" disabled={!!busyId || loading} onClick={() => void reviewGeneratedCandidate(candidate.id, "DISMISSED")}>
+                <X size={16} /> Dismiss
+              </button>
+            </div>
           </article>)}
         </div>
       </>}
