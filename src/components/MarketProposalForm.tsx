@@ -251,11 +251,11 @@ export function MarketProposalForm({
                   Proposal submission fee
                 </strong>
                 <span style={{ display: "block", marginTop: 4, fontSize: 14 }}>
-                  Regular users: <strong>10 USDC</strong> on Asset Chain Enugu Testnet.
-                  Market Creators (MC2 and MC3) and the owner: <strong>Free</strong>.
+                  External users: <strong>10 USDC</strong> on Asset Chain Enugu Testnet.
+                  Admin and authorised market creator wallets: <strong>Free</strong>.
                 </span>
                 <span style={{ display: "block", marginTop: 5, color: "#8DA9B3", fontSize: 12 }}>
-                  The backend enforces this exemption. Market Creators and the owner submit manually proposed markets without paying. Regular users must complete the verified fee payment, and their proposals remain pending review.
+                  The $10 fee is held in escrow while the proposal is reviewed. Approval releases it to Treasury; rejection automatically refunds the original wallet. Admin and authorised market creator wallets are exempt.
                 </span>
               </div>
             )}
