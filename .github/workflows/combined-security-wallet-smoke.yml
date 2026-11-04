@@ -16,8 +16,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Regenerate lockfile with patched Reown Zod 3
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Install exact combined dependency tree
         run: npm ci --no-audit --no-fund
+      - name: Run dependency security audit
+        shell: bash
+        run: |
+          npm audit --json > npm-audit.json || true
+          node <<'NODE'
+          const fs = require('node:fs');
+          const audit = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          const v = audit.metadata?.vulnerabilities || {};
+          console.log('NPM AUDIT SUMMARY');
+          console.log(JSON.stringify(v, null, 2));
+          for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
+            console.log('- ' + name + ': severity=' + item.severity + ', direct=' + item.isDirect + ', fixAvailable=' + JSON.stringify(item.fixAvailable));
+          }
+          NODE
       - name: Verify wallet stack versions
         run: |
           npm ls wagmi @rainbow-me/rainbowkit viem @walletconnect/ethereum-provider @walletconnect/core --all
