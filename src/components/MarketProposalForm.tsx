@@ -61,7 +61,7 @@ export function MarketProposalForm({
   const [question, setQuestion] = useState(initialProposal?.question ?? "");
   const [description, setDescription] = useState(initialProposal?.description ?? "");
   const [category, setCategory] =
-    useState<MarketProposalInput["category"]>(initialProposal?.category ?? "Crypto");
+    useState<MarketProposalInput["category"]>(initialProposal?.category ?? "Digital Assets");
   const [sport, setSport] = useState<NonNullable<MarketProposalInput["sport"]> | "">(initialProposal?.sport ?? "");
   const [closesAt, setClosesAt] = useState(initialProposal ? toLocalDateTime(initialProposal.closesAt) : "");
   const [resolvesAt, setResolvesAt] = useState(initialProposal ? toLocalDateTime(initialProposal.resolvesAt) : "");
@@ -332,7 +332,7 @@ export function MarketProposalForm({
                 setCategory(nextCategory);
                 if (nextCategory !== "Sports") setSport("");
               }}
-              options={categories.map((item) => ({ value: item === "Digital Assets" ? "Crypto" : item, label: item }))}
+              options={categories.map((item) => ({ value: item, label: item }))}
               ariaLabel="Market category"
             />
           </label>
