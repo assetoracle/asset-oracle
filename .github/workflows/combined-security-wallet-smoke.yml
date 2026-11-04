@@ -23,13 +23,12 @@ jobs:
           npm ls wagmi @rainbow-me/rainbowkit viem @walletconnect/ethereum-provider @walletconnect/core --all
           node <<'NODE'
           const assert = require('node:assert/strict');
-          const wagmi = require('wagmi/package.json');
-          const rainbow = require('@rainbow-me/rainbowkit/package.json');
-          const viem = require('viem/package.json');
-          assert.equal(wagmi.version, '2.19.5');
-          assert.ok(rainbow.version.startsWith('2.'));
-          assert.ok(viem.version.startsWith('2.'));
-          console.log('PASS: Wagmi 2, RainbowKit 2 and Viem 2 remain installed.');
+          const fs = require('node:fs');
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          assert.equal(lock.packages['node_modules/wagmi'].version, '2.19.5');
+          assert.ok(lock.packages['node_modules/@rainbow-me/rainbowkit'].version.startsWith('2.'));
+          assert.ok(lock.packages['node_modules/viem'].version.startsWith('2.'));
+          console.log('PASS: lockfile confirms Wagmi 2, RainbowKit 2 and Viem 2 remain installed.');
           NODE
       - name: Build production frontend
         run: npm run build
