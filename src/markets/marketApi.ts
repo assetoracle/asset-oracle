@@ -382,6 +382,61 @@ export async function createPaidMarketProposal(
   };
 }
 
+
+export async function decideManualMarketProposal(
+  id: string,
+  address: string,
+  status: "APPROVED" | "REJECTED",
+  signMessage: (message: string) => Promise<string>,
+) {
+  await ensureWalletSession(address, signMessage);
+  const context = await request<{
+    requiresEscrow: boolean;
+    escrowAddress?: string;
+    proposalIdHash?: string;
+  }>(`/api/markets/admin/proposals/${encodeURIComponent(id)}/escrow-context/session`, {
+    method: "POST",
+    body: JSON.stringify({ address }),
+  });
+
+  let transactionHash: string | undefined;
+  if (context.requiresEscrow) {
+    const provider = (window as Window & { ethereum?: InjectedWalletProvider }).ethereum;
+    if (!provider || !context.escrowAddress || !context.proposalIdHash) {
+      throw new Error("The proposal escrow context or connected wallet is unavailable.");
+    }
+    const chainValue = await provider.request({ method: "eth_chainId" });
+    const chainId = typeof chainValue === "string" ? Number.parseInt(chainValue, 16) : Number.NaN;
+    const accounts = await provider.request({ method: "eth_accounts" });
+    if (chainId !== 42421 || !Array.isArray(accounts) ||
+        !accounts.some((account) => typeof account === "string" && account.toLowerCase() === address.toLowerCase())) {
+      throw new Error("Connect the authorised reviewer wallet on Asset Chain Enugu Testnet.");
+    }
+    const data = encodeFunctionData({
+      abi: proposalEscrowAbi,
+      functionName: status === "APPROVED" ? "approveAndRelease" : "rejectAndRefund",
+      args: [context.proposalIdHash as `0x${string}`],
+    });
+    const hash = await provider.request({
+      method: "eth_sendTransaction",
+      params: [{ from: address, to: getAddress(context.escrowAddress), data, value: "0x0" }],
+    });
+    if (typeof hash !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(hash)) {
+      throw new Error("Wallet did not return a valid escrow decision transaction hash.");
+    }
+    transactionHash = hash;
+    await waitForConfirmedWalletTransaction(provider, hash);
+  }
+
+  return request<{ message: string; proposal: StoredMarketProposal }>(
+    `/api/markets/admin/proposals/${encodeURIComponent(id)}/decision/session`,
+    {
+      method: "POST",
+      body: JSON.stringify({ address, status, ...(transactionHash ? { transactionHash } : {}) }),
+    },
+  );
+}
+
 export async function updateMarketProposal(
   id: string,
   proposal: MarketProposalInput,
