@@ -896,15 +896,15 @@ useEffect(() => {
       if (!panel || panel === dialog) return;
       const guide = document.createElement("section");
       guide.className = "ao-rainbowkit-guide";
-      guide.innerHTML = '<div class="ao-rainbowkit-guide-heading"><span class="ao-rainbowkit-guide-icon">◎</span><div><h3>Wallet not connecting?</h3><p>Copy the official site link and open it in your wallet browser.</p></div></div><p>Copy <strong>https://assetoracleapp.xyz</strong>, then open MetaMask, Trust Wallet, or OKX Wallet. Go to its Browser or Discover tab and paste the link.</p><button type="button" class="ao-wallet-copy-link">Copy https://assetoracleapp.xyz</button><p class="ao-rainbowkit-guide-safety">Never share your recovery phrase or private keys.</p>';
+      guide.innerHTML = '<div class="ao-rainbowkit-guide-heading"><span class="ao-rainbowkit-guide-icon">◎</span><div><h3>Wallet not connecting?</h3><p>Copy the official site link and open it in your wallet browser.</p></div></div><p>Copy <strong>https://asset-oracle-bzmn.onrender.com</strong>, then open MetaMask, Trust Wallet, or OKX Wallet. Go to its Browser or Discover tab and paste the link.</p><button type="button" class="ao-wallet-copy-link">Copy https://asset-oracle-bzmn.onrender.com</button><p class="ao-rainbowkit-guide-safety">Never share your recovery phrase or private keys.</p>';
       const copyButton = guide.querySelector<HTMLButtonElement>(".ao-wallet-copy-link");
       copyButton?.addEventListener("click", async () => {
         try {
-          await navigator.clipboard.writeText("https://assetoracleapp.xyz");
+          await navigator.clipboard.writeText("https://asset-oracle-bzmn.onrender.com");
           copyButton.textContent = "Copied!";
         } catch {
           const field = document.createElement("textarea");
-          field.value = "https://assetoracleapp.xyz";
+          field.value = "https://asset-oracle-bzmn.onrender.com";
           field.setAttribute("readonly", "");
           field.style.position = "fixed";
           field.style.opacity = "0";
