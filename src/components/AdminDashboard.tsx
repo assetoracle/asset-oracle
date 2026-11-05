@@ -5,6 +5,7 @@ import { ShieldCheck, RefreshCw, Check, X } from "lucide-react";
 import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
 import ValidatorDashboard from "./ValidatorDashboard";
+import ProviderEvidenceCollectionPanel from "./ProviderEvidenceCollectionPanel";
 import { friendlyError } from "../utils/friendlyError";
 import { API_BASE_URL } from "../config/env";
 
@@ -48,7 +49,7 @@ export default function AdminDashboard({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [confirmation, setConfirmation] = useState<{ id: string; status: "APPROVED" | "REJECTED" } | null>(null);
-  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "candidates" | "validators" | "referrals">("proposals");
+  const [activeSection, setActiveSection] = useState<"proposals" | "automated" | "candidates" | "validators" | "referrals" | "evidence">("proposals");
 
   useEffect(() => {
     if (role === "MARKET_CREATOR") setActiveSection("proposals");
@@ -215,6 +216,7 @@ export default function AdminDashboard({
         <button type="button" className={activeSection === "automated" ? "primary-button" : "text-action"} aria-current={activeSection === "automated" ? "page" : undefined} onClick={() => setActiveSection("automated")}>Automated markets</button>
         {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "candidates" ? "primary-button" : "text-action"} aria-current={activeSection === "candidates" ? "page" : undefined} onClick={() => setActiveSection("candidates")}>Generated candidates</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "validators" ? "primary-button" : "text-action"} aria-current={activeSection === "validators" ? "page" : undefined} onClick={() => setActiveSection("validators")}>Validator operations</button>}
+        {role === "OWNER" && <button type="button" className={activeSection === "evidence" ? "primary-button" : "text-action"} aria-current={activeSection === "evidence" ? "page" : undefined} onClick={async () => { setActiveSection("evidence"); await loadProposals(); await loadAutomatedProposals(); }}>Provider evidence</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>}
       </nav>
 
@@ -388,6 +390,7 @@ export default function AdminDashboard({
         </div>
       </>}
       {role === "OWNER" && activeSection === "validators" && <ValidatorDashboard />}
+      {role === "OWNER" && activeSection === "evidence" && <ProviderEvidenceCollectionPanel address={address} signMessage={signMessage} proposals={[...proposals, ...automatedProposals]} />}
       {role === "OWNER" && activeSection === "referrals" && <ReferralReviewPanel address={address} signMessage={signMessage} />}
 
       {confirmation && createPortal((() => {
