@@ -14,7 +14,7 @@ export const TESTNET_USDC_DECIMALS = 6;
  * Asset Chain Enugu testnet only (chain ID 42421).
  */
 export const CURRENT_ASSET_ORACLE_MARKET_MANAGER_ADDRESS =
-  "0x5fc327f55cf533ed5d05337f835be37ff1e0db1f" as Address;
+  "0xa3c11C6141689050c83f2b53f7e5892BF2fffeD2" as Address;
 
 export const assetOracleMarketManagerAddress: Address =
   CURRENT_ASSET_ORACLE_MARKET_MANAGER_ADDRESS;
