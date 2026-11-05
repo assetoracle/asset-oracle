@@ -3,6 +3,7 @@ import BrandedSelect from "./BrandedSelect";
 import { encodeAbiParameters, keccak256, toBytes, type Address } from "viem";
 import { useAccount, useChainId, useReadContracts, useWaitForTransactionReceipt, useWriteContract, useSignMessage } from "wagmi";
 import { recordValidatorSourceLink } from "../markets/marketApi";
+import ProviderEvidenceReviewPanel from "./ProviderEvidenceReviewPanel";
 import { ArrowUpRight, RefreshCw, ShieldCheck } from "lucide-react";
 import {
   ASSET_CHAIN_TESTNET_ID,
@@ -94,7 +95,7 @@ export default function ValidatorDashboard() {
   const [savingSource, setSavingSource] = useState(false);
   const handledEvidenceHash = useRef<string | null>(null);
   const [notice, setNotice] = useState("");
-  const [activeValidatorSection, setActiveValidatorSection] = useState<"voting" | "finalization">("voting");
+  const [activeValidatorSection, setActiveValidatorSection] = useState<"voting" | "finalization" | "evidence">("voting");
   const [refreshingMarkets, setRefreshingMarkets] = useState(false);
   const [actionType, setActionType] = useState<"close" | "vote" | "finalize" | null>(null);
   const [pendingVote, setPendingVote] = useState<{ managerAddress: Address; marketId: bigint; outcome: 1 | 2 | 3; evidenceHash: `0x${string}` } | null>(null);
@@ -284,7 +285,9 @@ export default function ValidatorDashboard() {
       <nav className="page-section-tabs" aria-label="Validator sections">
         <button type="button" className={activeValidatorSection === "voting" ? "active" : ""} aria-pressed={activeValidatorSection === "voting"} onClick={() => setActiveValidatorSection("voting")}>Review & vote</button>
         <button type="button" className={activeValidatorSection === "finalization" ? "active" : ""} aria-pressed={activeValidatorSection === "finalization"} onClick={() => setActiveValidatorSection("finalization")}>Challenge & finalization</button>
+        <button type="button" className={activeValidatorSection === "evidence" ? "active" : ""} aria-pressed={activeValidatorSection === "evidence"} onClick={() => setActiveValidatorSection("evidence")}>Provider evidence</button>
       </nav>
+      {activeValidatorSection === "evidence" ? <ProviderEvidenceReviewPanel /> : <>
       {notice && <p role="status">{notice}</p>}
       {error && <p role="alert">Transaction was not submitted: the wallet rejected it or the contract returned an error. If the closing transaction failed, refresh the market list and try again.</p>}
       {receipt.isSuccess && txHash && <p className="wallet-message" role="status">{actionType === "close" ? "Market close transaction confirmed. Refresh the list to load it for voting." : actionType === "finalize" ? "Market finalized on-chain. Participants can now claim eligible payouts." : "Vote transaction confirmed."} <a href={explorerTx(txHash)} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={13} /></a> <button type="button" className="secondary-button refresh-action-button" onClick={() => void refreshMarketData()} disabled={refreshingMarkets}><RefreshCw size={13} className={refreshingMarkets ? "refresh-action-spinning" : ""} /> {refreshingMarkets ? "Refreshing..." : "Refresh list"}</button></p>}
@@ -340,6 +343,7 @@ export default function ValidatorDashboard() {
             </article>;
           })}
         </div>}
+      </>}
     </section>
   );
 }

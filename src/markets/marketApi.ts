@@ -691,3 +691,82 @@ export async function getValidatorSourceLinks(marketId: string, managerAddress: 
     `/api/validator-evidence/${encodeURIComponent(marketId)}?managerAddress=${encodeURIComponent(managerAddress)}`,
   );
 }
+
+
+export type ProviderEvidenceReview = {
+  validatorAddress: string;
+  decision: "ACCEPTED" | "REJECTED";
+  note: string | null;
+  reviewedAt: string;
+};
+
+export type ProviderMarketEvidence = {
+  id: string;
+  proposalId: string;
+  question?: string;
+  category?: string;
+  provider: string;
+  sourceUrl: string;
+  retrievedAt: string;
+  contentHash: string;
+  rawData: unknown;
+  metric: string;
+  normalizedValue: unknown;
+  verificationStatus: "UNREVIEWED" | "ACCEPTED" | "REJECTED" | "STALE";
+  acceptedReviews: number;
+  rejectedReviews: number;
+  myDecision?: "ACCEPTED" | "REJECTED" | null;
+  reviews: ProviderEvidenceReview[];
+};
+
+export async function collectProviderEvidence(proposalId: string, address: string, signMessage: (message: string) => Promise<string>) {
+  await ensureWalletSession(address, signMessage);
+  return request<{ message: string; evidence: ProviderMarketEvidence; inserted: boolean }>(
+    `/api/market-evidence/${encodeURIComponent(proposalId)}/collect`,
+    { method: "POST", body: JSON.stringify({ address }) },
+  );
+}
+
+export async function listProviderEvidence(proposalId: string, address: string, signMessage: (message: string) => Promise<string>) {
+  await ensureWalletSession(address, signMessage);
+  return request<{ evidence: ProviderMarketEvidence[]; count: number }>(
+    `/api/market-evidence/${encodeURIComponent(proposalId)}/list`,
+    { method: "POST", body: JSON.stringify({ address }) },
+  );
+}
+
+export async function getProviderEvidenceReviewQueue(address: string, signMessage: (message: string) => Promise<string>) {
+  await ensureWalletSession(address, signMessage);
+  return request<{ evidence: ProviderMarketEvidence[]; count: number }>(
+    "/api/market-evidence/review-queue",
+    { method: "POST", body: JSON.stringify({ address }) },
+  );
+}
+
+export async function reviewProviderEvidence(input: {
+  proposalId: string;
+  evidenceId: string;
+  address: string;
+  decision: "ACCEPTED" | "REJECTED";
+  note?: string;
+  signMessage: (message: string) => Promise<string>;
+}) {
+  await ensureWalletSession(input.address, input.signMessage);
+  return request<{
+    message: string;
+    verificationStatus: "UNREVIEWED" | "ACCEPTED" | "REJECTED";
+    acceptedReviews: number;
+    rejectedReviews: number;
+    reviews: ProviderEvidenceReview[];
+  }>(
+    `/api/market-evidence/${encodeURIComponent(input.proposalId)}/${encodeURIComponent(input.evidenceId)}/review`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        address: input.address,
+        decision: input.decision,
+        ...(input.note ? { note: input.note } : {}),
+      }),
+    },
+  );
+}
