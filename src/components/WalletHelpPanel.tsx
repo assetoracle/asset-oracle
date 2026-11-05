@@ -5,7 +5,7 @@ type WalletHelpPanelProps = {
   onClose: () => void;
 };
 
-const appUrl = "https://assetoracleapp.xyz";
+const appUrl = "https://asset-oracle-bzmn.onrender.com";
 const encodedAppUrl = encodeURIComponent(appUrl);
 
 const recommendedWallets = [
@@ -88,7 +88,7 @@ export default function WalletHelpPanel({
           <p>
             Tap a wallet to open Asset Oracle in its app where supported. If the app
             opens to its home screen instead, open its built-in browser and visit
-            assetoracleapp.xyz. Your wallet will only connect after you approve the
+            asset-oracle-bzmn.onrender.com. Your wallet will only connect after you approve the
             connection request.
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function WalletHelpPanel({
             <ol>
               <li>Make sure your wallet app is installed and unlocked.</li>
               <li>If a wallet opens to its home screen, open its built-in browser.</li>
-              <li>Visit assetoracleapp.xyz inside that browser and tap Connect Wallet.</li>
+              <li>Visit asset-oracle-bzmn.onrender.com inside that browser and tap Connect Wallet.</li>
               <li>Confirm Asset Chain Enugu Testnet (Chain ID 42421) when prompted.</li>
               <li>Approve only the connection request you initiated.</li>
             </ol>
@@ -166,7 +166,7 @@ export default function WalletHelpPanel({
         <p className="wallet-recommendation-disclaimer">
           App handoff depends on the wallet version, device, and browser. If a link
           does not open the DApp directly, use the wallet's built-in browser to visit
-          assetoracleapp.xyz.
+          asset-oracle-bzmn.onrender.com.
         </p>
       </section>
     </div>
