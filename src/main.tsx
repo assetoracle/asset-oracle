@@ -25,7 +25,7 @@ createRoot(rootElement).render(
           theme={rainbowKitTheme}
           appInfo={{
             appName: "Asset Oracle",
-            learnMoreUrl: "https://assetoracleapp.xyz",
+            learnMoreUrl: "https://asset-oracle-bzmn.onrender.com",
           }}
         >
           <App />
