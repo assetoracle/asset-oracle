@@ -321,8 +321,8 @@ export default function MarketsPage({
       ) : visibleMarkets.length === 0 ? (
         <div className="empty-state market-empty-state">
           <span className="market-empty-icon" aria-hidden="true"><Search size={22} /></span>
-          <h3>{search.trim() ? "No matching markets" : activeCategory === "Live" ? "No live markets right now" : activeCategory === "Settled Markets" ? "No settled markets yet" : "No published markets in this category"}</h3>
-          <p>{search.trim() ? "Try a different keyword or clear your search to see more published markets." : activeCategory === "Live" ? "Markets appear here only while on-chain status is open and the participation deadline has not passed." : activeCategory === "Settled Markets" ? "Markets move here after their on-chain settlement status is confirmed." : "Markets appear here after publication and are filtered by the selected category."}</p>
+          <h3>{search.trim() ? "No matching markets" : activeCategory === "Live" ? "No live markets right now" : activeCategory === "Settled Markets" ? "No settled markets yet" : activeCategory !== "All Markets" ? "No markets available in this category" : "No markets available right now"}</h3>
+          <p>{search.trim() ? "Try a different keyword or clear your search to see more published markets." : activeCategory === "Live" ? "There are no live markets at the moment. New markets will appear here when they are published and open for participation." : activeCategory === "Settled Markets" ? "There are no settled markets to display yet. Settled markets will appear here once their outcomes are confirmed." : activeCategory !== "All Markets" ? "There are currently no published markets in this category. Please check back later." : "There are currently no published markets. Please check back later. Once new markets are approved and published, they will appear here."}</p>
           {(search.trim() || activeCategory !== "All Markets") && (
             <button
               className="text-action"
