@@ -643,23 +643,29 @@ useEffect(() => {
     const onchainMarket = read.result as unknown as {
       creator?: string; status?: bigint; closeTime?: bigint; outcome?: bigint; resolvedAt?: bigint;
       evidenceHash?: string; evidenceSource?: string; totalYes?: bigint; totalNo?: bigint;
-      1?: string; 5?: string; 6?: bigint; 8?: bigint; 9?: bigint; 10?: bigint; 12?: bigint; 13?: bigint; 14?: string;
+      totalStaked?: bigint;
+      1?: string; 6?: string; 7?: bigint; 9?: bigint; 10?: bigint; 11?: bigint;
+      12?: bigint; 13?: bigint; 14?: bigint; 15?: string;
     };
-    const statusValue = onchainMarket.status ?? onchainMarket[13];
-    const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[6];
+    // Keep positional fallbacks aligned with the canonical getMarket tuple:
+    // id, creator, marketType, stablecoin, question, resolutionRules,
+    // evidenceSource, closeTime, challengePeriod, resolvedAt, totalYes,
+    // totalNo, totalStaked, outcome, status, evidenceHash.
+    const statusValue = onchainMarket.status ?? onchainMarket[14];
+    const closeTimeValue = onchainMarket.closeTime ?? onchainMarket[7];
     const participantRead = marketParticipantReads.data?.[index];
     if (statusValue === undefined) return;
     marketLifecycle.set(market.id, {
       status: Number(statusValue),
       closeTime: closeTimeValue === undefined ? 0 : Number(closeTimeValue),
       creator: String(onchainMarket.creator ?? onchainMarket[1] ?? ""),
-      outcome: Number(onchainMarket.outcome ?? onchainMarket[12] ?? 0n),
-      resolvedAt: Number(onchainMarket.resolvedAt ?? onchainMarket[8] ?? 0n),
-      evidenceHash: String(onchainMarket.evidenceHash ?? onchainMarket[14] ?? ""),
-      evidenceSource: String(onchainMarket.evidenceSource ?? onchainMarket[5] ?? ""),
-      totalYes: BigInt(onchainMarket.totalYes ?? onchainMarket[9] ?? 0n),
-      totalNo: BigInt(onchainMarket.totalNo ?? onchainMarket[10] ?? 0n),
-      totalStaked: BigInt((onchainMarket as { totalStaked?: bigint; 11?: bigint }).totalStaked ?? (onchainMarket as { 11?: bigint })[11] ?? 0n),
+      outcome: Number(onchainMarket.outcome ?? onchainMarket[13] ?? 0n),
+      resolvedAt: Number(onchainMarket.resolvedAt ?? onchainMarket[9] ?? 0n),
+      evidenceHash: String(onchainMarket.evidenceHash ?? onchainMarket[15] ?? ""),
+      evidenceSource: String(onchainMarket.evidenceSource ?? onchainMarket[6] ?? ""),
+      totalYes: BigInt(onchainMarket.totalYes ?? onchainMarket[10] ?? 0n),
+      totalNo: BigInt(onchainMarket.totalNo ?? onchainMarket[11] ?? 0n),
+      totalStaked: BigInt((onchainMarket as { totalStaked?: bigint; 12?: bigint }).totalStaked ?? (onchainMarket as { 12?: bigint })[12] ?? 0n),
       participantCount: participantRead?.status === "success"
         ? Number(participantRead.result)
         : null,
