@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/env";
 import {
   ArrowUpRight,
   ChartNoAxesCombined,
@@ -54,7 +55,6 @@ type HomePageProps = {
   onOpenReferrals: () => void;
 };
 
-const API_BASE_URL = "https://asset-oracle-backend.onrender.com";
 
 function formatCount(value: number | null | undefined) {
   return value === undefined || value === null ? "—" : value.toLocaleString();
