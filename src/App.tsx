@@ -717,8 +717,10 @@ useEffect(() => {
     })
     .map((market) => {
       const stats = marketLifecycle.get(market.id);
+      const lifecycleNames = ["OPEN", "CLOSED", "DISPUTED", "SETTLED", "REFUNDABLE", "CANCELLED", "ARBITRATION"] as const;
       return {
         ...market,
+        onchainLifecycleStatus: stats ? lifecycleNames[stats.status] ?? "UNKNOWN" : null,
         participantCount: stats?.participantCount ?? null,
         totalStaked: stats ? stats.totalStaked.toString() : null,
       };

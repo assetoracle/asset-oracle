@@ -25,6 +25,7 @@ export type DisplayMarket = {
   closesAt: string;
   resolvesAt: string;
   status: string;
+  onchainLifecycleStatus?: string | null;
   symbol: string;
   label: string;
   endDate: string;

@@ -134,6 +134,8 @@ export default function MarketsPage({
               <span className="market-status market-status-settled">SETTLED</span>
             ) : liveMarketIds.has(market.id) ? (
               <span className="market-status market-status-live"><span className="live-indicator" aria-hidden="true" />LIVE</span>
+            ) : market.onchainLifecycleStatus && market.onchainLifecycleStatus !== "CLOSED" ? (
+              <span className="market-status">{market.onchainLifecycleStatus}</span>
             ) : (
               <span className="market-status">CLOSED</span>
             )}
