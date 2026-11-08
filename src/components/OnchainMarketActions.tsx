@@ -26,6 +26,13 @@ import { ensureWalletSession } from "../markets/marketApi";
 type Props = { marketId: bigint; managerAddress?: string | null; closeTime: number };
 
 const MINIMUM_STAKE = 5_000_000n; // 5 USDC with the approved 6-decimal testnet token.
+const TRADING_FEE_BPS = 100n;
+const BPS_DENOMINATOR = 10_000n;
+
+export function getStakeTotalWithFee(stakeAmount: bigint): bigint {
+  const tradingFee = (stakeAmount * TRADING_FEE_BPS) / BPS_DENOMINATOR;
+  return stakeAmount + tradingFee;
+}
 
 
 export default function OnchainMarketActions({ marketId, managerAddress, closeTime }: Props) {
@@ -164,6 +171,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       return parseUnits(amount.trim(), TESTNET_USDC_DECIMALS);
     } catch { return 0n; }
   })();
+  const totalRequired = parsedAmount > 0n ? getStakeTotalWithFee(parsedAmount) : 0n;
   const allowance = useReadContract({
     address: TESTNET_USDC_ADDRESS,
     abi: erc20TestnetAbi,
@@ -202,7 +210,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
   const canStake = safe && managerCompatible && isConnected && Boolean(address) &&
     Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 < closeTime && parsedAmount >= MINIMUM_STAKE &&
-    balance.data !== undefined && parsedAmount <= balance.data;
+    balance.data !== undefined && totalRequired <= balance.data;
   const stakeDisabledReason = !isConnected
     ? "Connect your wallet to stake."
     : chainId !== ASSET_CHAIN_TESTNET_ID
@@ -229,8 +237,8 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
                           ? "Enter a valid amount greater than zero (up to 6 decimal places)."
                           : parsedAmount < MINIMUM_STAKE
                             ? "Minimum stake is 5 USDC."
-                            : balance.data !== undefined && parsedAmount > balance.data
-                            ? "Your USDC balance is too low for this stake."
+                            : balance.data !== undefined && totalRequired > balance.data
+                            ? `You need ${formatUnits(totalRequired, TESTNET_USDC_DECIMALS)} USDC including the 1% trading fee.`
                             : "Staking is temporarily unavailable. Check your wallet and market status.";
   const canClose = safe && managerCompatible && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 >= closeTime;
@@ -293,13 +301,13 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       setReferralPreparing(false);
     }
     reset();
-    if ((allowance.data ?? 0n) < parsedAmount) {
+    if ((allowance.data ?? 0n) < totalRequired) {
       setLastAction("approve");
       writeContract({
         address: TESTNET_USDC_ADDRESS,
         abi: erc20TestnetAbi,
         functionName: "approve",
-        args: [manager, parsedAmount],
+        args: [manager, totalRequired],
       });
       return;
     }
@@ -412,10 +420,10 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
               <button className="outcome-choice-no" type="button" aria-pressed={!yesSide} onClick={() => setYesSide(false)}>NO</button>
             </div>
             <button className="primary-button" type="button" disabled={!canStake || isWalletPending || receipt.isLoading || referralPreparing || !amount.trim()} onClick={submitStake}>
-              {referralPreparing ? "Confirm referral in wallet…" : isWalletPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : (allowance.data ?? 0n) < parsedAmount ? "Approve exact USDC amount" : `Stake ${amount || "USDC"} on ${yesSide ? "YES" : "NO"}`}
+              {referralPreparing ? "Confirm referral in wallet…" : isWalletPending ? "Confirm in wallet…" : receipt.isLoading ? "Waiting for confirmation…" : (allowance.data ?? 0n) < totalRequired ? `Approve ${formatUnits(totalRequired, TESTNET_USDC_DECIMALS)} USDC (including fee)` : `Stake ${amount || "USDC"} on ${yesSide ? "YES" : "NO"}`}
             </button>
             {!canStake && stakeDisabledReason && !isWalletPending && !receipt.isLoading && <p className="stake-disabled-note" role="status">{stakeDisabledReason}</p>}
-            {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
+            {balance.data !== undefined && totalRequired > balance.data && <p role="alert">Insufficient USDC balance for the stake plus trading fee.</p>}
           </>}
           {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p className="disabled-note">This market is closed.</p>}
@@ -428,7 +436,7 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
       {txHash && <p>Transaction: <a href={`https://scan-testnet.assetchain.org/tx/${txHash}`} target="_blank" rel="noreferrer">{txHash.slice(0, 12)}…</a></p>}
       {message && <p role="status">{message}</p>}
       {writeError && <p role="alert">Wallet transaction failed or was rejected.</p>}
-      <p className="disabled-note">Testnet only. Approval is limited to the entered amount. Review the transaction in your wallet before confirming.</p>
+      <p className="disabled-note">Testnet only. Approval covers the stake plus the 1% trading fee. Review the transaction in your wallet before confirming.</p>
     </section>
   );
 }
