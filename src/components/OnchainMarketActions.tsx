@@ -117,6 +117,33 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
     return () => { cancelled = true; };
   }, [client, managerCode, chainId, marketId]);
 
+  const contractOwner = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "owner",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
+  });
+  const marketCreatorRole = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "MARKET_CREATOR_ROLE",
+    query: { enabled: Boolean(manager) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 60_000 },
+  });
+  const creatorRoleMembership = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "hasRole",
+    args: marketCreatorRole.data && address ? [marketCreatorRole.data, address] : undefined,
+    query: { enabled: Boolean(manager && address && marketCreatorRole.data) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
+  });
+  const validatorMembership = useReadContract({
+    address: manager,
+    abi: assetOracleMarketManagerAbi,
+    functionName: "isValidator",
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(manager && address) && chainId === ASSET_CHAIN_TESTNET_ID, refetchInterval: 30_000 },
+  });
+
   const market = useReadContract({
     address: manager,
     abi: assetOracleMarketManagerAbi,
@@ -232,6 +259,13 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
                             : balance.data !== undefined && parsedAmount > balance.data
                             ? "Your USDC balance is too low for this stake."
                             : "Staking is temporarily unavailable. Check your wallet and market status.";
+  const canManageLifecycle = Boolean(
+    isConnected && address && (
+      contractOwner.data?.toLowerCase() === address.toLowerCase() ||
+      creatorRoleMembership.data === true ||
+      validatorMembership.data === true
+    )
+  );
   const canClose = safe && managerCompatible && isConnected && Number(marketData?.status) === MARKET_STATUS.OPEN &&
     Date.now() / 1000 >= closeTime;
   const canClaim = safe && isConnected && hasPosition && !claimed &&
@@ -417,11 +451,11 @@ export default function OnchainMarketActions({ marketId, managerAddress, closeTi
             {!canStake && stakeDisabledReason && !isWalletPending && !receipt.isLoading && <p className="stake-disabled-note" role="status">{stakeDisabledReason}</p>}
             {balance.data !== undefined && parsedAmount > balance.data && <p role="alert">Amount exceeds your test USDC balance.</p>}
           </>}
-          {Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
+          {canManageLifecycle && Number(marketData?.status) === MARKET_STATUS.OPEN && Date.now() / 1000 >= closeTime && <button className="primary-button" type="button" disabled={!canClose || isWalletPending || receipt.isLoading} onClick={() => submitAction("close")}>Close expired market</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p className="disabled-note">This market is closed.</p>}
           {Number(marketData?.status) === MARKET_STATUS.SETTLED && <button className="primary-button" type="button" disabled={!canClaim || isWalletPending || receipt.isLoading} onClick={() => submitAction("claim")}>Claim settlement</button>}
           {Number(marketData?.status) === MARKET_STATUS.CLOSED && <p>This market has closed but has not been resolved. After the contract timeout, an eligible participant can enable refunds.</p>}
-          {Number(marketData?.status) === MARKET_STATUS.CLOSED && <button className="primary-button" type="button" disabled={!canStartTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("timeout")}>Enable timeout refunds</button>}
+          {canManageLifecycle && Number(marketData?.status) === MARKET_STATUS.CLOSED && <button className="primary-button" type="button" disabled={!canStartTimeoutRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("timeout")}>Enable timeout refunds</button>}
           {(Number(marketData?.status) === MARKET_STATUS.CANCELLED || Number(marketData?.status) === MARKET_STATUS.REFUNDABLE) && <button className="primary-button" type="button" disabled={!canRefund || isWalletPending || receipt.isLoading} onClick={() => submitAction("refund")}>Refund position</button>}
           {Number(marketData?.outcome) === MARKET_OUTCOME.INVALID && <p>Invalid outcome: the contract returns the net stake through the settlement claim path.</p>}
         </>}
