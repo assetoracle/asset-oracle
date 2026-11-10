@@ -704,6 +704,7 @@ export type MarketResolutionVerification = {
   targetValue: number;
   proposedOutcome: "YES" | "NO";
   evidenceHash: string;
+  contentHash: string;
   recommendationStatus: string;
   preparedAt: string;
   validatorCount: number;
