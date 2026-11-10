@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, ShieldCheck, FileCheck2, WalletCards } from "lucide-react";
-import { getValidatorSourceLinks, type ValidatorSourceLink } from "../markets/marketApi";
+import { getValidatorSourceLinks, getMarketResolutionVerification, type ValidatorSourceLink, type MarketResolutionVerification } from "../markets/marketApi";
 import { useAccount, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import { assetOracleMarketManagerAbi, MARKET_OUTCOME, ASSET_CHAIN_TESTNET_EXPLORER, TESTNET_USDC_DECIMALS } from "../contracts/assetOracle";
@@ -57,6 +57,8 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
   const sourceLink = normalizedHttpUrl(evidenceSource);
   const hasEvidenceHash = Boolean(evidenceHash && evidenceHash !== "0x" + "0".repeat(64));
   const [validatorLinks, setValidatorLinks] = useState<ValidatorSourceLink[]>([]);
+  const [resolutionVerification, setResolutionVerification] = useState<MarketResolutionVerification | null>(null);
+  const [resolutionVerificationLoading, setResolutionVerificationLoading] = useState(false);
   const [validatorLinksLoading, setValidatorLinksLoading] = useState(false);
   const [activeVerificationSection, setActiveVerificationSection] = useState<"outcome" | "details" | "sources" | "position">("outcome");
 
@@ -64,6 +66,8 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
     if (marketId === undefined || !managerAddress) return;
     let cancelled = false;
     setValidatorLinksLoading(true);
+    setResolutionVerificationLoading(true);
+    void getMarketResolutionVerification(marketId.toString()).then((result) => { if (!cancelled) setResolutionVerification(result.verification); }).catch(() => { if (!cancelled) setResolutionVerification(null); }).finally(() => { if (!cancelled) setResolutionVerificationLoading(false); });
     void getValidatorSourceLinks(marketId.toString(), managerAddress)
       .then((result) => { if (!cancelled) setValidatorLinks(result.links); })
       .catch(() => { if (!cancelled) setValidatorLinks([]); })
@@ -114,6 +118,14 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
             <strong className="verification-hash">{shortHash(evidenceHash)}</strong>
             <p>{hasEvidenceHash ? "Evidence hash recorded by the market contract." : "No evidence hash is recorded for this market."}</p>
           </article>
+          {resolutionVerificationLoading && <article className="verification-detail-card"><p>Loading provider verification record…</p></article>}
+          {resolutionVerification && <>
+            <article className="verification-detail-card"><span className="verification-detail-label">Resolution-time provider</span><strong>{resolutionVerification.provider}</strong><a href={normalizedHttpUrl(resolutionVerification.sourceUrl) ?? undefined} target="_blank" rel="noreferrer">Open exact source used <ExternalLink size={14} /></a><p>Fetched {new Date(resolutionVerification.retrievedAt).toLocaleString()}</p></article>
+            <article className="verification-detail-card"><span className="verification-detail-label">Observed result</span><strong>{resolutionVerification.metric}: {resolutionVerification.observedValue.toLocaleString()}</strong><p>Rule: {resolutionVerification.comparison.replace("_", " ")} {resolutionVerification.targetValue.toLocaleString()}</p><p>API recommendation: {resolutionVerification.proposedOutcome}. Prepared {new Date(resolutionVerification.preparedAt).toLocaleString()}</p></article>
+            <article className="verification-detail-card"><span className="verification-detail-label">Validator consensus</span><strong>{resolutionVerification.validatorCount} / 3 recorded</strong><p>YES: {resolutionVerification.validatorConsensus.yes} · NO: {resolutionVerification.validatorConsensus.no} · INVALID: {resolutionVerification.validatorConsensus.invalid}</p><p>Minimum agreement: {resolutionVerification.validatorThreshold} of 3</p></article>
+            <article className="verification-detail-card"><span className="verification-detail-label">Automated settlement status</span><strong>{resolutionVerification.settlementStatus.replaceAll("_", " ")}</strong>{resolutionVerification.finalizationTransaction ? <a href={resolutionVerification.explorerBaseUrl + "/tx/" + resolutionVerification.finalizationTransaction.hash} target="_blank" rel="noreferrer">Finalization transaction {shortHash(resolutionVerification.finalizationTransaction.hash)} <ExternalLink size={14} /></a> : <p>Finalization transaction not yet recorded.</p>}<p>{resolutionVerification.payoutTransactions.length} payout transaction(s) recorded</p>{resolutionVerification.payoutTransactions.map((tx) => <p key={tx.hash}><a href={resolutionVerification.explorerBaseUrl + "/tx/" + tx.hash} target="_blank" rel="noreferrer">Payout {shortHash(tx.hash)} <ExternalLink size={13} /></a></p>)}</article>
+            <article className="verification-detail-card verification-evidence-card"><span className="verification-detail-label">Resolution evidence integrity</span><strong className="verification-hash">{shortHash(resolutionVerification.evidenceHash)}</strong><p>Evidence record hash prepared for validator review.</p></article>
+          </>}
           <article className="verification-detail-card">
             <span className="verification-detail-label">On-chain proof</span>
             <strong>Asset Chain testnet</strong>
@@ -149,7 +161,7 @@ export default function MarketVerificationPage({ market, outcome, resolvedAt, ev
           </div>
         )}
       </section>}
-      <p className="verification-disclaimer">Verification information is limited to data recorded by the connected Asset Oracle market contract. A source name or evidence hash is not represented as an independent audit. The resolution transaction is not available from the market record unless supplied by the indexer.</p>
+      <p className="verification-disclaimer">The provider result is a recommendation, not a validator vote. Final outcomes are determined by the market contract after human-validator consensus. Transaction and evidence details are shown only when recorded by the platform.</p>
     </section>
   );
 }
