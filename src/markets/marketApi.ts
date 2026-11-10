@@ -693,6 +693,42 @@ export async function getValidatorSourceLinks(marketId: string, managerAddress: 
 }
 
 
+
+export type MarketResolutionVerification = {
+  provider: string;
+  sourceUrl: string;
+  retrievedAt: string;
+  metric: string;
+  observedValue: number;
+  comparison: "ABOVE" | "AT_LEAST" | "BELOW" | "EQUALS";
+  targetValue: number;
+  proposedOutcome: "YES" | "NO";
+  evidenceHash: string;
+  contentHash: string;
+  recommendationStatus: string;
+  preparedAt: string;
+  validatorCount: number;
+  validatorThreshold: number;
+  validatorConsensus: { yes: number; no: number; invalid: number };
+  validators: Array<{
+    validatorAddress: string;
+    outcome: number;
+    sourceUrl: string;
+    transactionHash: string;
+    recordedAt: string;
+  }>;
+  finalizationTransaction: { hash: string; recordedAt: string } | null;
+  payoutTransactions: Array<{ hash: string; recordedAt: string }>;
+  settlementStatus: string;
+  explorerBaseUrl: string;
+};
+
+export async function getMarketResolutionVerification(marketId: string) {
+  return request<{ verification: MarketResolutionVerification | null }>(
+    `/api/markets/public/${encodeURIComponent(marketId)}/verification`,
+  );
+}
+
 export type ProviderEvidenceReview = {
   validatorAddress: string;
   decision: "ACCEPTED" | "REJECTED";
