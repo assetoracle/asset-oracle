@@ -42,6 +42,7 @@ export default function AdminDashboard({
   signMessage,
 }: Props) {
   const [proposals, setProposals] = useState<StoredMarketProposal[]>([]);
+  const [evidenceProposals, setEvidenceProposals] = useState<StoredMarketProposal[]>([]);
   const [automatedProposals, setAutomatedProposals] = useState<StoredMarketProposal[]>([]);
   const [generatedCandidates, setGeneratedCandidates] = useState<GeneratedMarketCandidate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -85,7 +86,9 @@ export default function AdminDashboard({
         throw new Error(data.error || "Unable to load proposals.");
       }
 
-      setProposals((data.proposals ?? []).filter((proposal: StoredMarketProposal) => proposal.origin !== "AUTOMATED").slice().sort((a: StoredMarketProposal, b: StoredMarketProposal) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
+      const allProposals = (data.proposals ?? []) as StoredMarketProposal[];
+      setEvidenceProposals(allProposals);
+      setProposals(allProposals.filter((proposal) => proposal.origin !== "AUTOMATED").slice().sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
     } catch (err) {
       setError(friendlyError(err, "Request failed."));
     } finally {
@@ -153,6 +156,7 @@ export default function AdminDashboard({
 
   useEffect(() => {
     setProposals([]);
+    setEvidenceProposals([]);
     setAutomatedProposals([]);
     setNotice("");
     setError("");
@@ -216,7 +220,7 @@ export default function AdminDashboard({
         <button type="button" className={activeSection === "automated" ? "primary-button" : "text-action"} aria-current={activeSection === "automated" ? "page" : undefined} onClick={() => setActiveSection("automated")}>Automated markets</button>
         {(role === "OWNER" || role === "MARKET_CREATOR") && <button type="button" className={activeSection === "candidates" ? "primary-button" : "text-action"} aria-current={activeSection === "candidates" ? "page" : undefined} onClick={() => setActiveSection("candidates")}>Generated candidates</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "validators" ? "primary-button" : "text-action"} aria-current={activeSection === "validators" ? "page" : undefined} onClick={() => setActiveSection("validators")}>Validator operations</button>}
-        {role === "OWNER" && <button type="button" className={activeSection === "evidence" ? "primary-button" : "text-action"} aria-current={activeSection === "evidence" ? "page" : undefined} onClick={async () => { setActiveSection("evidence"); await loadProposals(); await loadAutomatedProposals(); }}>Provider evidence</button>}
+        {role === "OWNER" && <button type="button" className={activeSection === "evidence" ? "primary-button" : "text-action"} aria-current={activeSection === "evidence" ? "page" : undefined} onClick={async () => { setActiveSection("evidence"); await loadProposals(); }}>Provider evidence</button>}
         {role === "OWNER" && <button type="button" className={activeSection === "referrals" ? "primary-button" : "text-action"} aria-current={activeSection === "referrals" ? "page" : undefined} onClick={() => setActiveSection("referrals")}>Referral review</button>}
       </nav>
 
@@ -390,7 +394,7 @@ export default function AdminDashboard({
         </div>
       </>}
       {role === "OWNER" && activeSection === "validators" && <ValidatorDashboard />}
-      {role === "OWNER" && activeSection === "evidence" && <ProviderEvidenceCollectionPanel address={address} signMessage={signMessage} proposals={[...proposals, ...automatedProposals]} />}
+      {role === "OWNER" && activeSection === "evidence" && <ProviderEvidenceCollectionPanel address={address} signMessage={signMessage} proposals={evidenceProposals} />}
       {role === "OWNER" && activeSection === "referrals" && <ReferralReviewPanel address={address} signMessage={signMessage} />}
 
       {confirmation && createPortal((() => {
