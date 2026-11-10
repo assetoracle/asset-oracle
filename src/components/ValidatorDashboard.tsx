@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BrandedSelect from "./BrandedSelect";
 import { encodeAbiParameters, keccak256, toBytes, type Address } from "viem";
 import { useAccount, useChainId, useReadContracts, useWaitForTransactionReceipt, useWriteContract, useSignMessage } from "wagmi";
-import { recordValidatorSourceLink } from "../markets/marketApi";
+import { getMarketResolutionVerification, recordValidatorSourceLink, type MarketResolutionVerification } from "../markets/marketApi";
 import ProviderEvidenceReviewPanel from "./ProviderEvidenceReviewPanel";
 import { ArrowUpRight, RefreshCw, ShieldCheck } from "lucide-react";
 import {
@@ -90,6 +90,7 @@ export default function ValidatorDashboard() {
   const { writeContract, data: txHash, isPending, error, reset } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash: txHash });
   const [outcomes, setOutcomes] = useState<Record<string, 1 | 2 | 3>>({});
+  const [resolutionRecommendations, setResolutionRecommendations] = useState<Record<string, MarketResolutionVerification>>({});
   const [sourceUrls, setSourceUrls] = useState<Record<string, string>>({});
   const [pendingSource, setPendingSource] = useState<{ managerAddress: Address; marketId: bigint; outcome: 1 | 2 | 3; sourceUrl: string } | null>(null);
   const [savingSource, setSavingSource] = useState(false);
@@ -123,6 +124,20 @@ export default function ValidatorDashboard() {
     .sort((a, b) => Number(a.closeTime - b.closeTime)), [marketReads.data, marketContracts]);
 
   const sectionMarkets = markets.filter((market) => activeValidatorSection === "finalization" ? market.status === MARKET_STATUS.DISPUTED : market.status !== MARKET_STATUS.DISPUTED);
+  useEffect(() => {
+    let cancelled = false;
+    async function loadRecommendations() {
+      const entries = await Promise.all(markets.map(async (market) => {
+        try {
+          const result = await getMarketResolutionVerification(market.id.toString());
+          return result.verification ? [market.managerAddress.toLowerCase() + "-" + market.id.toString(), result.verification] as const : null;
+        } catch { return null; }
+      }));
+      if (!cancelled) setResolutionRecommendations(Object.fromEntries(entries.filter((entry): entry is NonNullable<typeof entry> => entry !== null)));
+    }
+    if (markets.length) void loadRecommendations(); else setResolutionRecommendations({});
+    return () => { cancelled = true; };
+  }, [markets]);
 
   const votedReads = useReadContracts({
     contracts: address ? markets.map((market) => ({
@@ -314,6 +329,23 @@ export default function ValidatorDashboard() {
                 <span>Published evidence</span>
                 {evidence ? <a href={/^https?:\/\//i.test(evidence) ? evidence : undefined} target="_blank" rel="noreferrer">{evidence}</a> : <strong>Missing evidence source — voting disabled</strong>}
               </div>
+              {resolutionRecommendations[market.managerAddress.toLowerCase() + "-" + id] && market.status !== MARKET_STATUS.DISPUTED && (() => {
+                const recommendation = resolutionRecommendations[market.managerAddress.toLowerCase() + "-" + id];
+                return <div className="validator-evidence">
+                  <span>API recommendation · human confirmation required</span>
+                  <strong>{recommendation.proposedOutcome} · {recommendation.provider}</strong>
+                  <p>{recommendation.metric}: {recommendation.observedValue.toLocaleString()} · Rule {recommendation.comparison.replace("_", " ")} {recommendation.targetValue.toLocaleString()}</p>
+                  <p>Fetched {new Date(recommendation.retrievedAt).toLocaleString()}</p>
+                  <a href={recommendation.sourceUrl} target="_blank" rel="noreferrer">Inspect exact provider source <ArrowUpRight size={13} /></a>
+                  <p>Evidence reference: {recommendation.evidenceHash.slice(0, 12)}…{recommendation.evidenceHash.slice(-8)}</p>
+                  <button className="secondary-button" type="button" disabled={hasVoted || isPending || receipt.isLoading} onClick={() => {
+                    const key = market.managerAddress.toLowerCase() + "-" + id;
+                    setOutcomes((current) => ({ ...current, [key]: recommendation.proposedOutcome === "YES" ? 1 : 2 }));
+                    setSourceUrls((current) => ({ ...current, [key]: recommendation.sourceUrl }));
+                    setNotice("API recommendation loaded into your vote form. Review it and submit your own validator vote.");
+                  }}>Use recommendation in vote form</button>
+                </div>;
+              })()}
               <label htmlFor={`validator-outcome-${id}`}>Your decision</label>
               <BrandedSelect
                 className="validator-outcome-select"
