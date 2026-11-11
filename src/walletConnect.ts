@@ -1,6 +1,7 @@
 import { connectorsForWallets, darkTheme } from "@rainbow-me/rainbowkit";
 import {
   binanceWallet,
+  bitgetWallet,
   coinbaseWallet,
   injectedWallet,
   metaMaskWallet,
@@ -36,6 +37,7 @@ const connectors = connectorsForWallets(
         zerionWallet,
         safepalWallet,
         binanceWallet,
+        bitgetWallet,
         coinbaseWallet,
       ],
     },
