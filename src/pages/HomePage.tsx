@@ -20,7 +20,7 @@ export type DisplayMarket = {
   id: string;
   question: string;
   description: string;
-  category: "Crypto" | "Sports" | "Economics" | "RWA" | "Regional";
+  category: "Digital Assets" | "Sports" | "Economics" | "RWA" | "Regional";
   sport?: "football" | "basketball" | "tennis";
   closesAt: string;
   resolvesAt: string;

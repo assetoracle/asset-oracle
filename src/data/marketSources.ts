@@ -12,9 +12,9 @@ export const marketSources: MarketSource[] = [
   {
     id: "coingecko",
     name: "CoinGecko",
-    category: "Crypto & Digital Assets",
+    category: "Digital Assets",
     description:
-      "Planned source for cryptocurrency prices and market data used in predefined prediction market rules.",
+      "Planned source for digital asset prices and market data used in predefined prediction market rules.",
     website: "https://www.coingecko.com/",
     enabled: true,
   },

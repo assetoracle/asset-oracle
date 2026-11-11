@@ -1,6 +1,6 @@
 export type MarketCategory =
   | "All Markets"
-  | "Crypto"
+  | "Digital Assets"
   | "Sports"
   | "Economics"
   | "RWA"
