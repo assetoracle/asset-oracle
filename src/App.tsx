@@ -702,13 +702,9 @@ useEffect(() => {
         market.label.toLowerCase().includes(query) ||
         market.description.toLowerCase().includes(query);
 
-      const lifecycle = marketLifecycle.get(market.id);
-      const ownerOnlyStatuses = new Set<number>([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
-      const ownerOnly = lifecycle ? ownerOnlyStatuses.has(lifecycle.status) : false;
-      const isMarketCreator = Boolean(address && lifecycle?.creator && lifecycle.creator.toLowerCase() === address.toLowerCase());
-
-      // Closed/review-state markets remain accessible to their creator and configured platform admins.
-      return matchesCategory && matchesSearch && (!ownerOnly || isMarketCreator || isAdmin);
+      // All Markets is a public catalogue of every verified publication.
+      // Lifecycle status controls participation, not whether a market can be discovered.
+      return matchesCategory && matchesSearch;
     })
     .sort((a, b) => {
       const idA = a.onchainMarketId ? Number(a.onchainMarketId) : Number.MAX_SAFE_INTEGER;
@@ -949,12 +945,8 @@ useEffect(() => {
 
     if (selectedMarket) {
       const lifecycle = marketLifecycle.get(selectedMarket.id);
-      const ownerOnlyStatuses = new Set<number>([MARKET_STATUS.CLOSED, MARKET_STATUS.DISPUTED, MARKET_STATUS.REFUNDABLE, MARKET_STATUS.CANCELLED, MARKET_STATUS.ARBITRATION]);
-      const isOwnerOnlyMarket = Boolean(lifecycle && ownerOnlyStatuses.has(lifecycle.status));
-      const isMarketCreator = Boolean(address && lifecycle?.creator && lifecycle.creator.toLowerCase() === address.toLowerCase());
-      if (isOwnerOnlyMarket && !isMarketCreator && !isAdmin) {
-        return <div className="empty-state" role="status"><h3>Market access restricted</h3><p>This market is closed or under review and is visible only to its creator and the Asset Oracle platform owner/admin.</p><button className="primary-button" type="button" onClick={goBackToMarkets}>Back to markets</button></div>;
-      }
+      // Published market details remain publicly readable in every lifecycle state.
+      // The marketClosed flag below still prevents participation when the market is not open.
       const marketClosed = !(
         lifecycle &&
         lifecycle.status === MARKET_STATUS.OPEN &&
