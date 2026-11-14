@@ -171,8 +171,14 @@ export default function MarketsPage({
     return (
       <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
-          <span className={`market-symbol market-identity-symbol${identityVisual ? " has-image" : ""}`}>
-            {identityVisual ? (
+          <span className={`market-symbol market-identity-symbol${identityVisual || market.teamIdentity ? " has-image" : ""}`}>
+            {market.teamIdentity ? (
+              <span className="market-team-identity" aria-label={`${market.teamIdentity.home.name} versus ${market.teamIdentity.away.name}`}>
+                {market.teamIdentity.home.logoUrl && <img src={market.teamIdentity.home.logoUrl} alt={market.teamIdentity.home.name} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.hidden = true; }} />}
+                {market.teamIdentity.away.logoUrl && <img src={market.teamIdentity.away.logoUrl} alt={market.teamIdentity.away.name} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.hidden = true; }} />}
+                {!market.teamIdentity.home.logoUrl && !market.teamIdentity.away.logoUrl && <SportIcon sport={sportKind} size={25} />}
+              </span>
+            ) : identityVisual ? (
               <img
                 className={`market-identity-image market-identity-image-${identityVisual.kind}`}
                 src={identityVisual.imageUrl}
