@@ -43,6 +43,46 @@ function formatMarketTime(value: string | undefined): string {
   }).format(date).replace("GMT+1", "WAT");
 }
 
+type MarketIdentityVisual = { imageUrl: string; alt: string; kind: "asset" | "flag" };
+
+function getMarketIdentityVisual(market: DisplayMarket): MarketIdentityVisual | null {
+  const rule = market.resolutionRule;
+  const query = rule?.query;
+  const sourceId = rule?.sourceId?.trim().toLowerCase() ?? "";
+  const marketText = `${market.question} ${market.description} ${query?.search ?? ""}`.toLowerCase();
+  const coinId = query?.coinId?.trim().toLowerCase();
+
+  // CoinGecko has already returned verified BTC market evidence for this market.
+  // Use its official asset image for the known Bitcoin coin ID; unknown IDs fall back safely.
+  if (sourceId === "coingecko" && (coinId === "bitcoin" || /\b(bitcoin|btc)\b/.test(marketText))) {
+    return {
+      imageUrl: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png?1696501400",
+      alt: "Bitcoin",
+      kind: "asset",
+    };
+  }
+
+  const country = query?.country?.trim().toUpperCase();
+  const countryCodes: Record<string, string> = {
+    NGA: "ng", NG: "ng", GHA: "gh", GH: "gh", KEN: "ke", KE: "ke",
+    ZAF: "za", ZA: "za", USA: "us", US: "us", GBR: "gb", GB: "gb",
+  };
+  const countryCode = (country && countryCodes[country]) ||
+    (/\bnigeria\b/.test(marketText) ? "ng" : "");
+  if (countryCode) {
+    const countryName = country === "NGA" || country === "NG" || /\bnigeria\b/.test(marketText)
+      ? "Nigeria"
+      : country ?? "Country";
+    return {
+      imageUrl: `https://flagcdn.com/w80/${countryCode}.png`,
+      alt: `${countryName} flag`,
+      kind: "flag",
+    };
+  }
+
+  return null;
+}
+
 type MarketsPageProps = {
   categories: MarketFilter[];
   activeCategory: MarketFilter;
@@ -124,10 +164,31 @@ export default function MarketsPage({
       : /\b(tennis|wimbledon|atp|wta|grand slam|set point)\b/.test(marketText)
         ? "tennis"
         : "football");
+    const identityVisual = getMarketIdentityVisual(market);
     return (
       <article className="market-card market-card-compact" key={market.id}>
         <div className="market-card-top">
-          <span className="market-symbol">{sportsMarket ? <SportIcon sport={sportKind} size={25} /> : `#${categoryIndex + 1}`}</span>
+          <span className={`market-symbol market-identity-symbol${identityVisual ? " has-image" : ""}`}>
+            {identityVisual ? (
+              <img
+                className={`market-identity-image market-identity-image-${identityVisual.kind}`}
+                src={identityVisual.imageUrl}
+                alt={identityVisual.alt}
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={(event) => {
+                  event.currentTarget.hidden = true;
+                  event.currentTarget.parentElement?.classList.add("is-fallback");
+                }}
+              />
+            ) : sportsMarket ? (
+              <SportIcon sport={sportKind} size={25} />
+            ) : (
+              `#${categoryIndex + 1}`
+            )}
+            {identityVisual && <span className="market-identity-fallback" aria-hidden="true">{sportsMarket ? <SportIcon sport={sportKind} size={25} /> : `#${categoryIndex + 1}`}</span>}
+          </span>
           <div className="market-card-badges">
             <span className="market-category">{market.label}</span>
             {settledMarketIds.has(market.id) ? (

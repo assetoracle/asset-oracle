@@ -11651,3 +11651,46 @@ select.brand-select option,
   .market-grid, .admin-proposal-grid, .my-proposal-grid, .admin-summary-grid { gap: 10px; }
   .account-summary-card, .dashboard-panel, .admin-dashboard .account-summary-card { padding: 13px; }
 }
+
+
+/* Contextual market identity: richer imagery without changing card geometry. */
+.market-card-compact {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.market-card-compact:hover,
+.market-card-compact:focus-within {
+  transform: translateY(-3px);
+  border-color: rgba(99, 243, 255, .42);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .22), 0 0 0 1px rgba(18, 217, 245, .08), 0 0 26px rgba(18, 217, 245, .07);
+}
+.market-identity-symbol {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 28% 18%, rgba(99,243,255,.18), rgba(18,217,245,.045) 62%, rgba(7,26,36,.9));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 5px 16px rgba(0,0,0,.14);
+}
+.market-identity-symbol.has-image {
+  border-color: rgba(99,243,255,.28);
+}
+.market-identity-image {
+  display: block;
+  width: 27px;
+  height: 27px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.25));
+}
+.market-identity-image-flag {
+  width: 30px;
+  height: 22px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,.24);
+}
+.market-identity-fallback { display: none; }
+.market-identity-symbol.is-fallback .market-identity-image { display: none; }
+.market-identity-symbol.is-fallback .market-identity-fallback { display: grid; place-items: center; }
+@media (prefers-reduced-motion: reduce) {
+  .market-card-compact { transition: none; }
+  .market-card-compact:hover,
+  .market-card-compact:focus-within { transform: none; }
+}
