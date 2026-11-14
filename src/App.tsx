@@ -385,6 +385,7 @@ const loadMarkets = useCallback(async () => {
         label: categoryLabel(market.category),
         endDate: formatDate(market.resolvesAt),
         resolutionRule: market.resolutionRule,
+        teamIdentity: market.teamIdentity ?? null,
         onchainMarketId: market.onchainMarketId ?? null,
         onchainTxHash: market.onchainTxHash ?? null,
         onchainManagerAddress: market.onchainManagerAddress ?? null,
