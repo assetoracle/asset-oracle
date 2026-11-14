@@ -46,6 +46,10 @@ export type DisplayMarket = {
   onchainChainId?: number | null;
   participantCount?: number | null;
   totalStaked?: string | null;
+  teamIdentity?: {
+    home: { name: string; logoUrl: string | null };
+    away: { name: string; logoUrl: string | null };
+  } | null;
 };
 
 type DashboardStats = {
