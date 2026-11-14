@@ -51,7 +51,6 @@ function getMarketIdentityVisual(market: DisplayMarket): MarketIdentityVisual | 
   }
   const rule = market.resolutionRule;
   const query = rule?.query;
-  const sourceId = rule?.sourceId?.trim().toLowerCase() ?? "";
   const marketText = `${market.question} ${market.description} ${query?.search ?? ""}`.toLowerCase();
   const coinId = query?.coinId?.trim().toLowerCase();
 
