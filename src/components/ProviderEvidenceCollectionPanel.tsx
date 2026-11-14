@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink, RefreshCw, Download } from "lucide-react";
 import { collectProviderEvidence, listProviderEvidence, type ProviderMarketEvidence, type StoredMarketProposal } from "../markets/marketApi";
 import { friendlyError } from "../utils/friendlyError";
@@ -53,6 +53,25 @@ export default function ProviderEvidenceCollectionPanel({ address, signMessage, 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
+  useEffect(() => {
+    if (!address) {
+      setEvidenceByProposal({});
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      for (const proposal of proposals.filter((item) => item.status === "APPROVED")) {
+        try {
+          const result = await listProviderEvidence(proposal.id, address, signMessage);
+          if (!cancelled) setEvidenceByProposal((current) => ({ ...current, [proposal.id]: result.evidence ?? [] }));
+        } catch (err) {
+          if (!cancelled) setError(friendlyError(err, "Unable to load collected provider evidence."));
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [address, proposals, signMessage]);
+
   async function loadEvidence(proposalId: string) {
     if (!address) return;
     setBusyId(proposalId);
@@ -67,13 +86,13 @@ export default function ProviderEvidenceCollectionPanel({ address, signMessage, 
     }
   }
 
-  async function collectEvidence(proposalId: string) {
+  async function collectEvidence(proposalId: string, confirmRefresh = false) {
     if (!address) return;
     setBusyId(proposalId);
     setError("");
     setNotice("");
     try {
-      const result = await collectProviderEvidence(proposalId, address, signMessage);
+      const result = await collectProviderEvidence(proposalId, address, signMessage, confirmRefresh);
       setNotice(result.message);
       await loadEvidence(proposalId);
     } catch (err) {
@@ -89,7 +108,7 @@ export default function ProviderEvidenceCollectionPanel({ address, signMessage, 
         <div>
           <span className="eyebrow">OWNER OPERATIONS</span>
           <h2>Collect provider evidence</h2>
-          <p>Collect a fresh provider result for an approved market. A saved record means the provider responded; “Required result found” means the market metric was extracted. Validators review the evidence separately.</p>
+          <p>Evidence is loaded automatically. Once a provider response is stored, collection is locked to prevent accidental repeats. Use “Collect new evidence” only when you intentionally need another provider observation. Validators review evidence separately.</p>
         </div>
       </div>
       {!address && <p role="alert">Connect the configured owner wallet to collect provider evidence.</p>}
@@ -105,12 +124,20 @@ export default function ProviderEvidenceCollectionPanel({ address, signMessage, 
               <div className="market-meta"><span>Provider</span><span>{providerLabel(proposal.resolutionRule.sourceId)}</span></div>
               <div className="market-meta"><span>Metric</span><span>{proposal.resolutionRule.metric.replaceAll("_", " ")}</span></div>
               <div className="hero-actions admin-proposal-actions">
-                <button className="primary-button" type="button" disabled={!address || !!busyId} onClick={() => void collectEvidence(proposal.id)}>
-                  <Download size={16} /> {busyId === proposal.id ? "Collecting..." : "Collect evidence"}
+                <button className="primary-button" type="button" disabled={!address || !!busyId || (evidenceByProposal[proposal.id] ?? []).length > 0} onClick={() => void collectEvidence(proposal.id)}>
+                  <Download size={16} /> {busyId === proposal.id ? "Collecting..." : (evidenceByProposal[proposal.id] ?? []).length > 0 ? "Evidence collected" : "Collect evidence"}
                 </button>
-                <button className="text-action" type="button" disabled={!address || !!busyId} onClick={() => void loadEvidence(proposal.id)}>
-                  <RefreshCw size={16} /> {busyId === proposal.id ? "Loading..." : "Refresh result"}
-                </button>
+                {(evidenceByProposal[proposal.id] ?? []).length > 0 ? (
+                  <button className="text-action" type="button" disabled={!address || !!busyId} onClick={() => {
+                    if (window.confirm("Collect a new provider observation? This makes another provider request and may create or refresh evidence for validator review.")) void collectEvidence(proposal.id, true);
+                  }}>
+                    <RefreshCw size={16} /> Collect new evidence
+                  </button>
+                ) : (
+                  <button className="text-action" type="button" disabled={!address || !!busyId} onClick={() => void loadEvidence(proposal.id)}>
+                    <RefreshCw size={16} /> {busyId === proposal.id ? "Loading..." : "Refresh result"}
+                  </button>
+                )}
               </div>
               {(evidenceByProposal[proposal.id] ?? []).map((item) => (
                 <div className="verification-detail-card" key={item.id}>

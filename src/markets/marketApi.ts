@@ -757,11 +757,11 @@ export type ProviderMarketEvidence = {
   reviews: ProviderEvidenceReview[];
 };
 
-export async function collectProviderEvidence(proposalId: string, address: string, signMessage: (message: string) => Promise<string>) {
+export async function collectProviderEvidence(proposalId: string, address: string, signMessage: (message: string) => Promise<string>, confirmRefresh = false) {
   await ensureWalletSession(address, signMessage);
   return request<{ message: string; evidence: ProviderMarketEvidence; inserted: boolean }>(
     `/api/market-evidence/${encodeURIComponent(proposalId)}/collect`,
-    { method: "POST", body: JSON.stringify({ address }) },
+    { method: "POST", body: JSON.stringify({ address, confirmRefresh }) },
   );
 }
 
