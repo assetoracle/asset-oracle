@@ -29,6 +29,7 @@ export type StoredMarketProposal = MarketProposalInput & {
   onchainChainId?: number | null;
   origin?: "MANUAL" | "AUTOMATED";
   visibility?: "PRIVATE" | "PUBLIC";
+  assetIdentity?: { name: string; logoUrl: string } | null;
 };
 
 function compactErrorMessage(value: unknown, fallback = "Request failed. Try again."): string {
