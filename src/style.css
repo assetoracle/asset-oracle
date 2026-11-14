@@ -11694,3 +11694,20 @@ select.brand-select option,
   .market-card-compact:hover,
   .market-card-compact:focus-within { transform: none; }
 }
+
+/* Two verified participant crests share the existing market identity tile. */
+.market-team-identity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 2px;
+}
+.market-team-identity img {
+  display: block;
+  width: 17px;
+  height: 17px;
+  max-width: 17px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.25));
+}
