@@ -109,8 +109,8 @@ export default function ProviderEvidenceReviewPanel({ canReview = true, proposal
           <span className="eyebrow">{canReview ? "VALIDATOR OPERATIONS" : "OWNER VIEW"}</span>
           <h2>{canReview ? "Evidence review" : "Evidence status and validator progress"}</h2>
           <p>{canReview
-            ? "Check the provider result in plain English, then record your independent decision."
-            : "View provider results and validator decisions. Only authorized validators can submit reviews."}</p>
+            ? "A saved record means the provider returned a response. “Required result found” means the market metric was extracted. Accept only when the result supports the market outcome."
+            : "A saved record means the provider returned a response. “Required result found” means the market metric was extracted. Only authorized validators can submit reviews."}</p>
         </div>
       </div>
       <button className="primary-button" type="button" onClick={() => void loadQueue()} disabled={!address || loading || !!busyId}>
@@ -131,7 +131,7 @@ export default function ProviderEvidenceReviewPanel({ canReview = true, proposal
                 <span className="market-status">{statusLabel(item.verificationStatus)}</span>
               </div>
               <h3>{item.question ?? "Market evidence"}</h3>
-              <div className="market-meta"><span>Provider responded</span><strong>{item.sourceUrl ? "Yes" : "No"}</strong></div>
+              <div className="market-meta"><span>Provider response received</span><strong>Yes</strong></div>
               <div className="market-meta"><span>Required result found</span><strong>{hasValue ? "Yes" : "No"}</strong></div>
               <div className="market-meta"><span>Provider</span><span>{item.provider}</span></div>
               <div className="market-meta"><span>Result</span><strong>{readableValue(item.normalizedValue)}</strong></div>
@@ -148,10 +148,11 @@ export default function ProviderEvidenceReviewPanel({ canReview = true, proposal
                 <p role="status">Your decision: {item.myDecision === "ACCEPTED" ? "Accepted" : "Rejected"}. You cannot review this record again.</p>
               ) : canReview ? (
                 <>
+                  {!hasValue && <p role="note">The required market result was not found. This evidence cannot be accepted; reject it or wait for a corrected collection.</p>}
                   <label htmlFor={`evidence-note-${item.id}`}>Review note (optional)</label>
                   <textarea id={`evidence-note-${item.id}`} rows={2} maxLength={500} value={notes[item.id] ?? ""} onChange={(event) => setNotes((current) => ({ ...current, [item.id]: event.target.value }))} placeholder="Add a short reason for your decision." />
                   <div className="hero-actions admin-proposal-actions">
-                    <button className="primary-button" type="button" disabled={!!busyId || loading} onClick={() => void submitReview(item, "ACCEPTED")}>
+                    <button className="primary-button" type="button" disabled={!hasValue || !!busyId || loading} title={!hasValue ? "Cannot accept evidence without the required market result." : undefined} onClick={() => void submitReview(item, "ACCEPTED")}>
                       <Check size={16} /> {busyId === item.id ? "Submitting..." : "Accept evidence"}
                     </button>
                     <button className="text-action" type="button" disabled={!!busyId || loading} onClick={() => void submitReview(item, "REJECTED")}>
