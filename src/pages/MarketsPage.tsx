@@ -54,9 +54,9 @@ function getMarketIdentityVisual(market: DisplayMarket): MarketIdentityVisual | 
   const marketText = `${market.question} ${market.description} ${query?.search ?? ""}`.toLowerCase();
   const coinId = query?.coinId?.trim().toLowerCase();
 
-  // CoinGecko has already returned verified BTC market evidence for this market.
-  // Use its official asset image for the known Bitcoin coin ID; unknown IDs fall back safely.
-  if (sourceId === "coingecko" && (coinId === "bitcoin" || /\b(bitcoin|btc)\b/.test(marketText))) {
+  // Market subject identity is independent of the provider used for resolution evidence.
+  // Use the known Bitcoin image as a safe fallback when backend metadata is unavailable.
+  if (coinId === "bitcoin" || /\b(bitcoin|btc)\b/.test(marketText)) {
     return {
       imageUrl: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png?1696501400",
       alt: "Bitcoin",
