@@ -30,6 +30,7 @@ export type StoredMarketProposal = MarketProposalInput & {
   origin?: "MANUAL" | "AUTOMATED";
   visibility?: "PRIVATE" | "PUBLIC";
   assetIdentity?: { name: string; logoUrl: string } | null;
+  teamIdentity?: { home: { name: string; logoUrl: string | null }; away: { name: string; logoUrl: string | null } } | null;
 };
 
 function compactErrorMessage(value: unknown, fallback = "Request failed. Try again."): string {
