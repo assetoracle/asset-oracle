@@ -386,6 +386,7 @@ const loadMarkets = useCallback(async () => {
         endDate: formatDate(market.resolvesAt),
         resolutionRule: market.resolutionRule,
         assetIdentity: market.assetIdentity ?? null,
+        teamIdentity: market.teamIdentity ?? null,
         onchainMarketId: market.onchainMarketId ?? null,
         onchainTxHash: market.onchainTxHash ?? null,
         onchainManagerAddress: market.onchainManagerAddress ?? null,
