@@ -46,6 +46,9 @@ function formatMarketTime(value: string | undefined): string {
 type MarketIdentityVisual = { imageUrl: string; alt: string; kind: "asset" | "flag" };
 
 function getMarketIdentityVisual(market: DisplayMarket): MarketIdentityVisual | null {
+  if (market.assetIdentity?.logoUrl) {
+    return { imageUrl: market.assetIdentity.logoUrl, alt: market.assetIdentity.name, kind: "asset" };
+  }
   const rule = market.resolutionRule;
   const query = rule?.query;
   const sourceId = rule?.sourceId?.trim().toLowerCase() ?? "";
