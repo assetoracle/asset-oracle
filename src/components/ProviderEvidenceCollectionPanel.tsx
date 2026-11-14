@@ -89,7 +89,7 @@ export default function ProviderEvidenceCollectionPanel({ address, signMessage, 
         <div>
           <span className="eyebrow">OWNER OPERATIONS</span>
           <h2>Collect provider evidence</h2>
-          <p>Collect a fresh provider result for an approved market. Validator decisions remain independent.</p>
+          <p>Collect a fresh provider result for an approved market. A saved record means the provider responded; “Required result found” means the market metric was extracted. Validators review the evidence separately.</p>
         </div>
       </div>
       {!address && <p role="alert">Connect the configured owner wallet to collect provider evidence.</p>}
@@ -114,8 +114,8 @@ export default function ProviderEvidenceCollectionPanel({ address, signMessage, 
               </div>
               {(evidenceByProposal[proposal.id] ?? []).map((item) => (
                 <div className="verification-detail-card" key={item.id}>
-                  <div className="market-meta"><span>Provider responded</span><strong>{item.sourceUrl ? "Yes" : "No"}</strong></div>
-                  <div className="market-meta"><span>Result found</span><strong>{item.normalizedValue === null || item.normalizedValue === undefined ? "No" : "Yes"}</strong></div>
+                  <div className="market-meta"><span>Provider response received</span><strong>Yes</strong></div>
+                  <div className="market-meta"><span>Required result found</span><strong>{item.normalizedValue === null || item.normalizedValue === undefined || item.normalizedValue === "" ? "No" : "Yes"}</strong></div>
                   <div className="market-meta"><span>Result</span><strong>{readableValue(item.normalizedValue)}</strong></div>
                   <div className="market-meta"><span>Review status</span><strong>{statusLabel(item.verificationStatus)}</strong></div>
                   <div className="market-meta"><span>Retrieved</span><span>{new Date(item.retrievedAt).toLocaleString()}</span></div>
