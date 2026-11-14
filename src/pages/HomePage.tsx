@@ -15,6 +15,15 @@ export type DisplayResolutionRule = {
   currency?: string;
   observationTime: string;
   description: string;
+  query?: {
+    coinId?: string;
+    country?: string;
+    search?: string;
+    protocol?: string;
+    date?: string;
+    league?: number;
+    season?: number;
+  };
 };
 
 export type DisplayMarket = {
