@@ -6,6 +6,7 @@ import ReferralReviewPanel from "./ReferralReviewPanel";
 import PublishApprovedMarket from "./PublishApprovedMarket";
 import ValidatorDashboard from "./ValidatorDashboard";
 import ProviderEvidenceCollectionPanel from "./ProviderEvidenceCollectionPanel";
+import ProviderEvidenceReviewPanel from "./ProviderEvidenceReviewPanel";
 import { friendlyError } from "../utils/friendlyError";
 import { API_BASE_URL } from "../config/env";
 
@@ -418,7 +419,10 @@ export default function AdminDashboard({
         </div>
       </>}
       {role === "OWNER" && activeSection === "validators" && <ValidatorDashboard />}
-      {role === "OWNER" && activeSection === "evidence" && <ProviderEvidenceCollectionPanel address={address} signMessage={signMessage} proposals={evidenceProposals} />}
+      {role === "OWNER" && activeSection === "evidence" && <>
+        <ProviderEvidenceCollectionPanel address={address} signMessage={signMessage} proposals={evidenceProposals} />
+        <ProviderEvidenceReviewPanel canReview={false} address={address} signMessage={signMessage} proposals={evidenceProposals} />
+      </>}
       {role === "OWNER" && activeSection === "referrals" && <ReferralReviewPanel address={address} signMessage={signMessage} />}
 
       {confirmation && createPortal((() => {
