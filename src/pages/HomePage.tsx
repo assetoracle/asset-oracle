@@ -47,6 +47,7 @@ export type DisplayMarket = {
   participantCount?: number | null;
   totalStaked?: string | null;
   assetIdentity?: { name: string; logoUrl: string } | null;
+  teamIdentity?: { home: { name: string; logoUrl: string | null }; away: { name: string; logoUrl: string | null } } | null;
 };
 
 type DashboardStats = {
